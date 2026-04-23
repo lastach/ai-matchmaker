@@ -4,7 +4,16 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 
-type OnboardingStep = 'core-intake' | 'attraction' | 'photos' | 'complete';
+type OnboardingStep = 'profile' | 'core-intake' | 'attraction' | 'photos' | 'complete';
+
+interface ProfileData {
+  name?: string;
+  birthDate?: string;
+  gender?: string;
+  pronouns?: string;
+  ownWantChildren?: string;
+  bio?: string;
+}
 
 interface CoreIntakeData {
   wantChildren?: string;
@@ -26,6 +35,7 @@ interface CoreIntakeData {
 interface UserProfile {
   userId: string;
   onboardingStep: OnboardingStep;
+  profileData: ProfileData;
   coreIntakeData: CoreIntakeData;
   attractionRatings: { [key: string]: 'pass' | 'maybe' | 'like' };
   attractionPhotos: string[];
@@ -79,6 +89,7 @@ export default function Dashboard() {
   // Core Intake state
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [coreIntakeData, setCoreIntakeData] = useState<CoreIntakeData>({});
+  const [profileData, setProfileData] = useState<ProfileData>({});
   const [contextualText, setContextualText] = useState('');
 
   // Attraction state
@@ -110,6 +121,7 @@ export default function Dashboard() {
         const parsed = JSON.parse(savedProfile);
         setProfile(parsed);
         setCoreIntakeData(parsed.coreIntakeData || {});
+        setProfileData(parsed.profileData || {});
         setAttractionRatings(parsed.attractionRatings || {});
         setUserPhotos(parsed.userPhotos || []);
         setAttractionPhotos(parsed.attractionPhotos || []);
@@ -118,7 +130,8 @@ export default function Dashboard() {
         // Initialize new profile - check if already completed onboarding
         const newProfile: UserProfile = {
           userId: session.user.id,
-          onboardingStep: 'core-intake',
+          onboardingStep: 'profile',
+          profileData: {},
           coreIntakeData: {},
           attractionRatings: {},
           attractionPhotos: [],
@@ -145,12 +158,36 @@ export default function Dashboard() {
     router.push('/');
   };
 
+  const handleProfileChange = (field: keyof ProfileData, value: string) => {
+    setProfileData({ ...profileData, [field]: value });
+  };
+
+  const advanceFromProfile = () => {
+    const errors: string[] = [];
+    if (!profileData.name?.trim()) errors.push('name');
+    if (!profileData.birthDate) errors.push('birthDate');
+    if (!profileData.gender) errors.push('gender');
+    if (!profileData.ownWantChildren) errors.push('ownWantChildren');
+    if (errors.length > 0) {
+      alert('Please fill in: ' + errors.join(', '));
+      return;
+    }
+    const newProfile: UserProfile = {
+      ...profile!,
+      profileData,
+      onboardingStep: 'core-intake',
+      profileStrength: 20,
+    };
+    saveProfile(newProfile);
+  };
+
   const restartOnboarding = () => {
     if (user?.id) {
       // Reset profile to initial onboarding state
       const resetProfile: UserProfile = {
         userId: user.id,
-        onboardingStep: 'core-intake',
+        onboardingStep: 'profile',
+        profileData: {},
         coreIntakeData: {},
         attractionRatings: {},
         attractionPhotos: [],
@@ -307,6 +344,134 @@ export default function Dashboard() {
   }
 
   // ONBOARDING FLOWS
+  if (profile.onboardingStep === 'profile') {
+    const yearMax = new Date().getFullYear() - 18;
+    const yearMin = new Date().getFullYear() - 90;
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-[#2E1A47] via-[#3D2557] to-[#D4537E]/10 p-4">
+        <div className="max-w-2xl mx-auto">
+          <div className="flex justify-between items-center mb-12 pt-8">
+            <div>
+              <h1 className="text-3xl font-bold text-white">About you first</h1>
+              <p className="text-[#D4537E]/80">Profile Basics • Step 1 of 3</p>
+            </div>
+            <button onClick={handleLogout} className="text-white/60 hover:text-white text-sm font-medium">Logout</button>
+          </div>
+
+          <div className="w-full bg-white/20 h-2 rounded-full mb-8">
+            <div className="bg-gradient-to-r from-[#D4537E] to-[#C04870] h-full rounded-full" style={{ width: '20%' }}></div>
+          </div>
+
+          <div className="bg-white rounded-2xl shadow-2xl p-8 space-y-6">
+            <div>
+              <h2 className="text-2xl font-bold text-[#1F2937] mb-2">Tell us who you are</h2>
+              <p className="text-[#6B7280]">Matching needs to know both sides &mdash; yours first, then who you're looking for.</p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-[#1F2937] mb-2">Preferred name *</label>
+              <input
+                type="text"
+                value={profileData.name || ''}
+                onChange={(e) => handleProfileChange('name', e.target.value)}
+                placeholder="First name"
+                className="w-full px-4 py-3 border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#D4537E]"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-[#1F2937] mb-2">Date of birth *</label>
+              <input
+                type="date"
+                value={profileData.birthDate || ''}
+                onChange={(e) => handleProfileChange('birthDate', e.target.value)}
+                min={`${yearMin}-01-01`}
+                max={`${yearMax}-12-31`}
+                className="w-full px-4 py-3 border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#D4537E]"
+              />
+              <p className="text-xs text-[#6B7280] mt-1">You must be 18 or older.</p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-[#1F2937] mb-2">Gender *</label>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                {['Woman', 'Man', 'Nonbinary', 'Other'].map((g) => (
+                  <button
+                    key={g}
+                    type="button"
+                    onClick={() => handleProfileChange('gender', g)}
+                    className={`py-2.5 rounded-lg border text-sm font-medium transition ${
+                      profileData.gender === g
+                        ? 'bg-[#D4537E] text-white border-[#D4537E]'
+                        : 'bg-white text-[#1F2937] border-[#E5E7EB] hover:border-[#D4537E]'
+                    }`}
+                  >
+                    {g}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-[#1F2937] mb-2">Pronouns (optional)</label>
+              <input
+                type="text"
+                value={profileData.pronouns || ''}
+                onChange={(e) => handleProfileChange('pronouns', e.target.value)}
+                placeholder="she/her, he/him, they/them, etc."
+                className="w-full px-4 py-3 border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#D4537E]"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-[#1F2937] mb-2">Do YOU want children? *</label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                {[
+                  { value: 'yes', label: 'Yes, definitely' },
+                  { value: 'maybe', label: 'Maybe / open' },
+                  { value: 'no', label: 'No, I do not' },
+                  { value: 'have-and-want-more', label: 'I have kids and want more' },
+                  { value: 'have-and-done', label: 'I have kids and am done' },
+                ].map((opt) => (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => handleProfileChange('ownWantChildren', opt.value)}
+                    className={`py-2.5 px-3 rounded-lg border text-sm font-medium transition text-left ${
+                      profileData.ownWantChildren === opt.value
+                        ? 'bg-[#D4537E] text-white border-[#D4537E]'
+                        : 'bg-white text-[#1F2937] border-[#E5E7EB] hover:border-[#D4537E]'
+                    }`}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-[#1F2937] mb-2">Short self-description (optional)</label>
+              <textarea
+                rows={3}
+                value={profileData.bio || ''}
+                onChange={(e) => handleProfileChange('bio', e.target.value)}
+                placeholder="A few sentences about you &mdash; what energizes you, how you spend your time, anything a partner should know up front."
+                className="w-full px-4 py-3 border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#D4537E]"
+              />
+            </div>
+
+            <button
+              onClick={advanceFromProfile}
+              className="w-full py-3 bg-gradient-to-r from-[#D4537E] to-[#C04870] text-white font-semibold rounded-lg hover:shadow-lg transition-all"
+            >
+              Continue to preferences
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (profile.onboardingStep === 'core-intake') {
     return (
       <div className="min-h-screen bg-gradient-to-br from-[#2E1A47] via-[#3D2557] to-[#D4537E]/10 p-4">
@@ -634,11 +799,21 @@ export default function Dashboard() {
                           rateAttraction(avatar.id, 'maybe');
                         }
                       }}
-                      className={`w-full aspect-square rounded-2xl flex items-center justify-center text-4xl font-bold transition-all ${
-                        rating ? colors[rating] : 'bg-[#F3F0ED] hover:bg-[#E5DFD9]'
+                      className={`w-full aspect-square rounded-2xl overflow-hidden transition-all border-4 ${
+                        rating === 'like'
+                          ? 'border-green-400'
+                          : rating === 'maybe'
+                          ? 'border-yellow-400'
+                          : rating === 'pass'
+                          ? 'border-gray-300 opacity-60'
+                          : 'border-transparent hover:border-[#D4537E]/40'
                       }`}
                     >
-                      {avatar.initials}
+                      <img
+                        src={`https://api.dicebear.com/9.x/personas/svg?seed=${encodeURIComponent(avatar.name)}&backgroundColor=transparent`}
+                        alt={avatar.name}
+                        className="w-full h-full object-cover bg-[#F3F0ED]"
+                      />
                     </button>
                     <p className="text-sm text-[#6B7280] mt-2">
                       {rating === 'like' ? '💚' : rating === 'maybe' ? '💛' : rating === 'pass' ? '⚪' : ''}
@@ -930,87 +1105,7 @@ export default function Dashboard() {
               </div>
             </div>
 
-            {/* Sample Match Card */}
-            <div className="bg-white rounded-2xl p-8 shadow-sm border border-[#E5E7EB]">
-              <h2 className="text-2xl font-bold text-[#1F2937] mb-6">Sample Match</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                {/* Profile Section */}
-                <div>
-                  <div className="flex gap-4 mb-6">
-                    <div className="w-20 h-20 bg-gradient-to-br from-[#D4537E] to-[#2E1A47] rounded-full flex items-center justify-center text-white text-2xl font-bold">
-                      S
-                    </div>
-                    <div>
-                      <h3 className="text-2xl font-bold text-[#1F2937]">Jordan</h3>
-                      <p className="text-[#6B7280]">32, Creative Professional</p>
-                      <p className="text-sm text-[#D4537E] mt-1">Lives in Portland, OR</p>
-                    </div>
-                  </div>
-
-                  {/* Photo placeholders */}
-                  <div className="grid grid-cols-2 gap-3 mb-6">
-                    <div className="w-full aspect-square bg-gradient-to-br from-[#D4537E]/20 to-[#2E1A47]/20 rounded-lg flex items-center justify-center">
-                      <p className="text-[#D4537E] text-sm">Photo 1</p>
-                    </div>
-                    <div className="w-full aspect-square bg-gradient-to-br from-[#2E1A47]/20 to-[#D4537E]/20 rounded-lg flex items-center justify-center">
-                      <p className="text-[#2E1A47] text-sm">Photo 2</p>
-                    </div>
-                  </div>
-
-                  {/* Why You'd Click */}
-                  <div className="bg-[#F3F0ED] rounded-lg p-6 mb-6">
-                    <h4 className="font-bold text-[#1F2937] mb-3">Why You Two Would Click</h4>
-                    <p className="text-sm text-[#6B7280] leading-relaxed">
-                      Jordan values deep conversations and travel just like you. Both of you prioritize authenticity in relationships and have similar approaches to life goals. The AI noticed you both appreciate creativity and meaningful connection over surface-level interactions.
-                    </p>
-                  </div>
-
-                  {/* CTA */}
-                  <button className="w-full py-3 bg-gradient-to-r from-[#D4537E] to-[#C04870] text-white font-semibold rounded-lg hover:shadow-lg transition-all">
-                    Schedule a Date
-                  </button>
-                </div>
-
-                {/* Stats */}
-                <div className="space-y-4">
-                  <div className="border border-[#E5E7EB] rounded-lg p-4">
-                    <p className="text-sm text-[#6B7280] mb-1">Compatibility Score</p>
-                    <p className="text-3xl font-bold text-[#D4537E]">87%</p>
-                  </div>
-                  <div className="border border-[#E5E7EB] rounded-lg p-4">
-                    <p className="text-sm text-[#6B7280] mb-2">Core Values Alignment</p>
-                    <div className="space-y-2">
-                      <div className="flex justify-between text-sm">
-                        <span className="text-[#6B7280]">Life Goals</span>
-                        <span className="font-semibold text-[#1F2937]">90%</span>
-                      </div>
-                      <div className="w-full bg-[#E5E7EB] h-2 rounded-full">
-                        <div className="bg-gradient-to-r from-[#D4537E] to-[#C04870] h-full rounded-full" style={{ width: '90%' }}></div>
-                      </div>
-                    </div>
-                    <div className="space-y-2 mt-3">
-                      <div className="flex justify-between text-sm">
-                        <span className="text-[#6B7280]">Lifestyle</span>
-                        <span className="font-semibold text-[#1F2937]">85%</span>
-                      </div>
-                      <div className="w-full bg-[#E5E7EB] h-2 rounded-full">
-                        <div className="bg-gradient-to-r from-[#D4537E] to-[#C04870] h-full rounded-full" style={{ width: '85%' }}></div>
-                      </div>
-                    </div>
-                    <div className="space-y-2 mt-3">
-                      <div className="flex justify-between text-sm">
-                        <span className="text-[#6B7280]">Values</span>
-                        <span className="font-semibold text-[#1F2937]">82%</span>
-                      </div>
-                      <div className="w-full bg-[#E5E7EB] h-2 rounded-full">
-                        <div className="bg-gradient-to-r from-[#D4537E] to-[#C04870] h-full rounded-full" style={{ width: '82%' }}></div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+</div>
         )}
 
         {activeTab === 'improve' && (
