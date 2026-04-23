@@ -115,7 +115,7 @@ export default function Dashboard() {
         setAttractionPhotos(parsed.attractionPhotos || []);
         setDepthResponses(parsed.depthQuestionResponses || {});
       } else if (session.user.id) {
-        // Initialize new profile
+        // Initialize new profile - check if already completed onboarding
         const newProfile: UserProfile = {
           userId: session.user.id,
           onboardingStep: 'core-intake',
@@ -143,6 +143,25 @@ export default function Dashboard() {
   const handleLogout = async () => {
     await supabase.auth.signOut();
     router.push('/');
+  };
+
+  const restartOnboarding = () => {
+    if (user?.id) {
+      // Reset profile to initial onboarding state
+      const resetProfile: UserProfile = {
+        userId: user.id,
+        onboardingStep: 'core-intake',
+        coreIntakeData: {},
+        attractionRatings: {},
+        attractionPhotos: [],
+        userPhotos: [],
+        depthQuestionResponses: {},
+        profileStrength: 0,
+      };
+      saveProfile(resetProfile);
+      setCurrentQuestion(0);
+      setContextualText('');
+    }
   };
 
   // Core Intake Handlers
@@ -1113,12 +1132,20 @@ export default function Dashboard() {
             {/* Account */}
             <div className="bg-white rounded-2xl p-8 shadow-sm border border-[#E5E7EB]">
               <h3 className="text-xl font-bold text-[#1F2937] mb-6">Account</h3>
-              <button
-                onClick={handleLogout}
-                className="px-6 py-3 bg-red-50 text-red-700 font-semibold rounded-lg hover:bg-red-100 transition-all"
-              >
-                Logout
-              </button>
+              <div className="flex gap-3">
+                <button
+                  onClick={restartOnboarding}
+                  className="px-6 py-3 bg-blue-50 text-blue-700 font-semibold rounded-lg hover:bg-blue-100 transition-all"
+                >
+                  Restart Setup Guide
+                </button>
+                <button
+                  onClick={handleLogout}
+                  className="px-6 py-3 bg-red-50 text-red-700 font-semibold rounded-lg hover:bg-red-100 transition-all"
+                >
+                  Logout
+                </button>
+              </div>
             </div>
           </div>
         )}
