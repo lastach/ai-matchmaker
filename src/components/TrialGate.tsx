@@ -3,18 +3,16 @@
 import { useEffect, useState } from "react";
 
 /**
- * Server-backed free-trial gate.
+ * Subscription-aware access gate.
  *
- * Calls /api/trial/status on mount. That endpoint upserts a user_trials row in
- * Supabase (RLS: user only touches their own row) and returns:
- *   { startedAt, daysRemaining, expired, plan, trialDays }
+ * Calls /api/trial/status, which reads the server-backed user_subscriptions
+ * row (RLS: user only touches their own) and returns:
+ *   { plan, daysRemaining, hasAccess, expired, trialEndsAt, ... }
  *
- * The trial clock lives server-side so the user cannot reset it by clearing
- * localStorage / cookies / switching browsers.
- *
- * If the endpoint is unavailable (e.g., migration not yet run, or Supabase
- * misconfigured), we fall back to letting the app render rather than hard
- * blocking — the server call is retried on next page load.
+ * While hasAccess is true (trialing with days left OR active paid), render
+ * children + a dismissible banner during trial. When hasAccess is false,
+ * render the soft paywall. Stripe wiring replaces the disabled button later
+ * without touching this component.
  */
 export default function TrialGate({
   userId,
@@ -27,7 +25,7 @@ export default function TrialGate({
 }) {
   const [status, setStatus] = useState<
     | { state: "loading" }
-    | { state: "loaded"; daysRemaining: number; expired: boolean; plan: string; trialDays: number }
+    | { state: "loaded"; plan: string; daysRemaining: number; hasAccess: boolean; trialDays: number }
     | { state: "unavailable" }
   >({ state: "loading" });
   const [dismissedBanner, setDismissedBanner] = useState(false);
@@ -43,26 +41,23 @@ export default function TrialGate({
         if (cancelled) return;
         setStatus({
           state: "loaded",
+          plan: data.plan || "trialing",
           daysRemaining: Number(data.daysRemaining) || 0,
-          expired: Boolean(data.expired),
-          plan: data.plan || "trial",
+          hasAccess: Boolean(data.hasAccess),
           trialDays: Number(data.trialDays) || 14,
         });
       } catch {
         if (!cancelled) setStatus({ state: "unavailable" });
       }
     })();
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; };
   }, [userId]);
 
-  // While checking, render nothing new (the app renders around this).
   if (status.state === "loading" || status.state === "unavailable" || !userId) {
     return <>{children}</>;
   }
 
-  if (status.expired && status.plan !== "active") {
+  if (!status.hasAccess) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
         <div className="max-w-lg w-full bg-white rounded-2xl shadow-lg border p-8 text-center">
@@ -97,7 +92,7 @@ export default function TrialGate({
 
   return (
     <>
-      {!dismissedBanner && status.daysRemaining > 0 && status.plan === "trial" && (
+      {!dismissedBanner && status.plan === "trialing" && status.daysRemaining > 0 && (
         <div className="bg-gradient-to-r from-rose-50 to-amber-50 border-b border-rose-200">
           <div className="max-w-6xl mx-auto px-4 py-2 flex items-center justify-between text-sm">
             <span className="text-rose-900">

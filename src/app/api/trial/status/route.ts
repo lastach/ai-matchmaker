@@ -5,12 +5,13 @@ import { cookies } from "next/headers";
 /**
  * GET /api/trial/status
  *
- * Reads the caller's user_trials row (creating it on first load), then returns:
- *   { startedAt, daysRemaining, expired, plan }
+ * Reads (and creates on first call) the user's user_subscriptions row, then
+ * returns the shape TrialGate expects: { startedAt, daysRemaining, expired, plan }.
  *
- * The timestamp lives in Supabase with RLS — the user cannot reset it from the
- * client by clearing localStorage / cookies. The Stripe-free paywall reads this
- * and blocks access when expired.
+ * Backed by the user_subscriptions table (see outputs/supabase/user_subscriptions_migration.sql).
+ * That table is the single source of truth for access control: trial is just
+ * one state of `plan`. Stripe wiring will write to the same row without schema
+ * changes.
  */
 export async function GET() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -32,36 +33,40 @@ export async function GET() {
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
   }
 
-  // Upsert the trial row on first call. started_at defaults to now() in the schema.
+  // Ensure a row exists. trial_started_at defaults to now(), trial_days defaults to 14.
   await supabase
-    .from("user_trials")
+    .from("user_subscriptions")
     .upsert(
       { user_id: user.id },
       { onConflict: "user_id", ignoreDuplicates: true }
     );
 
+  // Read the convenience view.
   const { data: row, error: selectErr } = await supabase
-    .from("user_trials")
-    .select("started_at, plan, trial_days, subscribed_at")
+    .from("current_plan")
+    .select("*")
     .eq("user_id", user.id)
     .single();
 
   if (selectErr || !row) {
-    return NextResponse.json({ error: "Trial record unavailable" }, { status: 500 });
+    return NextResponse.json({ error: "Subscription record unavailable" }, { status: 500 });
   }
 
-  const started = new Date(row.started_at).getTime();
-  const days = Number(process.env.NEXT_PUBLIC_TRIAL_DAYS || row.trial_days || 14);
-  const trialMs = days * 24 * 60 * 60 * 1000;
-  const elapsed = Date.now() - started;
-  const daysRemaining = Math.max(0, Math.ceil((trialMs - elapsed) / (24 * 60 * 60 * 1000)));
-  const expired = row.plan !== "active" && elapsed >= trialMs;
+  const trialEnds = row.trial_ends_at ? new Date(row.trial_ends_at).getTime() : null;
+  const daysRemaining = trialEnds
+    ? Math.max(0, Math.ceil((trialEnds - Date.now()) / (24 * 60 * 60 * 1000)))
+    : 0;
 
   return NextResponse.json({
-    startedAt: row.started_at,
+    plan: row.plan,              // trialing | active | canceled | past_due | expired
+    tier: row.tier,
+    billingInterval: row.billing_interval,
+    startedAt: row.trial_started_at,
+    trialEndsAt: row.trial_ends_at,
+    currentPeriodEnd: row.current_period_end,
+    trialDays: row.trial_days,
     daysRemaining,
-    expired,
-    plan: row.plan,
-    trialDays: days,
+    hasAccess: Boolean(row.has_access),
+    expired: !row.has_access,
   });
 }
