@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import OnboardingChat from './OnboardingChat';
+import TrialGate from '@/components/TrialGate';
 
 type OnboardingStep = 'profile' | 'core-intake' | 'summary' | 'attraction' | 'photos' | 'complete';
 
@@ -872,6 +873,7 @@ export default function Dashboard() {
 
   // POST-ONBOARDING DASHBOARD
   return (
+    <TrialGate userId={user?.id} productName="AI Matchmaker">
     <div className="min-h-screen bg-[#FBF9F7]">
       {/* Header */}
       <div className="bg-gradient-to-r from-[#2E1A47] to-[#3D2557] text-white p-6 flex justify-between items-center">
@@ -1108,5 +1110,6 @@ export default function Dashboard() {
         )}
       </div>
     </div>
+    </TrialGate>
   );
 }
