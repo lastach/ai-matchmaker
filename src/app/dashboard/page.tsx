@@ -11,6 +11,7 @@ interface ProfileData {
   birthDate?: string;
   gender?: string;
   pronouns?: string;
+  interestedIn?: string; // 'women' | 'men' | 'nonbinary' | 'anyone'
   ownWantChildren?: string;
   bio?: string;
 }
@@ -42,6 +43,26 @@ interface UserProfile {
   userPhotos: string[];
   depthQuestionResponses: { [key: number]: string };
   profileStrength: number;
+}
+
+// Returns a real portrait photo URL from randomuser.me that matches the user's dating preference.
+// Two buckets of 99 each (men, women). Nonbinary/anyone rotates between both.
+function getAvatarUrl(avatarId: string, interestedIn?: string): string {
+  const n = (parseInt(avatarId, 10) % 99) + 1;
+  const bucket = (() => {
+    switch (interestedIn) {
+      case 'men':
+        return 'men';
+      case 'women':
+        return 'women';
+      case 'nonbinary':
+      case 'anyone':
+      default:
+        // Alternate men/women so the grid has a mix
+        return (parseInt(avatarId, 10) % 2 === 0) ? 'women' : 'men';
+    }
+  })();
+  return `https://randomuser.me/api/portraits/${bucket}/${n}.jpg`;
 }
 
 const SAMPLE_AVATARS = [
@@ -167,6 +188,7 @@ export default function Dashboard() {
     if (!profileData.name?.trim()) errors.push('name');
     if (!profileData.birthDate) errors.push('birthDate');
     if (!profileData.gender) errors.push('gender');
+    if (!profileData.interestedIn) errors.push('interestedIn');
     if (!profileData.ownWantChildren) errors.push('ownWantChildren');
     if (errors.length > 0) {
       alert('Please fill in: ' + errors.join(', '));
@@ -207,25 +229,33 @@ export default function Dashboard() {
     setCoreIntakeData(updated);
   };
 
+  const MIN_WORDS_PER_CONVERSATIONAL = 20;
+  const countWords = (s: string) => s.trim().split(/\s+/).filter(Boolean).length;
+
   const advanceCoreIntake = () => {
-    if (currentQuestion < 4) {
-      // Structured questions
+    if (currentQuestion < 3) {
+      // Structured questions (Q1-Q4 in the old numbering, now 0-3)
       setCurrentQuestion(currentQuestion + 1);
-    } else if (currentQuestion < 10) {
-      // Conversational questions
-      const qNum = currentQuestion - 4; // 0-5 for Q6-Q10
-      const questionNum = 6 + qNum; // 6-10
+    } else if (currentQuestion < 9) {
+      // Conversational questions (Q5-Q9, indices 3-8 after removing the old Q1)
+      // Enforce minimum word count before moving on
+      if (currentQuestion >= 3 && countWords(contextualText) < MIN_WORDS_PER_CONVERSATIONAL) {
+        alert(`Please give this question at least ${MIN_WORDS_PER_CONVERSATIONAL} words. A thoughtful answer is the whole point of the process.`);
+        return;
+      }
+      const qNum = currentQuestion - 3; // 0-5 for Q6-Q10 in original semantic numbering
+      const questionNum = 6 + qNum;
       const responseKey = `q${questionNum}Response` as keyof CoreIntakeData;
       const updated = { ...coreIntakeData, [responseKey]: contextualText };
       setCoreIntakeData(updated);
 
-      if (currentQuestion === 9) {
+      if (currentQuestion === 8) {
         // Complete core intake
         const newProfile: UserProfile = {
           ...profile!,
           coreIntakeData: updated,
           onboardingStep: 'attraction',
-          profileStrength: 60,
+          profileStrength: 50,
         };
         saveProfile(newProfile);
         setCurrentQuestion(0);
@@ -242,7 +272,7 @@ export default function Dashboard() {
       ...profile!,
       coreIntakeData,
       onboardingStep: 'attraction',
-      profileStrength: 60,
+      profileStrength: 50,
     };
     saveProfile(newProfile);
     setCurrentQuestion(0);
@@ -255,6 +285,11 @@ export default function Dashboard() {
   };
 
   const completeAttractionStep = () => {
+    const ratingsCount = Object.keys(attractionRatings).length;
+    if (ratingsCount < 5) {
+      alert('Please rate at least 5 people before continuing.');
+      return;
+    }
     const newProfile: UserProfile = {
       ...profile!,
       attractionRatings,
@@ -308,7 +343,7 @@ export default function Dashboard() {
         ...profile!,
         userPhotos,
         onboardingStep: 'complete',
-        profileStrength: 100,
+        profileStrength: 70,
       };
       saveProfile(newProfile);
     }
@@ -323,7 +358,7 @@ export default function Dashboard() {
     const newProfile: UserProfile = {
       ...profile!,
       depthQuestionResponses: updated,
-      profileStrength: Math.min(100, 100 + Object.keys(updated).length * 4),
+      profileStrength: Math.min(100, 70 + Object.keys(updated).filter(k => (updated as any)[k]?.trim?.().length > 0).length * 3),
     };
     saveProfile(newProfile);
   };
@@ -413,6 +448,31 @@ export default function Dashboard() {
             </div>
 
             <div>
+              <label className="block text-sm font-semibold text-[#1F2937] mb-2">I'm interested in dating *</label>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                {[
+                  { value: 'women', label: 'Women' },
+                  { value: 'men', label: 'Men' },
+                  { value: 'nonbinary', label: 'Nonbinary' },
+                  { value: 'anyone', label: 'Anyone' },
+                ].map((opt) => (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => handleProfileChange('interestedIn', opt.value)}
+                    className={`py-2.5 rounded-lg border text-sm font-medium transition ${
+                      profileData.interestedIn === opt.value
+                        ? 'bg-[#D4537E] text-white border-[#D4537E]'
+                        : 'bg-white text-[#1F2937] border-[#E5E7EB] hover:border-[#D4537E]'
+                    }`}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div>
               <label className="block text-sm font-semibold text-[#1F2937] mb-2">Pronouns (optional)</label>
               <input
                 type="text"
@@ -494,46 +554,13 @@ export default function Dashboard() {
           <div className="w-full bg-white/20 h-2 rounded-full mb-8">
             <div
               className="bg-gradient-to-r from-[#D4537E] to-[#C04870] h-full rounded-full transition-all duration-300"
-              style={{ width: `${((currentQuestion + 1) / 10) * 100}%` }}
+              style={{ width: `${((currentQuestion + 1) / 9) * 100}%` }}
             ></div>
           </div>
 
           {/* Questions */}
           <div className="bg-white rounded-2xl shadow-2xl p-8 mb-8">
             {currentQuestion === 0 && (
-              <div className="space-y-6">
-                <div>
-                  <h2 className="text-2xl font-bold text-[#1F2937] mb-1">
-                    Do you want children?
-                  </h2>
-                  <p className="text-[#6B7280] mb-4">Choose what resonates with you</p>
-                </div>
-                <div className="space-y-3">
-                  {[
-                    'Yes definitely',
-                    'Open to it',
-                    'Not sure',
-                    'No',
-                    'Already have kids, want more',
-                    'Already have kids, done',
-                  ].map((option) => (
-                    <button
-                      key={option}
-                      onClick={() => handleCoreIntakeChange('wantChildren', option)}
-                      className={`w-full p-4 text-left rounded-lg border-2 transition-all ${
-                        coreIntakeData.wantChildren === option
-                          ? 'border-[#D4537E] bg-[#FDE9F0]'
-                          : 'border-[#E5E7EB] hover:border-[#D4537E]/50'
-                      }`}
-                    >
-                      <p className="font-semibold text-[#1F2937]">{option}</p>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {currentQuestion === 1 && (
               <div className="space-y-6">
                 <div>
                   <h2 className="text-2xl font-bold text-[#1F2937] mb-1">
@@ -566,7 +593,7 @@ export default function Dashboard() {
               </div>
             )}
 
-            {currentQuestion === 2 && (
+            {currentQuestion === 1 && (
               <div className="space-y-6">
                 <div>
                   <h2 className="text-2xl font-bold text-[#1F2937] mb-1">
@@ -612,7 +639,7 @@ export default function Dashboard() {
               </div>
             )}
 
-            {currentQuestion === 3 && (
+            {currentQuestion === 2 && (
               <div className="space-y-6">
                 <div>
                   <h2 className="text-2xl font-bold text-[#1F2937] mb-1">
@@ -642,7 +669,7 @@ export default function Dashboard() {
               </div>
             )}
 
-            {currentQuestion === 4 && (
+            {currentQuestion === 3 && (
               <div className="space-y-6">
                 <div>
                   <h2 className="text-2xl font-bold text-[#1F2937] mb-1">
@@ -693,7 +720,7 @@ export default function Dashboard() {
               </div>
             )}
 
-            {currentQuestion >= 5 && (
+            {currentQuestion >= 4 && (
               <div className="space-y-6">
                 <div>
                   <h2 className="text-2xl font-bold text-[#1F2937] mb-1">
@@ -715,6 +742,14 @@ export default function Dashboard() {
                   placeholder="Your answer..."
                   className="w-full px-4 py-3 border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#D4537E] min-h-32"
                 />
+                <div className="flex justify-between text-xs mt-2">
+                  <span className={countWords(contextualText) >= MIN_WORDS_PER_CONVERSATIONAL ? 'text-green-600' : 'text-[#6B7280]'}>
+                    {countWords(contextualText)} / {MIN_WORDS_PER_CONVERSATIONAL} words minimum
+                  </span>
+                  {countWords(contextualText) < MIN_WORDS_PER_CONVERSATIONAL && (
+                    <span className="text-[#6B7280]">{MIN_WORDS_PER_CONVERSATIONAL - countWords(contextualText)} more to continue</span>
+                  )}
+                </div>
               </div>
             )}
 
@@ -734,9 +769,10 @@ export default function Dashboard() {
               </button>
               <button
                 onClick={advanceCoreIntake}
-                className="flex-1 py-3 px-4 bg-gradient-to-r from-[#D4537E] to-[#C04870] text-white font-semibold rounded-lg hover:shadow-lg"
+                disabled={currentQuestion >= 3 && countWords(contextualText) < MIN_WORDS_PER_CONVERSATIONAL}
+                className="flex-1 py-3 px-4 bg-gradient-to-r from-[#D4537E] to-[#C04870] text-white font-semibold rounded-lg hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {currentQuestion === 9 ? 'Complete' : 'Next'}
+                {currentQuestion === 8 ? 'Complete' : 'Next'}
               </button>
             </div>
           </div>
@@ -810,9 +846,10 @@ export default function Dashboard() {
                       }`}
                     >
                       <img
-                        src={`https://api.dicebear.com/9.x/personas/svg?seed=${encodeURIComponent(avatar.name)}&backgroundColor=transparent`}
-                        alt={avatar.name}
+                        src={getAvatarUrl(avatar.id, profileData.interestedIn)}
+                        alt={`Person ${avatar.id}`}
                         className="w-full h-full object-cover bg-[#F3F0ED]"
+                        loading="lazy"
                       />
                     </button>
                     <p className="text-sm text-[#6B7280] mt-2">
