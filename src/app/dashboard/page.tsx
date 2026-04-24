@@ -3,8 +3,9 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
+import OnboardingChat from './OnboardingChat';
 
-type OnboardingStep = 'profile' | 'core-intake' | 'attraction' | 'photos' | 'complete';
+type OnboardingStep = 'profile' | 'core-intake' | 'summary' | 'attraction' | 'photos' | 'complete';
 
 interface ProfileData {
   name?: string;
@@ -379,402 +380,121 @@ export default function Dashboard() {
   }
 
   // ONBOARDING FLOWS
-  if (profile.onboardingStep === 'profile') {
-    const yearMax = new Date().getFullYear() - 18;
-    const yearMin = new Date().getFullYear() - 90;
+  if (profile.onboardingStep === 'profile' || profile.onboardingStep === 'core-intake') {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-[#2E1A47] via-[#3D2557] to-[#D4537E]/10 p-4">
-        <div className="max-w-2xl mx-auto">
-          <div className="flex justify-between items-center mb-12 pt-8">
-            <div>
-              <h1 className="text-3xl font-bold text-white">About you first</h1>
-              <p className="text-[#D4537E]/80">Profile Basics • Step 1 of 3</p>
-            </div>
-            <button onClick={handleLogout} className="text-white/60 hover:text-white text-sm font-medium">Logout</button>
-          </div>
-
-          <div className="w-full bg-white/20 h-2 rounded-full mb-8">
-            <div className="bg-gradient-to-r from-[#D4537E] to-[#C04870] h-full rounded-full" style={{ width: '20%' }}></div>
-          </div>
-
-          <div className="bg-white rounded-2xl shadow-2xl p-8 space-y-6">
-            <div>
-              <h2 className="text-2xl font-bold text-[#1F2937] mb-2">Tell us who you are</h2>
-              <p className="text-[#6B7280]">Matching needs to know both sides &mdash; yours first, then who you're looking for.</p>
-            </div>
-
-            <div>
-              <label className="block text-sm font-semibold text-[#1F2937] mb-2">Preferred name *</label>
-              <input
-                type="text"
-                value={profileData.name || ''}
-                onChange={(e) => handleProfileChange('name', e.target.value)}
-                placeholder="First name"
-                className="w-full px-4 py-3 border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#D4537E]"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-semibold text-[#1F2937] mb-2">Date of birth *</label>
-              <input
-                type="date"
-                value={profileData.birthDate || ''}
-                onChange={(e) => handleProfileChange('birthDate', e.target.value)}
-                min={`${yearMin}-01-01`}
-                max={`${yearMax}-12-31`}
-                className="w-full px-4 py-3 border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#D4537E]"
-              />
-              <p className="text-xs text-[#6B7280] mt-1">You must be 18 or older.</p>
-            </div>
-
-            <div>
-              <label className="block text-sm font-semibold text-[#1F2937] mb-2">Gender *</label>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                {['Woman', 'Man', 'Nonbinary', 'Other'].map((g) => (
-                  <button
-                    key={g}
-                    type="button"
-                    onClick={() => handleProfileChange('gender', g)}
-                    className={`py-2.5 rounded-lg border text-sm font-medium transition ${
-                      profileData.gender === g
-                        ? 'bg-[#D4537E] text-white border-[#D4537E]'
-                        : 'bg-white text-[#1F2937] border-[#E5E7EB] hover:border-[#D4537E]'
-                    }`}
-                  >
-                    {g}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-semibold text-[#1F2937] mb-2">I'm interested in dating *</label>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                {[
-                  { value: 'women', label: 'Women' },
-                  { value: 'men', label: 'Men' },
-                  { value: 'nonbinary', label: 'Nonbinary' },
-                  { value: 'anyone', label: 'Anyone' },
-                ].map((opt) => (
-                  <button
-                    key={opt.value}
-                    type="button"
-                    onClick={() => handleProfileChange('interestedIn', opt.value)}
-                    className={`py-2.5 rounded-lg border text-sm font-medium transition ${
-                      profileData.interestedIn === opt.value
-                        ? 'bg-[#D4537E] text-white border-[#D4537E]'
-                        : 'bg-white text-[#1F2937] border-[#E5E7EB] hover:border-[#D4537E]'
-                    }`}
-                  >
-                    {opt.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-semibold text-[#1F2937] mb-2">Pronouns (optional)</label>
-              <input
-                type="text"
-                value={profileData.pronouns || ''}
-                onChange={(e) => handleProfileChange('pronouns', e.target.value)}
-                placeholder="she/her, he/him, they/them, etc."
-                className="w-full px-4 py-3 border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#D4537E]"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-semibold text-[#1F2937] mb-2">Do YOU want children? *</label>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                {[
-                  { value: 'yes', label: 'Yes, definitely' },
-                  { value: 'maybe', label: 'Maybe / open' },
-                  { value: 'no', label: 'No, I do not' },
-                  { value: 'have-and-want-more', label: 'I have kids and want more' },
-                  { value: 'have-and-done', label: 'I have kids and am done' },
-                ].map((opt) => (
-                  <button
-                    key={opt.value}
-                    type="button"
-                    onClick={() => handleProfileChange('ownWantChildren', opt.value)}
-                    className={`py-2.5 px-3 rounded-lg border text-sm font-medium transition text-left ${
-                      profileData.ownWantChildren === opt.value
-                        ? 'bg-[#D4537E] text-white border-[#D4537E]'
-                        : 'bg-white text-[#1F2937] border-[#E5E7EB] hover:border-[#D4537E]'
-                    }`}
-                  >
-                    {opt.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-semibold text-[#1F2937] mb-2">Short self-description (optional)</label>
-              <textarea
-                rows={3}
-                value={profileData.bio || ''}
-                onChange={(e) => handleProfileChange('bio', e.target.value)}
-                placeholder="A few sentences about you &mdash; what energizes you, how you spend your time, anything a partner should know up front."
-                className="w-full px-4 py-3 border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#D4537E]"
-              />
-            </div>
-
-            <button
-              onClick={advanceFromProfile}
-              className="w-full py-3 bg-gradient-to-r from-[#D4537E] to-[#C04870] text-white font-semibold rounded-lg hover:shadow-lg transition-all"
-            >
-              Continue to preferences
-            </button>
-          </div>
-        </div>
-      </div>
+      <OnboardingChat
+        initialProfile={profileData}
+        initialCore={coreIntakeData}
+        onComplete={(newProfile, newCore) => {
+          setProfileData(newProfile);
+          setCoreIntakeData(newCore);
+          const updated: UserProfile = {
+            ...profile!,
+            profileData: newProfile,
+            coreIntakeData: newCore,
+            onboardingStep: 'summary',
+            profileStrength: 50,
+          };
+          saveProfile(updated);
+        }}
+      />
     );
   }
 
-  if (profile.onboardingStep === 'core-intake') {
+  if (profile.onboardingStep === 'summary') {
+    const today = new Date();
+    const birth = profileData.birthDate ? new Date(profileData.birthDate) : null;
+    const age = birth ? Math.floor((today.getTime() - birth.getTime()) / (365.25 * 24 * 60 * 60 * 1000)) : null;
+    const kidsLabelMap: { [k: string]: string } = {
+      'yes': 'Yes, definitely',
+      'Yes, definitely': 'Yes, definitely',
+      'maybe': 'Maybe / open',
+      'Maybe / open': 'Maybe / open',
+      'no': "No, doesn't want kids",
+      "No, I don't": "No, doesn't want kids",
+      'have-and-want-more': 'Has kids and wants more',
+      'I have kids and want more': 'Has kids and wants more',
+      'have-and-done': 'Has kids and is done',
+      'I have kids and am done': 'Has kids and is done',
+    };
+    const kidsDisplay = profileData.ownWantChildren ? (kidsLabelMap[profileData.ownWantChildren] || profileData.ownWantChildren) : '—';
+    const deepAnswers: Array<[string, string | undefined]> = [
+      ['Ideal future', coreIntakeData.q6Response],
+      ['Handling conflict', coreIntakeData.q7Response],
+      ['Ideal Saturday', coreIntakeData.q8Response],
+      ['Past-relationship lesson', coreIntakeData.q9Response],
+      ['What success looks like', coreIntakeData.q10Response],
+    ];
+
+    const sectionCard = (title: string, rows: Array<[string, string | null | undefined]>) => (
+      <div className="bg-white rounded-2xl shadow p-6 mb-4">
+        <h3 className="text-lg font-semibold text-[#1F2937] mb-3">{title}</h3>
+        <dl className="divide-y divide-[#E5E7EB]">
+          {rows.map(([label, val], i) => (
+            <div key={i} className="py-2 grid grid-cols-1 sm:grid-cols-3 gap-1">
+              <dt className="text-sm font-medium text-[#6B7280]">{label}</dt>
+              <dd className="text-sm text-[#1F2937] sm:col-span-2 whitespace-pre-wrap">{val && val.toString().trim() ? val : <span className="text-[#9CA3AF] italic">not provided</span>}</dd>
+            </div>
+          ))}
+        </dl>
+      </div>
+    );
+
     return (
       <div className="min-h-screen bg-gradient-to-br from-[#2E1A47] via-[#3D2557] to-[#D4537E]/10 p-4">
-        <div className="max-w-2xl mx-auto">
-          {/* Header */}
-          <div className="flex justify-between items-center mb-12 pt-8">
-            <div>
-              <h1 className="text-3xl font-bold text-white">Let's get to know you</h1>
-              <p className="text-[#D4537E]/80">Core Intake • Step 1 of 3</p>
-            </div>
+        <div className="max-w-3xl mx-auto pt-6">
+          <div className="mb-6">
+            <h1 className="text-3xl font-bold text-white">Here's what I learned about you</h1>
+            <p className="text-[#D4537E]/80 text-sm mt-1">Review and refine before we move on to visual preferences.</p>
+          </div>
+
+          {sectionCard('You', [
+            ['Name', profileData.name],
+            ['Age', age !== null ? String(age) : null],
+            ['Gender', profileData.gender],
+            ['Pronouns', profileData.pronouns],
+            ['Interested in dating', profileData.interestedIn],
+            ['Own stance on kids', kidsDisplay],
+            ['Self-description', profileData.bio],
+          ])}
+
+          {sectionCard('What you\'re looking for', [
+            ['Location', coreIntakeData.location],
+            ['Location flexibility', coreIntakeData.locationFlexibility],
+            ['Age range', (coreIntakeData.ageMin && coreIntakeData.ageMax) ? `${coreIntakeData.ageMin} to ${coreIntakeData.ageMax}` : null],
+            ['Physical attraction', coreIntakeData.attractionImportance],
+            ['Dealbreakers', coreIntakeData.dealbreakersOther],
+          ])}
+
+          {sectionCard('Deeper picture', deepAnswers.map(([k, v]) => [k, v]))}
+
+          <div className="flex flex-col sm:flex-row gap-3 pt-2">
             <button
-              onClick={handleLogout}
-              className="text-white/60 hover:text-white text-sm font-medium"
+              onClick={() => {
+                const updated: UserProfile = {
+                  ...profile!,
+                  onboardingStep: 'profile',
+                  profileStrength: 0,
+                };
+                saveProfile(updated);
+              }}
+              className="flex-1 py-3 px-4 border border-white/40 text-white font-semibold rounded-lg hover:bg-white/10"
             >
-              Logout
+              Restart the conversation
             </button>
-          </div>
-
-          {/* Progress bar */}
-          <div className="w-full bg-white/20 h-2 rounded-full mb-8">
-            <div
-              className="bg-gradient-to-r from-[#D4537E] to-[#C04870] h-full rounded-full transition-all duration-300"
-              style={{ width: `${((currentQuestion + 1) / 9) * 100}%` }}
-            ></div>
-          </div>
-
-          {/* Questions */}
-          <div className="bg-white rounded-2xl shadow-2xl p-8 mb-8">
-            {currentQuestion === 0 && (
-              <div className="space-y-6">
-                <div>
-                  <h2 className="text-2xl font-bold text-[#1F2937] mb-1">
-                    Where do you live?
-                  </h2>
-                  <p className="text-[#6B7280] mb-4">And how flexible are you?</p>
-                </div>
-                <input
-                  type="text"
-                  value={coreIntakeData.location || ''}
-                  onChange={(e) => handleCoreIntakeChange('location', e.target.value)}
-                  placeholder="City, State"
-                  className="w-full px-4 py-3 border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#D4537E]"
-                />
-                <div className="space-y-3">
-                  {['Rooted here', 'Open to relocating', 'Long-distance OK'].map((option) => (
-                    <button
-                      key={option}
-                      onClick={() => handleCoreIntakeChange('locationFlexibility', option)}
-                      className={`w-full p-4 text-left rounded-lg border-2 transition-all ${
-                        coreIntakeData.locationFlexibility === option
-                          ? 'border-[#D4537E] bg-[#FDE9F0]'
-                          : 'border-[#E5E7EB] hover:border-[#D4537E]/50'
-                      }`}
-                    >
-                      <p className="font-semibold text-[#1F2937]">{option}</p>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {currentQuestion === 1 && (
-              <div className="space-y-6">
-                <div>
-                  <h2 className="text-2xl font-bold text-[#1F2937] mb-1">
-                    What's your age range preference?
-                  </h2>
-                  <p className="text-[#6B7280] mb-4">Be realistic but flexible if you want</p>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-semibold text-[#1F2937] mb-2">
-                      Minimum Age
-                    </label>
-                    <input
-                      type="number"
-                      value={coreIntakeData.ageMin || ''}
-                      onChange={(e) => handleCoreIntakeChange('ageMin', parseInt(e.target.value) || undefined)}
-                      placeholder="25"
-                      className="w-full px-4 py-3 border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#D4537E]"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-[#1F2937] mb-2">
-                      Maximum Age
-                    </label>
-                    <input
-                      type="number"
-                      value={coreIntakeData.ageMax || ''}
-                      onChange={(e) => handleCoreIntakeChange('ageMax', parseInt(e.target.value) || undefined)}
-                      placeholder="40"
-                      className="w-full px-4 py-3 border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#D4537E]"
-                    />
-                  </div>
-                </div>
-                <label className="flex items-center gap-3 p-4 border-2 border-[#E5E7EB] rounded-lg hover:border-[#D4537E]/50 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={coreIntakeData.ageFlexible || false}
-                    onChange={(e) => handleCoreIntakeChange('ageFlexible', e.target.checked)}
-                    className="w-5 h-5 rounded accent-[#D4537E]"
-                  />
-                  <span className="font-semibold text-[#1F2937]">I'm flexible about age</span>
-                </label>
-              </div>
-            )}
-
-            {currentQuestion === 2 && (
-              <div className="space-y-6">
-                <div>
-                  <h2 className="text-2xl font-bold text-[#1F2937] mb-1">
-                    How important is physical attraction?
-                  </h2>
-                  <p className="text-[#6B7280] mb-4">There's no wrong answer</p>
-                </div>
-                <div className="space-y-3">
-                  {[
-                    'Need strong chemistry',
-                    'Important but can grow',
-                    'Connection matters more',
-                  ].map((option) => (
-                    <button
-                      key={option}
-                      onClick={() => handleCoreIntakeChange('attractionImportance', option)}
-                      className={`w-full p-4 text-left rounded-lg border-2 transition-all ${
-                        coreIntakeData.attractionImportance === option
-                          ? 'border-[#D4537E] bg-[#FDE9F0]'
-                          : 'border-[#E5E7EB] hover:border-[#D4537E]/50'
-                      }`}
-                    >
-                      <p className="font-semibold text-[#1F2937]">{option}</p>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {currentQuestion === 3 && (
-              <div className="space-y-6">
-                <div>
-                  <h2 className="text-2xl font-bold text-[#1F2937] mb-1">
-                    Any dealbreakers?
-                  </h2>
-                  <p className="text-[#6B7280] mb-4">Check what matters to you</p>
-                </div>
-                <div className="space-y-3">
-                  {[
-                    'No smoking',
-                    'Substance use matters',
-                    'Drinking matters',
-                    'Political alignment',
-                    'Faith alignment',
-                    'Pets matter',
-                  ].map((option) => (
-                    <label
-                      key={option}
-                      className="flex items-center gap-3 p-4 border-2 border-[#E5E7EB] rounded-lg hover:border-[#D4537E]/50 cursor-pointer"
-                    >
-                      <input
-                        type="checkbox"
-                        checked={(coreIntakeData.dealbreakers || []).includes(option)}
-                        onChange={(e) => {
-                          const current = coreIntakeData.dealbreakers || [];
-                          const updated = e.target.checked
-                            ? [...current, option]
-                            : current.filter((d) => d !== option);
-                          handleCoreIntakeChange('dealbreakers', updated);
-                        }}
-                        className="w-5 h-5 rounded accent-[#D4537E]"
-                      />
-                      <span className="font-semibold text-[#1F2937]">{option}</span>
-                    </label>
-                  ))}
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-[#1F2937] mb-2">
-                    Anything else?
-                  </label>
-                  <textarea
-                    value={coreIntakeData.dealbreakersOther || ''}
-                    onChange={(e) => handleCoreIntakeChange('dealbreakersOther', e.target.value)}
-                    placeholder="Tell us about any other dealbreakers..."
-                    className="w-full px-4 py-3 border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#D4537E] min-h-24"
-                  />
-                </div>
-              </div>
-            )}
-
-            {currentQuestion >= 4 && (
-              <div className="space-y-6">
-                <div>
-                  <h2 className="text-2xl font-bold text-[#1F2937] mb-1">
-                    {
-                      [
-                        'What does a really good life look like to you a few years from now?',
-                        'When something is bothering you in a relationship, what\'s your instinct — talk about it right away, sit with it, or hope it resolves itself?',
-                        'Describe your ideal Saturday — not a vacation, just a regular nothing-special Saturday.',
-                        "What's one thing you've learned about yourself from past relationships that changed how you show up now?",
-                        'What would make you feel like this process really worked — even if the first match isn\'t \'the one\'?',
-                      ][currentQuestion - 5]
-                    }
-                  </h2>
-                  <p className="text-[#6B7280] mb-4">Be honest and thoughtful</p>
-                </div>
-                <textarea
-                  value={contextualText}
-                  onChange={(e) => setContextualText(e.target.value)}
-                  placeholder="Your answer..."
-                  className="w-full px-4 py-3 border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#D4537E] min-h-32"
-                />
-                <div className="flex justify-between text-xs mt-2">
-                  <span className={countWords(contextualText) >= MIN_WORDS_PER_CONVERSATIONAL ? 'text-green-600' : 'text-[#6B7280]'}>
-                    {countWords(contextualText)} / {MIN_WORDS_PER_CONVERSATIONAL} words minimum
-                  </span>
-                  {countWords(contextualText) < MIN_WORDS_PER_CONVERSATIONAL && (
-                    <span className="text-[#6B7280]">{MIN_WORDS_PER_CONVERSATIONAL - countWords(contextualText)} more to continue</span>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* Navigation */}
-            <div className="flex gap-4 mt-8 pt-8 border-t border-[#E5E7EB]">
-              <button
-                onClick={() => {
-                  if (currentQuestion > 0) {
-                    setCurrentQuestion(currentQuestion - 1);
-                    setContextualText('');
-                  }
-                }}
-                disabled={currentQuestion === 0}
-                className="flex-1 py-3 px-4 border border-[#D4537E] text-[#D4537E] font-semibold rounded-lg hover:bg-[#FDE9F0] disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Back
-              </button>
-              <button
-                onClick={advanceCoreIntake}
-                disabled={currentQuestion >= 3 && countWords(contextualText) < MIN_WORDS_PER_CONVERSATIONAL}
-                className="flex-1 py-3 px-4 bg-gradient-to-r from-[#D4537E] to-[#C04870] text-white font-semibold rounded-lg hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {currentQuestion === 8 ? 'Complete' : 'Next'}
-              </button>
-            </div>
+            <button
+              onClick={() => {
+                const updated: UserProfile = {
+                  ...profile!,
+                  onboardingStep: 'attraction',
+                  profileStrength: 55,
+                };
+                saveProfile(updated);
+              }}
+              className="flex-1 py-3 px-4 bg-gradient-to-r from-[#D4537E] to-[#C04870] text-white font-semibold rounded-lg hover:shadow-lg"
+            >
+              Looks right — continue
+            </button>
           </div>
         </div>
       </div>
