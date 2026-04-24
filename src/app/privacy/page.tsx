@@ -61,7 +61,7 @@ export default function PrivacyPage() {
       <h2 className="text-xl font-semibold mt-8 mb-2">Contact</h2>
       <p className="text-sm">
         Privacy questions: {'{CONTACT_EMAIL}'}<br/>
-        Mailing address: {'{MAILING_ADDRESS}'}
+        Mailing address: c/o DelawareRegisteredAgent.com, 8 The Green, Suite A, Dover, DE 19901
       </p>
 
       <p className="text-xs text-gray-400 mt-10">
