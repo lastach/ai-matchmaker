@@ -102,6 +102,117 @@ const DEPTH_QUESTIONS = [
   { id: 20, text: 'What would a really fulfilling partnership look like to you?' },
 ];
 
+function MatchPanel({ profileData, coreIntakeData, userId }: { profileData: any; coreIntakeData: any; userId: string | undefined }) {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [result, setResult] = useState<any>(null);
+
+  // Translate the existing intake into a MatchProfile. Missing fields get conservative defaults
+  // so the engine can still produce a ranked pool even before the full research-backed intake ships.
+  const buildProfile = () => {
+    if (!userId) return null;
+    const birthDate = profileData?.birthDate;
+    const today = new Date();
+    const age = birthDate ? Math.floor((today.getTime() - new Date(birthDate).getTime()) / (365.25 * 24 * 60 * 60 * 1000)) : 35;
+    // Default all 12 values to 3 (neutral) until the values question is added to the intake.
+    const valueRatings: Record<string, number> = {
+      honesty: 4, ambition: 3, family: 3, adventure: 3, stability: 3, intellect: 3,
+      spirituality: 3, creativity: 3, wellness: 3, service: 3, independence: 3, playfulness: 3,
+    };
+    return {
+      userId,
+      name: profileData?.name || 'You',
+      age,
+      gender: profileData?.gender || 'Other',
+      interestedIn: profileData?.interestedIn || 'anyone',
+      location: coreIntakeData?.location || '',
+      ownWantChildren: (profileData?.ownWantChildren || 'maybe').replace(/\s.*$/, '').toLowerCase().startsWith('yes')
+        ? 'yes'
+        : (profileData?.ownWantChildren || 'maybe'),
+      preferredAgeMin: coreIntakeData?.ageMin || Math.max(21, age - 7),
+      preferredAgeMax: coreIntakeData?.ageMax || Math.min(65, age + 7),
+      ageFlexible: true,
+      valueRatings,
+      // Inferred — real intake will capture these explicitly in the next pass.
+      attachmentStyle: 'secure',
+      communicationStyle: (coreIntakeData?.q7Response && coreIntakeData.q7Response.toLowerCase().includes('right away')) ? 'direct-when-upset' : 'sit-with-it',
+      lifeGoals: [] as string[],
+      relationshipPriority: 'open-and-serious',
+    };
+  };
+
+  const fetchMatch = async () => {
+    const profile = buildProfile();
+    if (!profile) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch('/api/match/compute', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ profile, n: 1 }),
+      });
+      const data = await res.json();
+      if (!res.ok) { setError(data.error || 'Failed to compute match'); return; }
+      setResult(data);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => { fetchMatch(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [userId]);
+
+  const m = result?.matches?.[0];
+
+  return (
+    <div className="bg-white rounded-2xl p-8 shadow-sm border border-[#E5E7EB]">
+      <div className="flex items-baseline justify-between mb-4">
+        <h2 className="text-2xl font-bold text-[#1F2937]">Your Current Top Match</h2>
+        {result && <p className="text-xs text-[#6B7280]">Scored against {result.pool_size} candidates</p>}
+      </div>
+      {loading && <p className="text-[#6B7280]">Scoring compatibility across attachment style, values, communication, and life goals…</p>}
+      {error && <p className="text-red-600">{error}</p>}
+      {m && !loading && (
+        <div className="bg-gradient-to-br from-[#D4537E]/10 to-[#2E1A47]/10 rounded-lg p-6">
+          <div className="flex items-baseline justify-between mb-4">
+            <p className="text-xl font-semibold text-[#2E1A47]">{m.candidate.name}, {m.candidate.age}</p>
+            <span className="text-2xl font-bold text-[#D4537E]">{m.score}</span>
+          </div>
+          <p className="text-sm text-[#6B7280] mb-4">{m.candidate.gender} in {m.candidate.location}. Attachment: {m.candidate.attachmentStyle}. Priority: {m.candidate.relationshipPriority.replace(/-/g, ' ')}.</p>
+          <div className="grid grid-cols-5 gap-2 mb-4">
+            {[
+              { label: 'Values', v: m.breakdown.values, w: 30 },
+              { label: 'Attach.', v: m.breakdown.attachment, w: 25 },
+              { label: 'Comm.', v: m.breakdown.communication, w: 20 },
+              { label: 'Goals', v: m.breakdown.lifeGoals, w: 20 },
+              { label: 'Priority', v: m.breakdown.relationshipPriority, w: 5 },
+            ].map((b) => (
+              <div key={b.label} className="text-center">
+                <p className="text-xs text-[#6B7280]">{b.label}</p>
+                <p className="text-sm font-semibold text-[#1F2937]">{Math.round(b.v * 100)}%</p>
+                <div className="w-full bg-[#E5E7EB] h-1 rounded mt-1"><div className="bg-gradient-to-r from-[#D4537E] to-[#C04870] h-full rounded" style={{ width: `${Math.round(b.v * 100)}%` }} /></div>
+              </div>
+            ))}
+          </div>
+          {m.notes.length > 0 && (
+            <ul className="text-sm text-[#6B7280] space-y-1 list-disc list-inside">
+              {m.notes.map((n: string, i: number) => (<li key={i}>{n}</li>))}
+            </ul>
+          )}
+          <div className="mt-4 pt-4 border-t border-[#E5E7EB] text-xs text-[#6B7280]">
+            Computed from a 40-profile demo pool. Once real users complete intake, this panel will score against them with the same engine.
+          </div>
+        </div>
+      )}
+      {!m && !loading && !error && (
+        <p className="text-[#6B7280] text-sm">Finish your intake to see your first scored match.</p>
+      )}
+    </div>
+  );
+}
+
 export default function Dashboard() {
   const router = useRouter();
   const [user, setUser] = useState<any>(null);
@@ -854,15 +965,7 @@ export default function Dashboard() {
             </div>
 
             {/* Match Status */}
-            <div className="bg-white rounded-2xl p-8 shadow-sm border border-[#E5E7EB]">
-              <h2 className="text-2xl font-bold text-[#1F2937] mb-4">Your First Match</h2>
-              <div className="bg-gradient-to-br from-[#D4537E]/10 to-[#2E1A47]/10 rounded-lg p-6">
-                <p className="text-[#D4537E] font-semibold mb-2">The match engine isn't live yet.</p>
-                <p className="text-[#6B7280] text-sm leading-relaxed">
-                  You've finished your intake — that part works. Matches require other users to have finished theirs, plus the compatibility scoring layer, neither of which is production-ready today. We'll email you the moment the first match drops; in the meantime you can refine your profile under the Improve tab.
-                </p>
-              </div>
-            </div>
+            <MatchPanel profileData={profileData} coreIntakeData={coreIntakeData} userId={user?.id} />
 
 </div>
         )}
