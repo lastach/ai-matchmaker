@@ -7,10 +7,10 @@ export default function PrivacyPage() {
     <main className="max-w-3xl mx-auto px-6 py-12 text-gray-800 leading-relaxed">
       <a href="/" className="text-sm text-gray-500 hover:text-gray-700">&larr; Back</a>
       <h1 className="text-3xl font-bold mt-4 mb-2">Privacy Policy</h1>
-      <p className="text-sm text-gray-500 mb-6">Effective {'{EFFECTIVE_DATE}'}</p>
+      <p className="text-sm text-gray-500 mb-6">Effective April 24, 2026</p>
 
       <p>
-        AI Matchmaker ({'{CONTROLLER_LEGAL_NAME}'}, &ldquo;we,&rdquo; &ldquo;us&rdquo;) operates an AI-assisted matchmaking service that helps adults 18+ identify high-quality potential partners at ai-matchmaker-pi.vercel.app. This page explains what we collect, how we use it, and the rights you have.
+        AI Matchmaker (Laurie Stach Holdings LLC, &ldquo;we,&rdquo; &ldquo;us&rdquo;) operates an AI-assisted matchmaking service that helps adults 18+ identify high-quality potential partners at ai-matchmaker-pi.vercel.app. This page explains what we collect, how we use it, and the rights you have.
       </p>
 
       <h2 className="text-xl font-semibold mt-8 mb-2">What we collect</h2>

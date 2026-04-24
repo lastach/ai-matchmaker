@@ -7,10 +7,10 @@ export default function TermsPage() {
     <main className="max-w-3xl mx-auto px-6 py-12 text-gray-800 leading-relaxed">
       <a href="/" className="text-sm text-gray-500 hover:text-gray-700">&larr; Back</a>
       <h1 className="text-3xl font-bold mt-4 mb-2">Terms of Service</h1>
-      <p className="text-sm text-gray-500 mb-6">Effective {'{EFFECTIVE_DATE}'}</p>
+      <p className="text-sm text-gray-500 mb-6">Effective April 24, 2026</p>
 
       <p>
-        These terms are a contract between you and {'{CONTROLLER_LEGAL_NAME}'} for use of AI Matchmaker (the &ldquo;Service&rdquo;). By creating an account or using the Service, you accept these terms.
+        These terms are a contract between you and Laurie Stach Holdings LLC for use of AI Matchmaker (the &ldquo;Service&rdquo;). By creating an account or using the Service, you accept these terms.
       </p>
 
       <h2 className="text-xl font-semibold mt-8 mb-2">Eligibility</h2>
@@ -63,7 +63,7 @@ export default function TermsPage() {
 
       <h2 className="text-xl font-semibold mt-8 mb-2">Governing law</h2>
       <p className="text-sm">
-        These terms are governed by the laws of {'{GOVERNING_LAW_STATE}'}, without regard to conflict-of-law rules.
+        These terms are governed by the laws of the State of Delaware, without regard to conflict-of-law rules.
       </p>
 
       <h2 className="text-xl font-semibold mt-8 mb-2">Changes to these terms</h2>
