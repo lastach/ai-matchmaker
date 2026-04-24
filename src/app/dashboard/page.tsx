@@ -855,10 +855,12 @@ export default function Dashboard() {
 
             {/* Match Status */}
             <div className="bg-white rounded-2xl p-8 shadow-sm border border-[#E5E7EB]">
-              <h2 className="text-2xl font-bold text-[#1F2937] mb-6">Your First Match</h2>
-              <div className="bg-gradient-to-br from-[#D4537E]/10 to-[#2E1A47]/10 rounded-lg p-8 text-center">
-                <p className="text-[#D4537E] font-semibold mb-2">Your first match is being prepared</p>
-                <p className="text-[#6B7280]">We estimate it'll be ready in 2-3 days</p>
+              <h2 className="text-2xl font-bold text-[#1F2937] mb-4">Your First Match</h2>
+              <div className="bg-gradient-to-br from-[#D4537E]/10 to-[#2E1A47]/10 rounded-lg p-6">
+                <p className="text-[#D4537E] font-semibold mb-2">The match engine isn't live yet.</p>
+                <p className="text-[#6B7280] text-sm leading-relaxed">
+                  You've finished your intake — that part works. Matches require other users to have finished theirs, plus the compatibility scoring layer, neither of which is production-ready today. We'll email you the moment the first match drops; in the meantime you can refine your profile under the Improve tab.
+                </p>
               </div>
             </div>
 
