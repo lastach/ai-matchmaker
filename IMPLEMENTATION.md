@@ -1,4 +1,4 @@
-# AI Matchmaker MVP - Implementation Guide
+# Amorlay MVP - Implementation Guide
 
 ## Project Overview
 

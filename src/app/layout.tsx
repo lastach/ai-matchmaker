@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "AI Matchmaker",
+  title: "Amorlay",
   description: "One match. One memo. One date.",
 };
 

@@ -122,7 +122,7 @@ export default function Home() {
             <div className="bg-white/5 rounded-xl p-5 border border-white/10">
               <p className="text-white/80 text-sm leading-relaxed">
                 Dating apps give you hundreds of options and zero insight.
-                AI Matchmaker gives you one match backed by real compatibility science:
+                Amorlay gives you one match backed by real compatibility science:
                 attachment style, communication patterns, values alignment, and mutual attraction.
               </p>
             </div>
@@ -190,7 +190,7 @@ export default function Home() {
         {/* Footer */}
         <div className="text-center mt-12">
           <p className="text-sm text-white/40">
-            AI Matchmaker &bull; Privacy-first. Science-backed. No swiping.
+            Amorlay &bull; Privacy-first. Science-backed. No swiping.
           </p>
         </div>
       </div>

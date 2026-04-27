@@ -1,5 +1,5 @@
 export const metadata = {
-  title: 'Privacy Policy | AI Matchmaker',
+  title: 'Privacy Policy | Amorlay',
 };
 
 export default function PrivacyPage() {
@@ -10,7 +10,7 @@ export default function PrivacyPage() {
       <p className="text-sm text-gray-500 mb-6">Effective April 24, 2026</p>
 
       <p>
-        AI Matchmaker (Laurie Stach Holdings LLC, &ldquo;we,&rdquo; &ldquo;us&rdquo;) operates an AI-assisted matchmaking service that helps adults 18+ identify high-quality potential partners at ai-matchmaker-pi.vercel.app. This page explains what we collect, how we use it, and the rights you have.
+        Amorlay (Laurie Stach Holdings LLC, &ldquo;we,&rdquo; &ldquo;us&rdquo;) operates an AI-assisted matchmaking service that helps adults 18+ identify high-quality potential partners at www.amorlay.com. This page explains what we collect, how we use it, and the rights you have.
       </p>
 
       <h2 className="text-xl font-semibold mt-8 mb-2">What we collect</h2>
@@ -25,7 +25,7 @@ export default function PrivacyPage() {
 
       <h2 className="text-xl font-semibold mt-8 mb-2">How we use it</h2>
       <p className="text-sm">
-        We use your data to operate AI Matchmaker: sign you in, save your profile, render your dashboard, and deliver the feature set of the product you&apos;re using. We do not use your data to target ads.
+        We use your data to operate Amorlay: sign you in, save your profile, render your dashboard, and deliver the feature set of the product you&apos;re using. We do not use your data to target ads.
       </p>
 
       <h2 className="text-xl font-semibold mt-8 mb-2">What we share</h2>
@@ -41,7 +41,7 @@ export default function PrivacyPage() {
 
       <h2 className="text-xl font-semibold mt-8 mb-2">Your rights</h2>
       <ul className="list-disc pl-6 space-y-1 text-sm">
-        <li>Access and download your data by emailing {'{CONTACT_EMAIL}'}.</li>
+        <li>Access and download your data by emailing support@amorlay.com.</li>
         <li>Correct or update your data from inside the app.</li>
         <li>Delete your account from Settings. Deletion is immediate; processor copies are purged within 30 days.</li>
         <li>If you are in the EEA or UK, object to processing or lodge a complaint with your data protection authority.</li>
@@ -50,17 +50,17 @@ export default function PrivacyPage() {
 
       <h2 className="text-xl font-semibold mt-8 mb-2">Children</h2>
       <p className="text-sm">
-        AI Matchmaker is not intended for anyone under 13 (or 16 in the EEA/UK). We do not knowingly collect data from children. If you believe a child has created an account, email {'{CONTACT_EMAIL}'} and we will delete it.
+        Amorlay is not intended for anyone under 13 (or 16 in the EEA/UK). We do not knowingly collect data from children. If you believe a child has created an account, email support@amorlay.com and we will delete it.
       </p>
 
       <h2 className="text-xl font-semibold mt-8 mb-2">Google API Services User Data Policy</h2>
       <p className="text-sm">
-        AI Matchmaker&apos;s use and transfer of information received from Google APIs to any other app will adhere to the Google API Services User Data Policy, including the Limited Use requirements. We do not share Google user data with third parties, do not use it for advertising, and do not allow humans to read it except where necessary for security, to comply with law, or with your explicit consent.
+        Amorlay&apos;s use and transfer of information received from Google APIs to any other app will adhere to the Google API Services User Data Policy, including the Limited Use requirements. We do not share Google user data with third parties, do not use it for advertising, and do not allow humans to read it except where necessary for security, to comply with law, or with your explicit consent.
       </p>
 
       <h2 className="text-xl font-semibold mt-8 mb-2">Contact</h2>
       <p className="text-sm">
-        Privacy questions: {'{CONTACT_EMAIL}'}<br/>
+        Privacy questions: support@amorlay.com<br/>
         Mailing address: c/o DelawareRegisteredAgent.com, 8 The Green, Suite A, Dover, DE 19901
       </p>
 

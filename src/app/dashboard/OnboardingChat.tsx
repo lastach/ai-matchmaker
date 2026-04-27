@@ -91,7 +91,7 @@ const TURNS: Turn[] = [
       if (Number.isNaN(d.getTime())) return 'That date didn\'t parse, try again.';
       const now = new Date();
       const age = Math.floor((now.getTime() - d.getTime()) / (365.25 * 24 * 60 * 60 * 1000));
-      if (age < 18) return 'AI Matchmaker is 18+ only.';
+      if (age < 18) return 'Amorlay is 18+ only.';
       if (age > 99) return 'That can\'t be right — give it another shot.';
       return null;
     },

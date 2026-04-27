@@ -873,13 +873,13 @@ export default function Dashboard() {
 
   // POST-ONBOARDING DASHBOARD
   return (
-    <TrialGate userId={user?.id} productName="AI Matchmaker">
+    <TrialGate userId={user?.id} productName="Amorlay">
     <div className="min-h-screen bg-[#FBF9F7]">
       {/* Header */}
       <div className="bg-gradient-to-r from-[#2E1A47] to-[#3D2557] text-white p-6 flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold">Your Dashboard</h1>
-          <p className="text-[#D4537E]">Welcome to AI Matchmaker</p>
+          <p className="text-[#D4537E]">Welcome to Amorlay</p>
         </div>
         <button
           onClick={handleLogout}

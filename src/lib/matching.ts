@@ -1,5 +1,5 @@
 /**
- * Matching engine for AI Matchmaker.
+ * Matching engine for Amorlay.
  *
  * Based on the product thesis from the investor deck:
  *  - Deep intake: values, attachment style, communication style, life goals, relationship priority

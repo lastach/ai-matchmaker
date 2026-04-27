@@ -1,5 +1,5 @@
 export const metadata = {
-  title: 'Terms of Service | AI Matchmaker',
+  title: 'Terms of Service | Amorlay',
 };
 
 export default function TermsPage() {
@@ -10,7 +10,7 @@ export default function TermsPage() {
       <p className="text-sm text-gray-500 mb-6">Effective April 24, 2026</p>
 
       <p>
-        These terms are a contract between you and Laurie Stach Holdings LLC for use of AI Matchmaker (the &ldquo;Service&rdquo;). By creating an account or using the Service, you accept these terms.
+        These terms are a contract between you and Laurie Stach Holdings LLC for use of Amorlay (the &ldquo;Service&rdquo;). By creating an account or using the Service, you accept these terms.
       </p>
 
       <h2 className="text-xl font-semibold mt-8 mb-2">Eligibility</h2>
@@ -20,7 +20,7 @@ export default function TermsPage() {
 
       <h2 className="text-xl font-semibold mt-8 mb-2">Your account</h2>
       <p className="text-sm">
-        You are responsible for keeping your account credentials secure. Notify us at {'{CONTACT_EMAIL}'} immediately if you suspect unauthorized access. You may delete your account at any time from Settings.
+        You are responsible for keeping your account credentials secure. Notify us at support@amorlay.com immediately if you suspect unauthorized access. You may delete your account at any time from Settings.
       </p>
 
       <h2 className="text-xl font-semibold mt-8 mb-2">Your content</h2>
@@ -38,12 +38,12 @@ export default function TermsPage() {
 
       <h2 className="text-xl font-semibold mt-8 mb-2">Beta status</h2>
       <p className="text-sm">
-        AI Matchmaker is currently in active development. Features may change, data may be reset during maintenance windows, and downtime is possible. We will give reasonable notice of any destructive changes.
+        Amorlay is currently in active development. Features may change, data may be reset during maintenance windows, and downtime is possible. We will give reasonable notice of any destructive changes.
       </p>
 
       <h2 className="text-xl font-semibold mt-8 mb-2">No professional advice</h2>
       <p className="text-sm">
-        The Service is not a substitute for legal, medical, financial, or other professional advice. AI Matchmaker may generate drafts or suggestions, but you are solely responsible for reviewing, correcting, and acting on any output.
+        The Service is not a substitute for legal, medical, financial, or other professional advice. Amorlay may generate drafts or suggestions, but you are solely responsible for reviewing, correcting, and acting on any output.
       </p>
 
       <h2 className="text-xl font-semibold mt-8 mb-2">Disclaimer of warranties</h2>
@@ -68,11 +68,11 @@ export default function TermsPage() {
 
       <h2 className="text-xl font-semibold mt-8 mb-2">Changes to these terms</h2>
       <p className="text-sm">
-        We will post changes to these terms at ai-matchmaker-pi.vercel.app/terms. If the changes are material we will also email active users. Continued use after the change takes effect means you accept the updated terms.
+        We will post changes to these terms at www.amorlay.com/terms. If the changes are material we will also email active users. Continued use after the change takes effect means you accept the updated terms.
       </p>
 
       <h2 className="text-xl font-semibold mt-8 mb-2">Contact</h2>
-      <p className="text-sm">Questions: {'{CONTACT_EMAIL}'}</p>
+      <p className="text-sm">Questions: support@amorlay.com</p>
 
       <p className="text-xs text-gray-400 mt-10">
         Values shown in curly-brace placeholders will be replaced with real legal entity information before public release.
