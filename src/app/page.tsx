@@ -73,11 +73,7 @@ export default function Home() {
       <div className="max-w-4xl mx-auto">
         {/* Hero */}
         <div className="text-center mb-12">
-          <div className="flex justify-center mb-6">
-            <div className="w-16 h-16 bg-gradient-to-br from-[#D4537E] to-[#2E1A47] rounded-full flex items-center justify-center">
-              <span className="text-white text-2xl font-bold">&hearts;</span>
-            </div>
-          </div>
+          <img src="/logo.svg" alt="Amorlay" className="h-16 mx-auto mb-6" />
           <h1 className="text-4xl md:text-5xl font-bold text-white mb-4 leading-tight">
             One match. One memo. One date.
           </h1>
