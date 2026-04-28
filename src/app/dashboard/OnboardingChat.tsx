@@ -40,6 +40,10 @@ export type ChatCoreIntakeData = {
   q8Response?: string;
   q9Response?: string;
   q10Response?: string;
+  topValue?: string;
+  attachmentSelf?: string;
+  topLifeGoal?: string;
+  priorityChoice?: string;
 };
 
 type Turn = {
@@ -274,6 +278,51 @@ const TURNS: Turn[] = [
     prompt: () =>
       "Last one: what would make you feel like this process really worked — even if the first match isn't \"the one\"?",
     ack: () => "Perfect. That gives me a clear target.",
+  },
+  {
+    id: 'topValue',
+    target: 'core',
+    field: 'topValue',
+    input: 'choices',
+    choices: ['Honesty', 'Family', 'Adventure', 'Wellness', 'Creativity', 'Spirituality', 'Ambition', 'Independence'],
+    prompt: () => "A few quick ones to sharpen the match. First: which of these matters MOST to you?",
+    ack: (a) => `${a} — noted.`,
+  },
+  {
+    id: 'attachmentSelf',
+    target: 'core',
+    field: 'attachmentSelf',
+    input: 'choices',
+    choices: [
+      'I feel comfortable being close and depending on others',
+      'I worry about whether my partner really cares about me',
+      'I feel uncomfortable when things get too close',
+      'It feels intense and confusing',
+    ],
+    prompt: () => "When you're in a close relationship, which sounds most like you?",
+    ack: () => "Got it.",
+  },
+  {
+    id: 'topLifeGoal',
+    target: 'core',
+    field: 'topLifeGoal',
+    input: 'choices',
+    choices: ['Build career', 'Start a family', 'Travel often', 'Health & wellness', 'Creative work', 'Service / impact'],
+    prompt: () => "What's your biggest life focus over the next few years?",
+    ack: (a) => `${a} — that helps a lot.`,
+  },
+  {
+    id: 'priorityChoice',
+    target: 'core',
+    field: 'priorityChoice',
+    input: 'choices',
+    choices: [
+      'Actively looking for a serious partner',
+      'Open to something serious if it clicks',
+      'Casually open, not in a rush',
+    ],
+    prompt: () => "Last question: where are you with dating right now?",
+    ack: () => "Perfect. That's everything I need.",
   },
 ];
 

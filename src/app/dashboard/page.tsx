@@ -115,11 +115,38 @@ function MatchPanel({ profileData, coreIntakeData, userId }: { profileData: any;
     const birthDate = profileData?.birthDate;
     const today = new Date();
     const age = birthDate ? Math.floor((today.getTime() - new Date(birthDate).getTime()) / (365.25 * 24 * 60 * 60 * 1000)) : 35;
-    // Default all 12 values to 3 (neutral) until the values question is added to the intake.
+    // Default all 12 values to 3 (neutral). Bump the user's selected top value to 5 (essential).
     const valueRatings: Record<string, number> = {
-      honesty: 4, ambition: 3, family: 3, adventure: 3, stability: 3, intellect: 3,
+      honesty: 3, ambition: 3, family: 3, adventure: 3, stability: 3, intellect: 3,
       spirituality: 3, creativity: 3, wellness: 3, service: 3, independence: 3, playfulness: 3,
     };
+    const topValueKey = (coreIntakeData?.topValue || '').toLowerCase().replace(/[^a-z]/g, '');
+    if (topValueKey && valueRatings[topValueKey] !== undefined) valueRatings[topValueKey] = 5;
+    // Map attachment self-report to engine label
+    const attachmentMap: Record<string, string> = {
+      'i feel comfortable being close and depending on others': 'secure',
+      'i worry about whether my partner really cares about me': 'anxious',
+      'i feel uncomfortable when things get too close': 'avoidant',
+      'it feels intense and confusing': 'disorganized',
+    };
+    const attachmentStyle = (attachmentMap[(coreIntakeData?.attachmentSelf || '').toLowerCase()] || 'secure') as 'secure' | 'anxious' | 'avoidant' | 'disorganized';
+    // Map life goal label to engine slug
+    const goalMap: Record<string, string> = {
+      'build career': 'build-career',
+      'start a family': 'start-family',
+      'travel often': 'travel-often',
+      'health & wellness': 'wellness',
+      'creative work': 'creative-work',
+      'service / impact': 'service-impact',
+    };
+    const lifeGoals = coreIntakeData?.topLifeGoal && goalMap[coreIntakeData.topLifeGoal.toLowerCase()] ? [goalMap[coreIntakeData.topLifeGoal.toLowerCase()]] : [];
+    // Map priority choice
+    const priorityMap: Record<string, string> = {
+      'actively looking for a serious partner': 'actively-looking',
+      'open to something serious if it clicks': 'open-and-serious',
+      'casually open, not in a rush': 'casually-open',
+    };
+    const relationshipPriority = (priorityMap[(coreIntakeData?.priorityChoice || '').toLowerCase()] || 'open-and-serious') as 'actively-looking' | 'open-and-serious' | 'casually-open';
     return {
       userId,
       name: profileData?.name || 'You',
@@ -134,11 +161,10 @@ function MatchPanel({ profileData, coreIntakeData, userId }: { profileData: any;
       preferredAgeMax: coreIntakeData?.ageMax || Math.min(65, age + 7),
       ageFlexible: true,
       valueRatings,
-      // Inferred — real intake will capture these explicitly in the next pass.
-      attachmentStyle: 'secure',
+      attachmentStyle,
       communicationStyle: (coreIntakeData?.q7Response && coreIntakeData.q7Response.toLowerCase().includes('right away')) ? 'direct-when-upset' : 'sit-with-it',
-      lifeGoals: [] as string[],
-      relationshipPriority: 'open-and-serious',
+      lifeGoals,
+      relationshipPriority,
     };
   };
 
