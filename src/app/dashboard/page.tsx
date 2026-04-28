@@ -1135,6 +1135,32 @@ export default function Dashboard() {
           </div>
         )}
       </div>
+
+      {/* Delete Account — GDPR/CCPA */}
+      <div className="mt-12 pt-6 border-t border-gray-200 px-6 max-w-4xl mx-auto">
+        <details className="text-xs text-gray-500">
+          <summary className="cursor-pointer hover:text-gray-700">Account & data</summary>
+          <div className="mt-3 space-y-2">
+            <button
+              onClick={async () => {
+                if (!confirm('Permanently delete your account and all your data? This cannot be undone.')) return;
+                if (!confirm('Last chance — delete your account?')) return;
+                const r = await fetch('/api/account/delete', { method: 'POST' });
+                const d = await r.json();
+                if (r.ok) {
+                  alert('Your account has been deleted.');
+                  window.location.href = '/';
+                } else {
+                  alert('Could not delete: ' + (d.error || 'unknown error'));
+                }
+              }}
+              className="text-red-600 hover:text-red-800 underline"
+            >
+              Delete my account and all my data
+            </button>
+          </div>
+        </details>
+      </div>
     </div>
     </TrialGate>
   );
