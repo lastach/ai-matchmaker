@@ -107,6 +107,8 @@ function MatchPanel({ profileData, coreIntakeData, userId }: { profileData: any;
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<any>(null);
+  const [memo, setMemo] = useState<string | null>(null);
+  const [memoLoading, setMemoLoading] = useState(false);
 
   // Translate the existing intake into a MatchProfile. Missing fields get conservative defaults
   // so the engine can still produce a ranked pool even before the full research-backed intake ships.
@@ -182,6 +184,26 @@ function MatchPanel({ profileData, coreIntakeData, userId }: { profileData: any;
       const data = await res.json();
       if (!res.ok) { setError(data.error || 'Failed to compute match'); return; }
       setResult(data);
+      // Fire-and-forget AI memo generation
+      const top = data?.matches?.[0];
+      if (top) {
+        setMemoLoading(true);
+        fetch('/api/match/memo', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            user: profile,
+            candidate: top.candidate,
+            breakdown: top.breakdown,
+            score: top.score,
+            notes: top.notes,
+          }),
+        })
+          .then(r => r.json())
+          .then(d => { if (d.memo) setMemo(d.memo); })
+          .catch(() => {})
+          .finally(() => setMemoLoading(false));
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
     } finally {
@@ -227,6 +249,15 @@ function MatchPanel({ profileData, coreIntakeData, userId }: { profileData: any;
             <ul className="text-sm text-[#6B7280] space-y-1 list-disc list-inside">
               {m.notes.map((n: string, i: number) => (<li key={i}>{n}</li>))}
             </ul>
+          )}
+          {memoLoading && !memo && (
+            <p className="mt-4 pt-4 border-t border-[#E5E7EB] text-sm text-[#6B7280] italic">Writing your match memo...</p>
+          )}
+          {memo && (
+            <div className="mt-4 pt-4 border-t border-[#E5E7EB]">
+              <p className="text-xs uppercase tracking-wide text-[#6B7280] mb-2">Match memo</p>
+              <div className="text-sm text-[#1F2937] leading-relaxed whitespace-pre-line">{memo}</div>
+            </div>
           )}
           <div className="mt-4 pt-4 border-t border-[#E5E7EB] text-xs text-[#6B7280]">
             Computed from a 40-profile demo pool. Once real users complete intake, this panel will score against them with the same engine.
