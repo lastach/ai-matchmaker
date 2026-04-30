@@ -250,6 +250,27 @@ function MatchPanel({ profileData, coreIntakeData, userId }: { profileData: any;
               {m.notes.map((n: string, i: number) => (<li key={i}>{n}</li>))}
             </ul>
           )}
+          {/* Report / Block */}
+          <div className="mt-3 pt-3 border-t border-[#E5E7EB] flex items-center gap-3 text-xs text-[#6B7280]">
+            <span>Concerned about this match?</span>
+            <button
+              onClick={async () => {
+                const reason = prompt('Why are you reporting this match? (e.g., fake profile, inappropriate behavior, safety concern)');
+                if (!reason || !reason.trim()) return;
+                const details = prompt('Anything else you want to add? (optional)') || '';
+                const r = await fetch('/api/match/report', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ reportedUserId: m.candidate.userId, reason: reason.trim(), details }),
+                });
+                if (r.ok) alert('Thanks. The report has been logged. We review every report.');
+                else alert('Could not submit report.');
+              }}
+              className="text-red-600 hover:text-red-800 underline"
+            >
+              Report
+            </button>
+          </div>
           {memoLoading && !memo && (
             <p className="mt-4 pt-4 border-t border-[#E5E7EB] text-sm text-[#6B7280] italic">Writing your match memo...</p>
           )}
