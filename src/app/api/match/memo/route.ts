@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { checkRateLimit } from '@/lib/rateLimit'
 
 /**
  * POST /api/match/memo
@@ -11,6 +12,12 @@ import { NextRequest, NextResponse } from 'next/server'
  */
 export async function POST(request: NextRequest) {
   try {
+    // Rate limit: 10 requests / minute per IP. AI memo is expensive.
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0] || 'anon'
+    const rl = await checkRateLimit('memo:' + ip)
+    if (!rl.success) {
+      return NextResponse.json({ error: 'Rate limit exceeded. Try again in a minute.' }, { status: 429, headers: { 'Retry-After': String(rl.retryAfter || 60) } })
+    }
     const apiKey = process.env.OPENAI_API_KEY
     if (!apiKey) {
       return NextResponse.json({ error: 'OPENAI_API_KEY not configured' }, { status: 500 })
