@@ -302,6 +302,19 @@ export default function Dashboard() {
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [coreIntakeData, setCoreIntakeData] = useState<CoreIntakeData>({});
   const [profileData, setProfileData] = useState<ProfileData>({});
+
+  // Hard age gate — required for app store + ToS compliance. If the user's stored
+  // birth date computes to <18, block the dashboard and sign them out.
+  useEffect(() => {
+    if (!profileData?.birthDate) return;
+    const ageMs = Date.now() - new Date(profileData.birthDate).getTime();
+    const ageYrs = ageMs / (365.25 * 24 * 60 * 60 * 1000);
+    if (Number.isFinite(ageYrs) && ageYrs < 18) {
+      alert('Amorlay is 18+ only. Your account will be signed out.');
+      supabase.auth.signOut().finally(() => router.push('/'));
+    }
+  }, [profileData?.birthDate]);
+
   const [contextualText, setContextualText] = useState('');
 
   // Attraction state
