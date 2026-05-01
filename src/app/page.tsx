@@ -53,6 +53,7 @@ export default function Home() {
         });
 
         if (signUpError) throw signUpError;
+        try { fetch('/api/auth/welcome', { method: 'POST' }).catch(() => {}); } catch {}
         if (data.user) {
           router.push('/dashboard');
         }
