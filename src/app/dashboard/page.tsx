@@ -286,6 +286,9 @@ export default function Dashboard() {
   const [coreIntakeData, setCoreIntakeData] = useState<CoreIntakeData>({});
   const [profileData, setProfileData] = useState<ProfileData>({});
 
+
+  useEffect(() => { if (user?.id) { refreshPhotos() } }, [user?.id])
+
   // Hard age gate — required for app store + ToS compliance. If the user's stored
   // birth date computes to <18, block the dashboard and sign them out.
   useEffect(() => {
@@ -487,41 +490,49 @@ export default function Dashboard() {
     saveProfile(newProfile);
   };
 
-  // Photo handlers
-  const handleUserPhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.currentTarget.files;
-    if (files) {
-      const newPhotos = [...userPhotos];
-      for (let i = 0; i < Math.min(files.length, 3); i++) {
-        const file = files[i];
-        const reader = new FileReader();
-        reader.onload = (event) => {
-          if (event.target?.result) {
-            newPhotos.push(event.target.result as string);
-            setUserPhotos(newPhotos.slice(0, 3));
-          }
-        };
-        reader.readAsDataURL(file);
-      }
-    }
+  // Photo handlers — upload to Supabase Storage via /api/photos/upload, then refresh via /api/photos/list
+  const refreshPhotos = async () => {
+    try {
+      const r = await fetch('/api/photos/list');
+      const d = await r.json();
+      const profileUrls: string[] = (d.photos || []).filter((p: any) => p.slot === 'profile').map((p: any) => p.url);
+      const attractionUrls: string[] = (d.photos || []).filter((p: any) => p.slot === 'attraction').map((p: any) => p.url);
+      setUserPhotos(profileUrls.slice(0, 3));
+      setAttractionPhotos(attractionUrls.slice(0, 5));
+    } catch {}
   };
 
-  const handleAttractionPhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.currentTarget.files;
-    if (files) {
-      const newPhotos = [...attractionPhotos];
-      for (let i = 0; i < Math.min(files.length, 5); i++) {
-        const file = files[i];
-        const reader = new FileReader();
-        reader.onload = (event) => {
-          if (event.target?.result) {
-            newPhotos.push(event.target.result as string);
-            setAttractionPhotos(newPhotos.slice(0, 5));
-          }
-        };
-        reader.readAsDataURL(file);
-      }
+  const uploadPhoto = async (file: File, slot: 'profile' | 'attraction') => {
+    const fd = new FormData();
+    fd.append('file', file);
+    fd.append('slot', slot);
+    const r = await fetch('/api/photos/upload', { method: 'POST', body: fd });
+    if (!r.ok) {
+      const d = await r.json().catch(() => ({}));
+      alert(d.error || 'Photo upload failed.');
+      return false;
     }
+    return true;
+  };
+
+  const handleUserPhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.currentTarget.files;
+    if (!files) return;
+    const slots = Math.min(files.length, 3 - userPhotos.length);
+    for (let i = 0; i < slots; i++) {
+      await uploadPhoto(files[i], 'profile');
+    }
+    await refreshPhotos();
+  };
+
+  const handleAttractionPhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.currentTarget.files;
+    if (!files) return;
+    const slots = Math.min(files.length, 5 - attractionPhotos.length);
+    for (let i = 0; i < slots; i++) {
+      await uploadPhoto(files[i], 'attraction');
+    }
+    await refreshPhotos();
   };
 
   const completePhotosStep = () => {
