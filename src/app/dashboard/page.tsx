@@ -1047,81 +1047,7 @@ export default function Dashboard() {
         )}
 
         {activeTab === 'improve' && (
-          <div className="space-y-8">
-            <div>
-              <h2 className="text-3xl font-bold text-[#1F2937] mb-2">Deepen Your Profile</h2>
-              <p className="text-[#6B7280]">
-                Answer a few more questions to improve match quality. Each answer increases your profile strength.
-              </p>
-            </div>
-
-            {/* Depth Questions Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {DEPTH_QUESTIONS.map((question) => {
-                const answered = depthResponses[question.id];
-                return (
-                  <div
-                    key={question.id}
-                    onClick={() => setCurrentDepthQuestion(question.id)}
-                    className={`bg-white rounded-2xl p-6 shadow-sm border-2 cursor-pointer transition-all hover:border-[#D4537E] ${
-                      answered
-                        ? 'border-[#86EFAC] bg-[#F0FDF4]'
-                        : 'border-[#E5E7EB]'
-                    }`}
-                  >
-                    <div className="flex gap-4">
-                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#D4537E] to-[#2E1A47] flex items-center justify-center text-white text-sm font-bold flex-shrink-0">
-                        {question.id}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-semibold text-[#1F2937] text-sm leading-snug mb-2">
-                          {question.text}
-                        </p>
-                        {answered ? (
-                          <div className="text-xs text-[#6B7280] bg-white/50 rounded p-2 line-clamp-2">
-                            {answered}
-                          </div>
-                        ) : (
-                          <p className="text-xs text-[#9CA3AF]">Not answered</p>
-                        )}
-                      </div>
-                      {answered && (
-                        <div className="text-xl">✓</div>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-
-            {/* Modal for answering */}
-            {currentDepthQuestion > 0 && (
-              <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-                <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[80vh] overflow-y-auto p-8">
-                  <h3 className="text-2xl font-bold text-[#1F2937] mb-4">
-                    {DEPTH_QUESTIONS.find((q) => q.id === currentDepthQuestion)?.text}
-                  </h3>
-                  <textarea
-                    value={depthResponses[currentDepthQuestion] || ''}
-                    onChange={(e) => {
-                      const value = e.target.value;
-                      handleDepthResponse(currentDepthQuestion, value);
-                    }}
-                    placeholder="Your thoughtful answer here..."
-                    className="w-full px-4 py-3 border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#D4537E] min-h-40 mb-6"
-                  />
-                  <div className="flex gap-4">
-                    <button
-                      onClick={() => setCurrentDepthQuestion(0)}
-                      className="flex-1 py-3 px-4 border border-[#D4537E] text-[#D4537E] font-semibold rounded-lg hover:bg-[#FDE9F0]"
-                    >
-                      Close
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
+          <DepthChat depthResponses={depthResponses} onAnswer={handleDepthResponse} />
         )}
 
         {activeTab === 'settings' && (
@@ -1213,3 +1139,88 @@ export default function Dashboard() {
     </TrialGate>
   );
 }
+
+
+function DepthChat({ depthResponses, onAnswer }: { depthResponses: { [k: number]: string }; onAnswer: (id: number, v: string) => void }) {
+  type Msg = { role: 'assistant' | 'user'; content: string };
+  // Find the next unanswered question. If all answered, we are at the end.
+  const unanswered = DEPTH_QUESTIONS.filter(q => !depthResponses[q.id] || depthResponses[q.id].trim().length < 10);
+  const total = DEPTH_QUESTIONS.length;
+  const answeredCount = total - unanswered.length;
+  const initialMsgs: Msg[] = (() => {
+    if (unanswered.length === 0) {
+      return [
+        { role: 'assistant', content: "All ten depth questions answered. Your profile is as deep as we ask for." },
+      ];
+    }
+    return [
+      { role: 'assistant', content: answeredCount === 0
+        ? "Want to go deeper? I'll ask you a few questions one at a time. The more you share, the better I can match you. Skip any with 'skip'."
+        : `You've answered ${answeredCount} of ${total}. Want to keep going? Same as before — answer or say 'skip'.` },
+      { role: 'assistant', content: unanswered[0].text },
+    ];
+  })();
+  const [messages, setMessages] = useState<Msg[]>(initialMsgs);
+  const [input, setInput] = useState('');
+  const [done, setDone] = useState(unanswered.length === 0);
+  const [idx, setIdx] = useState(0); // index into unanswered
+
+  const submit = (raw: string) => {
+    const text = raw.trim();
+    if (!text) return;
+    const cur = unanswered[idx];
+    if (!cur) return;
+    setMessages(prev => [...prev, { role: 'user', content: text } as Msg]);
+    if (text.toLowerCase() !== 'skip') onAnswer(cur.id, text);
+    setInput('');
+    const next = unanswered[idx + 1];
+    setTimeout(() => {
+      if (next) {
+        setMessages(prev => [...prev, { role: 'assistant', content: 'Got it.' } as Msg, { role: 'assistant', content: next.text } as Msg]);
+        setIdx(i => i + 1);
+      } else {
+        setMessages(prev => [...prev, { role: 'assistant', content: "That's all the depth questions for now. Your profile is in great shape." } as Msg]);
+        setDone(true);
+      }
+    }, 400);
+  };
+
+  return (
+    <div className="max-w-2xl mx-auto">
+      <div className="mb-4">
+        <h2 className="text-2xl font-bold text-[#1F2937]">Deepen your profile</h2>
+        <p className="text-sm text-[#6B7280]">A short conversation. {answeredCount} of {total} answered. Each answer sharpens future matches.</p>
+      </div>
+      <div className="bg-white rounded-2xl shadow-sm border border-[#E5E7EB] p-6 space-y-4 max-h-[55vh] overflow-y-auto">
+        {messages.map((m, i) => (
+          <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+            <div className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${m.role === 'user' ? 'bg-[#D4537E] text-white' : 'bg-[#F3F4F6] text-[#1F2937]'}`}>
+              {m.content}
+            </div>
+          </div>
+        ))}
+      </div>
+      {!done && (
+        <div className="mt-4 bg-white rounded-2xl shadow-sm border border-[#E5E7EB] p-4">
+          <textarea
+            value={input}
+            onChange={e => setInput(e.target.value)}
+            placeholder="Type your answer, or write 'skip'…"
+            rows={3}
+            className="w-full px-4 py-3 border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#D4537E]"
+          />
+          <div className="flex justify-end mt-2">
+            <button
+              onClick={() => submit(input)}
+              disabled={input.trim().length === 0}
+              className="px-5 py-2.5 bg-gradient-to-r from-[#D4537E] to-[#C04870] text-white font-semibold rounded-lg disabled:opacity-50"
+            >
+              Send
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
