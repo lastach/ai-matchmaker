@@ -217,19 +217,22 @@ function MatchPanel({ profileData, coreIntakeData, userId }: { profileData: any;
 
   return (
     <div className="bg-white rounded-2xl p-8 shadow-sm border border-[#E5E7EB]">
-      <div className="flex items-baseline justify-between mb-4">
-        <h2 className="text-2xl font-bold text-[#1F2937]">Your Current Top Match</h2>
-        {result && <p className="text-xs text-[#6B7280]">Scored against {result.pool_size} candidates</p>}
+      <div className="mb-4">
+        <div className="flex items-baseline justify-between">
+          <h2 className="text-2xl font-bold text-[#1F2937]">Algorithm preview</h2>
+          {result && <p className="text-xs text-[#6B7280]">Sample profile · {result.pool_size}-person demo pool</p>}
+        </div>
+        <p className="text-sm text-[#6B7280] mt-1">This is not a real match. We're showing how the matching engine would score against a sample profile so you can see the dimensions it weighs. Real matchmaking starts once enough verified members complete intake in your area.</p>
       </div>
       {loading && <p className="text-[#6B7280]">Scoring compatibility across attachment style, values, communication, and life goals…</p>}
       {error && <p className="text-red-600">{error}</p>}
       {m && !loading && (
         <div className="bg-gradient-to-br from-[#D4537E]/10 to-[#2E1A47]/10 rounded-lg p-6">
           <div className="flex items-baseline justify-between mb-4">
-            <p className="text-xl font-semibold text-[#2E1A47]">{m.candidate.name}, {m.candidate.age}</p>
+            <p className="text-xl font-semibold text-[#2E1A47]">Sample profile <span className="text-sm font-normal text-[#9CA3AF]">(age {m.candidate.age})</span></p>
             <span className="text-2xl font-bold text-[#D4537E]">{m.score}</span>
           </div>
-          <p className="text-sm text-[#6B7280] mb-4">{m.candidate.gender} in {m.candidate.location}. Attachment: {m.candidate.attachmentStyle}. Priority: {m.candidate.relationshipPriority.replace(/-/g, ' ')}.</p>
+          <p className="text-sm text-[#6B7280] mb-4">Attachment: {m.candidate.attachmentStyle}. Communication: {m.candidate.communicationStyle?.replace(/-/g, ' ')}. Priority: {m.candidate.relationshipPriority?.replace(/-/g, ' ')}.</p>
           <div className="grid grid-cols-5 gap-2 mb-4">
             {[
               { label: 'Values', v: m.breakdown.values, w: 30 },
@@ -250,27 +253,7 @@ function MatchPanel({ profileData, coreIntakeData, userId }: { profileData: any;
               {m.notes.map((n: string, i: number) => (<li key={i}>{n}</li>))}
             </ul>
           )}
-          {/* Report / Block */}
-          <div className="mt-3 pt-3 border-t border-[#E5E7EB] flex items-center gap-3 text-xs text-[#6B7280]">
-            <span>Concerned about this match?</span>
-            <button
-              onClick={async () => {
-                const reason = prompt('Why are you reporting this match? (e.g., fake profile, inappropriate behavior, safety concern)');
-                if (!reason || !reason.trim()) return;
-                const details = prompt('Anything else you want to add? (optional)') || '';
-                const r = await fetch('/api/match/report', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ reportedUserId: m.candidate.userId, reason: reason.trim(), details }),
-                });
-                if (r.ok) alert('Thanks. The report has been logged. We review every report.');
-                else alert('Could not submit report.');
-              }}
-              className="text-red-600 hover:text-red-800 underline"
-            >
-              Report
-            </button>
-          </div>
+          {/* No Report on demo profile — only meaningful once real users are matched */}
           {memoLoading && !memo && (
             <p className="mt-4 pt-4 border-t border-[#E5E7EB] text-sm text-[#6B7280] italic">Writing your match memo...</p>
           )}
@@ -281,7 +264,7 @@ function MatchPanel({ profileData, coreIntakeData, userId }: { profileData: any;
             </div>
           )}
           <div className="mt-4 pt-4 border-t border-[#E5E7EB] text-xs text-[#6B7280]">
-            Computed from a 40-profile demo pool. Once real users complete intake, this panel will score against them with the same engine.
+            Score components above show how the engine weighs the five dimensions — values, attachment style, communication style, life goals, relationship priority — and produces a composite. When a verified member matches your profile, you'll see them here with a memo.
           </div>
         </div>
       )}
