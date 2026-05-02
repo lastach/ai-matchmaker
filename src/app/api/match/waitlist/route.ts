@@ -61,5 +61,6 @@ export async function GET() {
     position = 1
     total = 1
   }
-  return NextResponse.json({ position, total, totalGlobal, location, threshold: COHORT_THRESHOLD })
+  const cohortOpen = total >= COHORT_THRESHOLD
+  return NextResponse.json({ position, total, totalGlobal, location, threshold: COHORT_THRESHOLD, cohortOpen })
 }
