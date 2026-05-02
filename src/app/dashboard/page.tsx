@@ -217,12 +217,13 @@ function MatchPanel({ profileData, coreIntakeData, userId }: { profileData: any;
 
   return (
     <div className="bg-white rounded-2xl p-8 shadow-sm border border-[#E5E7EB]">
-      <div className="mb-4">
+      <Waitlist />
+      <div className="mb-2 mt-8">
         <div className="flex items-baseline justify-between">
-          <h2 className="text-2xl font-bold text-[#1F2937]">Algorithm preview</h2>
+          <h2 className="text-lg font-semibold text-[#1F2937]">How matching works</h2>
           {result && <p className="text-xs text-[#6B7280]">Sample profile · {result.pool_size}-person demo pool</p>}
         </div>
-        <p className="text-sm text-[#6B7280] mt-1">This is not a real match. We're showing how the matching engine would score against a sample profile so you can see the dimensions it weighs. Real matchmaking starts once enough verified members complete intake in your area.</p>
+        <p className="text-sm text-[#6B7280] mt-1">Below is what the matching engine weighs when your cohort opens — your values, attachment style, communication style, life goals, and relationship priority.</p>
       </div>
       {loading && <p className="text-[#6B7280]">Scoring compatibility across attachment style, values, communication, and life goals…</p>}
       {error && <p className="text-red-600">{error}</p>}
@@ -1151,6 +1152,39 @@ export default function Dashboard() {
   );
 }
 
+
+
+
+function Waitlist() {
+  const [data, setData] = useState<{ position: number | null; total: number; threshold: number } | null>(null);
+  useEffect(() => {
+    fetch('/api/match/waitlist').then(r => r.json()).then(setData).catch(() => {});
+  }, []);
+  if (!data) return <p className="text-sm text-[#6B7280]">Loading your spot…</p>;
+  const { position, total, threshold } = data;
+  const remaining = Math.max(0, threshold - total);
+  const ready = total >= threshold;
+  return (
+    <div className="bg-gradient-to-br from-[#F4EDDC] to-[#FAF1E0] rounded-xl p-6 border border-[#E8D8B8]">
+      <h2 className="text-2xl font-bold text-[#3D1820] mb-1">{ready ? "Your cohort is open" : "You're on the waitlist"}</h2>
+      <div className="flex items-baseline gap-3 mt-3">
+        <p className="text-5xl font-bold text-[#5E1F2A]">#{position ?? '—'}</p>
+        <p className="text-sm text-[#6B7280]">of {total} signed up so far</p>
+      </div>
+      {!ready && (
+        <p className="text-sm text-[#1F2937] mt-4">
+          We open matchmaking in cohorts. {remaining > 0 ? `When ${remaining} more verified members complete intake, your cohort opens and we begin curating real matches.` : 'Your cohort just hit the threshold. We are starting curation now.'}
+        </p>
+      )}
+      {ready && (
+        <p className="text-sm text-[#1F2937] mt-4">
+          We have hit the cohort threshold. Curation has started — expect a match memo by email within 7 days.
+        </p>
+      )}
+      <p className="text-xs text-[#6B7280] mt-3">We will not show you fake matches in the meantime. The dimensions below describe how the engine will score real candidates when curation begins.</p>
+    </div>
+  );
+}
 
 function DepthChat({ depthResponses, onAnswer }: { depthResponses: { [k: number]: string }; onAnswer: (id: number, v: string) => void }) {
   type Msg = { role: 'assistant' | 'user'; content: string };
