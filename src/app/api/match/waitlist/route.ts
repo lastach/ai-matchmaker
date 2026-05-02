@@ -24,23 +24,42 @@ export async function GET() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ position: null, total: 0, threshold: COHORT_THRESHOLD })
 
-  // Count rows older or equal to user's row (position by created_at)
+  // Get the user's stated location (free text) to filter the cohort
+  let userLocation: string | null = null
   let position: number | null = null
   let total = 0
+  let totalGlobal = 0
+  let location: string | null = null
   try {
-    const { count: totalCount } = await supabase.from('matchmaker_profiles').select('*', { count: 'exact', head: true })
-    total = totalCount || 0
-    const { data: own } = await supabase.from('matchmaker_profiles').select('created_at').eq('user_id', user.id).maybeSingle()
+    const { data: own } = await supabase.from('matchmaker_profiles').select('created_at, location').eq('user_id', user.id).maybeSingle()
+    userLocation = own?.location?.trim() || null
+    location = userLocation
+    // Global count regardless of location (sanity)
+    const { count: globalTotal } = await supabase.from('matchmaker_profiles').select('*', { count: 'exact', head: true })
+    totalGlobal = globalTotal || 0
+    // Cohort total — anyone whose location matches the same area (case-insensitive substring on city/region)
+    if (userLocation) {
+      const firstToken = userLocation.split(/[\s,]/).filter(Boolean)[0] || userLocation
+      const { count: areaTotal } = await supabase.from('matchmaker_profiles').select('*', { count: 'exact', head: true }).ilike('location', `%${firstToken}%`)
+      total = areaTotal || 0
+    } else {
+      total = totalGlobal
+    }
     if (own?.created_at) {
-      const { count: priorCount } = await supabase.from('matchmaker_profiles').select('*', { count: 'exact', head: true }).lte('created_at', own.created_at)
+      let q = supabase.from('matchmaker_profiles').select('*', { count: 'exact', head: true }).lte('created_at', own.created_at)
+      if (userLocation) {
+        const firstToken = userLocation.split(/[\s,]/).filter(Boolean)[0] || userLocation
+        q = q.ilike('location', `%${firstToken}%`)
+      }
+      const { count: priorCount } = await q
       position = priorCount || 1
     } else {
-      position = total + 1 // they haven't completed intake yet — they'll be at the end
+      position = total + 1
     }
   } catch {
     // Table missing pre-migration — fall back to "you're #1"
     position = 1
     total = 1
   }
-  return NextResponse.json({ position, total, threshold: COHORT_THRESHOLD })
+  return NextResponse.json({ position, total, totalGlobal, location, threshold: COHORT_THRESHOLD })
 }

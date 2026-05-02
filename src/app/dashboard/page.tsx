@@ -1156,30 +1156,37 @@ export default function Dashboard() {
 
 
 function Waitlist() {
-  const [data, setData] = useState<{ position: number | null; total: number; threshold: number } | null>(null);
+  const [data, setData] = useState<{ position: number | null; total: number; totalGlobal?: number; location?: string | null; threshold: number } | null>(null);
   useEffect(() => {
     fetch('/api/match/waitlist').then(r => r.json()).then(setData).catch(() => {});
   }, []);
   if (!data) return <p className="text-sm text-[#6B7280]">Loading your spot…</p>;
-  const { position, total, threshold } = data;
+  const { position, total, totalGlobal, location, threshold } = data;
   const remaining = Math.max(0, threshold - total);
   const ready = total >= threshold;
+  const areaLabel = location || 'your area';
   return (
     <div className="bg-gradient-to-br from-[#F4EDDC] to-[#FAF1E0] rounded-xl p-6 border border-[#E8D8B8]">
-      <h2 className="text-2xl font-bold text-[#3D1820] mb-1">{ready ? "Your cohort is open" : "You're on the waitlist"}</h2>
+      <h2 className="text-2xl font-bold text-[#3D1820] mb-1">{ready ? `Your ${areaLabel} cohort is open` : `You're on the ${areaLabel} waitlist`}</h2>
       <div className="flex items-baseline gap-3 mt-3">
         <p className="text-5xl font-bold text-[#5E1F2A]">#{position ?? '—'}</p>
-        <p className="text-sm text-[#6B7280]">of {total} signed up so far</p>
+        <p className="text-sm text-[#6B7280]">of {total} signed up so far in {areaLabel}</p>
       </div>
+      {!location && (
+        <p className="text-xs text-[#9C3E3E] mt-2">Add your location in the intake to see your area-specific cohort.</p>
+      )}
       {!ready && (
         <p className="text-sm text-[#1F2937] mt-4">
-          We open matchmaking in cohorts. {remaining > 0 ? `When ${remaining} more verified members complete intake, your cohort opens and we begin curating real matches.` : 'Your cohort just hit the threshold. We are starting curation now.'}
+          We open matchmaking in cohorts of {threshold} verified members per area. {remaining > 0 ? `When ${remaining} more complete intake in ${areaLabel}, your cohort opens and we begin curating real matches.` : 'Your cohort just hit the threshold. We are starting curation now.'}
         </p>
       )}
       {ready && (
         <p className="text-sm text-[#1F2937] mt-4">
-          We have hit the cohort threshold. Curation has started — expect a match memo by email within 7 days.
+          We have hit the cohort threshold for {areaLabel}. Curation has started — expect a match memo by email within 7 days.
         </p>
+      )}
+      {typeof totalGlobal === 'number' && totalGlobal > total && (
+        <p className="text-xs text-[#6B7280] mt-2">{totalGlobal} total members across all areas.</p>
       )}
       <p className="text-xs text-[#6B7280] mt-3">We will not show you fake matches in the meantime. The dimensions below describe how the engine will score real candidates when curation begins.</p>
     </div>
