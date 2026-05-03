@@ -72,22 +72,92 @@ type Message = {
 const MIN_DEEP_WORDS = 20;
 
 const TURNS: Turn[] = [
+  // ═══════════════════════════════════════════════════════════
+  // PHASE 1 — OPEN-ENDED CONVERSATION (no profile fields yet, no chips).
+  // The point: get a real picture in the user's own words BEFORE the form.
+  // ═══════════════════════════════════════════════════════════
   {
     id: 'name',
     target: 'profile',
     field: 'name',
     input: 'text',
     prompt: () =>
-      "Hi — I'm going to chat with you for a bit so I can understand who you are and what you're looking for. Answer like you're talking to a friend, not filling out a form. What should I call you?",
+      "Hi — I'm going to talk with you for a bit before I ask any of the typical profile stuff. Answer however you want. What should I call you?",
     ack: (a) => `Nice to meet you, ${a.trim().split(/\s+/)[0]}.`,
     validate: (a) => (a.trim().length === 0 ? 'I need something to call you.' : null),
   },
+  {
+    id: 'bringsYou',
+    target: 'core',
+    field: 'q6Response',
+    input: 'longtext',
+    minWords: MIN_DEEP_WORDS,
+    prompt: () =>
+      "Before we get into any details — what brings you here right now? What made you want to try something different than how dating usually goes?",
+    ack: () => "Got you. That helps me hear where you're starting from.",
+  },
+  {
+    id: 'challenge',
+    target: 'core',
+    field: 'q7Response',
+    input: 'longtext',
+    minWords: MIN_DEEP_WORDS,
+    prompt: () =>
+      "What's been hard about dating so far? Tell me what hasn't worked, or where it tends to go sideways for you.",
+    ack: () => "Useful — that tells me a lot about what to avoid.",
+  },
+  {
+    id: 'goodLife',
+    target: 'core',
+    field: 'q8Response',
+    input: 'longtext',
+    minWords: MIN_DEEP_WORDS,
+    prompt: () =>
+      "Picture your life a few years from now in a version where things have gone really well — not Instagram-well, just actually well. What does that look like, day to day?",
+    ack: () => "That paints a picture.",
+  },
+  {
+    id: 'pastLesson',
+    target: 'core',
+    field: 'q9Response',
+    input: 'longtext',
+    minWords: MIN_DEEP_WORDS,
+    prompt: () =>
+      "What's something you've learned about yourself from past relationships — good or hard — that's changed how you show up now?",
+    ack: () => "That's growth. Got it.",
+  },
+  {
+    id: 'idealSaturday',
+    target: 'core',
+    field: 'q10Response',
+    input: 'longtext',
+    minWords: MIN_DEEP_WORDS,
+    prompt: () =>
+      "Describe a regular Saturday you'd actually want to live — not a vacation, not a highlight reel. The whole picture, who you're with, what you're doing.",
+    ack: () => "Perfect. That tells me a lot.",
+  },
+  {
+    id: 'context',
+    target: 'profile',
+    field: 'bio',
+    input: 'longtext',
+    optional: true,
+    prompt: () =>
+      "Anything else about your life right now that I should understand — work, family, where your time goes, what you're navigating? Whatever you'd want me to actually know. (Or say \"skip\".)",
+    ack: (a) =>
+      a.trim().toLowerCase() === 'skip' || !a.trim()
+        ? "All good — you can fill this in later." : "Thanks. That helps the picture.",
+  },
+
+  // ═══════════════════════════════════════════════════════════
+  // PHASE 2 — PROFILE BASICS (the minimum I need to match anyone at all).
+  // ═══════════════════════════════════════════════════════════
   {
     id: 'birthDate',
     target: 'profile',
     field: 'birthDate',
     input: 'date',
-    prompt: () => "When were you born? Dating platforms are a bit of a numbers game — I need your age to do anything useful.",
+    prompt: () => "Now a few quick basics so I can find people in the right spot for you. When were you born?",
     ack: () => "Got it.",
     validate: (a) => {
       if (!a) return 'Please pick a date.';
@@ -115,7 +185,7 @@ const TURNS: Turn[] = [
     field: 'interestedIn',
     input: 'choices',
     choices: ['women', 'men', 'nonbinary', 'anyone'],
-    prompt: () => "And who are you interested in dating?",
+    prompt: () => "Who are you looking to date?",
     ack: (a) => `Okay — I'll look for ${a}.`,
   },
   {
@@ -129,42 +199,12 @@ const TURNS: Turn[] = [
       a.trim().toLowerCase() === 'skip' || !a.trim() ? "No problem." : `Cool — ${a.trim()}.`,
   },
   {
-    id: 'ownWantChildren',
-    target: 'profile',
-    field: 'ownWantChildren',
-    input: 'choices',
-    choices: [
-      'Yes, definitely',
-      'Maybe / open',
-      "No, I don't",
-      'I have kids and want more',
-      'I have kids and am done',
-    ],
-    prompt: () => "Big one: where are you at on children?",
-    ack: () => "Noted.",
-  },
-  {
-    id: 'bio',
-    target: 'profile',
-    field: 'bio',
-    input: 'longtext',
-    optional: true,
-    prompt: () =>
-      "Tell me a little about yourself — what energizes you, how you spend your time, the stuff that'd matter to someone dating you. (A sentence or two. Say \"skip\" if you'd rather not.)",
-    ack: (a) =>
-      a.trim().toLowerCase() === 'skip' || !a.trim()
-        ? "All good — you can fill this in later." : "Got you.",
-  },
-
-  // TRANSITION MESSAGE will render as a bubble between sections; we encode it as a no-input "assistant-only" turn.
-  // Simpler: just let the next turn's prompt do the transition.
-  {
     id: 'location',
     target: 'core',
     field: 'location',
     input: 'text',
     prompt: () =>
-      "Now about what you're looking for in a partner. First — where do you live? City, region, or area is fine.",
+      "Where do you live? City, region, or area is fine.",
     ack: (a) => `${a.trim()}. Okay.`,
     validate: (a) => (a.trim().length < 2 ? 'I need at least a city or region.' : null),
   },
@@ -188,7 +228,7 @@ const TURNS: Turn[] = [
     field: 'ageRange',
     input: 'age-range',
     prompt: () =>
-      "Age range for a match? Give me a span like \"28 to 38\" or \"mid 30s to mid 40s\".",
+      "Age range you'd actually consider? Give me a span like \"28 to 38\" or \"mid 30s to mid 40s\".",
     ack: (_, ctx) =>
       ctx.core.ageMin && ctx.core.ageMax
         ? `Got it — ${ctx.core.ageMin} to ${ctx.core.ageMax}.`
@@ -203,81 +243,46 @@ const TURNS: Turn[] = [
       return null;
     },
   },
+
+  // ═══════════════════════════════════════════════════════════
+  // PHASE 3 — STRUCTURED CHOICES (last, after we have the picture).
+  // ═══════════════════════════════════════════════════════════
   {
-    id: 'attractionImportance',
+    id: 'priorityChoice',
     target: 'core',
-    field: 'attractionImportance',
+    field: 'priorityChoice',
     input: 'choices',
     choices: [
-      'Very important — has to be someone I\'m drawn to',
-      'Matters, but chemistry can grow',
-      'Less important than compatibility',
+      'Actively looking for a serious partner',
+      'Open to something serious if it clicks',
+      'Casually open, not in a rush',
     ],
-    prompt: () => "How important is physical attraction to you, really?",
-    ack: () => "Thanks for being honest.",
+    prompt: () => "Now a few quick ones to sharpen the match. Where are you with dating right now?",
+    ack: () => "Got it.",
   },
   {
-    id: 'dealbreakersOther',
-    target: 'core',
-    field: 'dealbreakersOther',
-    input: 'longtext',
-    optional: true,
-    prompt: () =>
-      "Any absolute dealbreakers? Not just preferences — things you won't budge on. (Type them out, or say \"none\".)",
-    ack: (a) =>
-      ['none', 'no', 'nope', 'nah'].includes(a.trim().toLowerCase())
-        ? "Fair enough — I'll keep things open."
-        : "Noted. I'll filter on that.",
+    id: 'ownWantChildren',
+    target: 'profile',
+    field: 'ownWantChildren',
+    input: 'choices',
+    choices: [
+      'Yes, definitely',
+      'Maybe / open',
+      "No, I don't",
+      'I have kids and want more',
+      'I have kids and am done',
+    ],
+    prompt: () => "Where are you on kids?",
+    ack: () => "Noted.",
   },
   {
-    id: 'q6',
+    id: 'topLifeGoal',
     target: 'core',
-    field: 'q6Response',
-    input: 'longtext',
-    minWords: MIN_DEEP_WORDS,
-    prompt: () =>
-      "Now a few deeper ones. Take your time on these — thoughtful answers actually help me find you a good match.\n\nWhat does a really good life look like to you a few years from now?",
-    ack: () => "That's a real answer — thanks for taking it seriously.",
-  },
-  {
-    id: 'q7',
-    target: 'core',
-    field: 'q7Response',
-    input: 'longtext',
-    minWords: MIN_DEEP_WORDS,
-    prompt: () =>
-      "When something's bothering you in a relationship, what's your instinct — talk about it right away, sit with it, or hope it resolves itself?",
-    ack: () => "Useful. That tells me a lot about how you navigate friction.",
-  },
-  {
-    id: 'q8',
-    target: 'core',
-    field: 'q8Response',
-    input: 'longtext',
-    minWords: MIN_DEEP_WORDS,
-    prompt: () =>
-      "Describe your ideal Saturday — not a vacation, just a regular nothing-special Saturday.",
-    ack: () => "That paints a picture.",
-  },
-  {
-    id: 'q9',
-    target: 'core',
-    field: 'q9Response',
-    input: 'longtext',
-    minWords: MIN_DEEP_WORDS,
-    prompt: () =>
-      "What's one thing you've learned about yourself from past relationships that changed how you show up now?",
-    ack: () => "That's growth. Got it.",
-  },
-  {
-    id: 'q10',
-    target: 'core',
-    field: 'q10Response',
-    input: 'longtext',
-    minWords: MIN_DEEP_WORDS,
-    prompt: () =>
-      "Last one: what would make you feel like this process really worked — even if the first match isn't \"the one\"?",
-    ack: () => "Perfect. That gives me a clear target.",
+    field: 'topLifeGoal',
+    input: 'choices',
+    choices: ['Build career', 'Start a family', 'Travel often', 'Health & wellness', 'Creative work', 'Service / impact'],
+    prompt: () => "Biggest life focus over the next few years?",
+    ack: (a) => `${a} — that helps.`,
   },
   {
     id: 'topValue',
@@ -285,7 +290,7 @@ const TURNS: Turn[] = [
     field: 'topValue',
     input: 'choices',
     choices: ['Honesty', 'Family', 'Adventure', 'Wellness', 'Creativity', 'Spirituality', 'Ambition', 'Independence'],
-    prompt: () => "A few quick ones to sharpen the match. First: which of these matters MOST to you?",
+    prompt: () => "Of these, which matters MOST to you?",
     ack: (a) => `${a} — noted.`,
   },
   {
@@ -303,29 +308,32 @@ const TURNS: Turn[] = [
     ack: () => "Got it.",
   },
   {
-    id: 'topLifeGoal',
+    id: 'attractionImportance',
     target: 'core',
-    field: 'topLifeGoal',
-    input: 'choices',
-    choices: ['Build career', 'Start a family', 'Travel often', 'Health & wellness', 'Creative work', 'Service / impact'],
-    prompt: () => "What's your biggest life focus over the next few years?",
-    ack: (a) => `${a} — that helps a lot.`,
-  },
-  {
-    id: 'priorityChoice',
-    target: 'core',
-    field: 'priorityChoice',
+    field: 'attractionImportance',
     input: 'choices',
     choices: [
-      'Actively looking for a serious partner',
-      'Open to something serious if it clicks',
-      'Casually open, not in a rush',
+      "Very important — has to be someone I'm drawn to",
+      'Matters, but chemistry can grow',
+      'Less important than compatibility',
     ],
-    prompt: () => "Last question: where are you with dating right now?",
-    ack: () => "Perfect. That's everything I need.",
+    prompt: () => "How important is physical attraction to you, really?",
+    ack: () => "Thanks for being honest.",
+  },
+  {
+    id: 'dealbreakersOther',
+    target: 'core',
+    field: 'dealbreakersOther',
+    input: 'longtext',
+    optional: true,
+    prompt: () =>
+      "Last one — any absolute dealbreakers? Things you won't budge on. (Type them out, or say \"none\".)",
+    ack: (a) =>
+      ['none', 'no', 'nope', 'nah'].includes(a.trim().toLowerCase())
+        ? "Fair enough — I'll keep things open."
+        : "Noted. I'll filter on that.",
   },
 ];
-
 const countWords = (s: string) => s.trim().split(/\s+/).filter(Boolean).length;
 
 export default function OnboardingChat({

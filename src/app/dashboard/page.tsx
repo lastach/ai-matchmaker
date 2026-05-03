@@ -327,10 +327,14 @@ export default function Dashboard() {
       }
       setUser(session.user);
 
-      // Load profile from localStorage
+      // Load profile from localStorage. If parse fails or onboardingStep is missing,
+      // treat it as a fresh profile so the user isn't stranded on a blank page.
       const savedProfile = localStorage.getItem(`profile_${session.user.id}`);
+      let parsed: any = null;
       if (savedProfile) {
-        const parsed = JSON.parse(savedProfile);
+        try { parsed = JSON.parse(savedProfile); } catch { parsed = null; }
+      }
+      if (parsed && parsed.onboardingStep) {
         setProfile(parsed);
         setCoreIntakeData(parsed.coreIntakeData || {});
         setProfileData(parsed.profileData || {});
@@ -574,7 +578,35 @@ export default function Dashboard() {
   }
 
   if (!user || !profile) {
-    return null;
+    return (
+      <div className="min-h-screen flex items-center justify-center p-6">
+        <div className="bg-white rounded-2xl border border-gray-200 shadow p-8 max-w-md text-center">
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">Welcome back to Amorlay</h1>
+          <p className="text-gray-600 mb-6">Looks like we lost the thread of your last session. Start the intake fresh — it&apos;ll only take a few minutes.</p>
+          <button
+            onClick={() => {
+              if (!user) { router.push('/'); return; }
+              const fresh: UserProfile = {
+                userId: user.id,
+                onboardingStep: 'profile',
+                profileData: {},
+                coreIntakeData: {},
+                attractionRatings: {},
+                attractionPhotos: [],
+                userPhotos: [],
+                depthQuestionResponses: {},
+                profileStrength: 0,
+              };
+              localStorage.setItem(`profile_${user.id}`, JSON.stringify(fresh));
+              setProfile(fresh);
+            }}
+            className="w-full py-3 px-4 bg-gradient-to-r from-[#D4537E] to-[#C04870] text-white font-semibold rounded-lg hover:shadow-lg"
+          >
+            Start the intake
+          </button>
+        </div>
+      </div>
+    );
   }
 
   // ONBOARDING FLOWS
