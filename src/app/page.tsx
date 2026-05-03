@@ -3,194 +3,153 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
 export default function Home() {
   const router = useRouter();
-  const [isLogin, setIsLogin] = useState(true);
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [loading, setLoading] = useState(false);
   const [checking, setChecking] = useState(true);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
-      if (user) {
-        router.replace('/dashboard');
-      } else {
-        setChecking(false);
-      }
+      if (user) router.replace('/dashboard');
+      else setChecking(false);
     });
   }, [router]);
 
-  const handleAuth = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
-    setSuccess('');
-    setLoading(true);
-
-    try {
-      if (isLogin) {
-        const { data, error: signInError } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
-
-        if (signInError) throw signInError;
-        if (data.user) {
-          router.push('/dashboard');
-        }
-      } else {
-        if (password !== confirmPassword) {
-          throw new Error('Passwords do not match');
-        }
-
-        const { data, error: signUpError } = await supabase.auth.signUp({
-          email,
-          password,
-        });
-
-        if (signUpError) throw signUpError;
-        try { fetch('/api/auth/welcome', { method: 'POST' }).catch(() => {}); } catch {}
-        if (data.user) {
-          router.push('/dashboard');
-        }
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  if (checking) {
-    return <div className="min-h-screen bg-gradient-to-br from-[#2E1A47] via-[#3D2557] to-[#D4537E]/10" />;
-  }
+  if (checking) return <div className="min-h-screen bg-white" />;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#2E1A47] via-[#3D2557] to-[#D4537E]/10 px-4 py-12">
-      <div className="max-w-4xl mx-auto">
-        {/* Hero */}
-        <div className="text-center mb-12">
-          <img src="/logo.svg" alt="Amorlay" className="h-16 mx-auto mb-6" />
-          <h1 className="text-4xl md:text-5xl font-bold text-white mb-4 leading-tight">
-            One match. One memo. One date.
+    <main className="min-h-screen bg-white">
+      <nav className="border-b border-rose-100">
+        <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
+          <img src="/logo.svg" alt="Amorlay" className="h-9" />
+          <Link href="/dashboard" className="text-sm font-medium text-gray-600 hover:text-gray-900">Sign in</Link>
+        </div>
+      </nav>
+
+      {/* Hero */}
+      <section className="max-w-6xl mx-auto px-6 pt-16 pb-20 grid lg:grid-cols-2 gap-12 items-center">
+        <div>
+          <span className="inline-block bg-rose-50 text-[#C8102E] border border-rose-200 text-xs font-semibold px-3 py-1 rounded-full uppercase tracking-wide mb-6">
+            For people done with swiping
+          </span>
+          <h1 className="text-5xl md:text-6xl font-bold text-gray-900 leading-tight mb-6">
+            One match.<br />One memo.<br />One date.
           </h1>
-          <p className="text-xl text-[#D4537E]/80 mb-6">
-            Replace swiping with science
+          <p className="text-lg text-gray-600 mb-8 leading-relaxed">
+            Tell me about you in your own words — not a profile, a conversation. When enough thoughtful
+            people in your area have done the same, I introduce you to one of them with a written memo
+            explaining why I think it's worth your night.
           </p>
+          <div className="flex flex-col sm:flex-row gap-3">
+            <Link href="/dashboard" className="bg-[#C8102E] hover:bg-[#A50D26] text-white px-7 py-3 rounded-lg font-semibold text-base transition">
+              Start the conversation
+            </Link>
+            <Link href="/dashboard" className="text-gray-700 hover:text-gray-900 px-5 py-3 rounded-lg font-medium border border-gray-300 hover:border-gray-400">
+              See how matching works &rarr;
+            </Link>
+          </div>
+          <p className="text-xs text-gray-500 mt-4">No swiping. No infinite scroll. 18+. Free during research preview.</p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-start">
-          {/* Left: Value prop */}
-          <div className="space-y-8">
-            <div className="space-y-6">
-              <div className="flex gap-4">
-                <div className="w-10 h-10 bg-[#D4537E]/20 rounded-full flex items-center justify-center flex-shrink-0">
-                  <span className="text-[#D4537E] font-bold">1</span>
-                </div>
+        {/* Mock match-memo preview */}
+        <div className="relative">
+          <div className="bg-white rounded-2xl border border-gray-200 shadow-xl overflow-hidden">
+            <div className="bg-rose-50 border-b border-rose-100 px-5 py-3 flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-red-300" />
+              <span className="w-2.5 h-2.5 rounded-full bg-yellow-300" />
+              <span className="w-2.5 h-2.5 rounded-full bg-green-300" />
+              <span className="text-xs text-gray-500 ml-3">Your match memo &middot; this Sunday</span>
+            </div>
+            <div className="p-5 space-y-4">
+              <div className="flex items-center gap-3 pb-3 border-b border-gray-100">
+                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-rose-300 to-rose-500" />
                 <div>
-                  <h3 className="font-semibold text-white mb-1">Answer 10 questions about who you are</h3>
-                  <p className="text-white/60 text-sm">Not what you look like. What makes you tick, how you connect, what you need from a partner.</p>
+                  <p className="text-sm font-bold text-gray-900">Compatibility: 87%</p>
+                  <p className="text-xs text-gray-500">In your area &middot; cohort opened Tuesday</p>
                 </div>
               </div>
-              <div className="flex gap-4">
-                <div className="w-10 h-10 bg-[#D4537E]/20 rounded-full flex items-center justify-center flex-shrink-0">
-                  <span className="text-[#D4537E] font-bold">2</span>
-                </div>
-                <div>
-                  <h3 className="font-semibold text-white mb-1">Train your attraction model</h3>
-                  <p className="text-white/60 text-sm">Rate photos so the algorithm learns your type. Upload pictures of people you find attractive for even better results.</p>
-                </div>
+              <div>
+                <p className="text-[10px] uppercase tracking-wide text-rose-700 font-semibold mb-1">Why I think you'll like them</p>
+                <p className="text-sm text-gray-700 leading-relaxed">
+                  You both wrote about wanting Sundays that don&apos;t look like vacation Instagram. Their answer
+                  about past relationships had a level of self-awareness that matched yours. Same posture
+                  toward kids. Different careers, but they care about your kind of impact.
+                </p>
               </div>
-              <div className="flex gap-4">
-                <div className="w-10 h-10 bg-[#D4537E]/20 rounded-full flex items-center justify-center flex-shrink-0">
-                  <span className="text-[#D4537E] font-bold">3</span>
-                </div>
-                <div>
-                  <h3 className="font-semibold text-white mb-1">Get one great match per week</h3>
-                  <p className="text-white/60 text-sm">No swiping. No endless browsing. One curated match with a compatibility memo explaining why you fit.</p>
-                </div>
+              <div>
+                <p className="text-[10px] uppercase tracking-wide text-rose-700 font-semibold mb-1">Where to be careful</p>
+                <p className="text-sm text-gray-700 leading-relaxed">
+                  They lean direct on conflict — you wrote that you take time to sit with it. That&apos;s not a
+                  dealbreaker but worth knowing on date one.
+                </p>
+              </div>
+              <div className="flex gap-2 pt-2 border-t border-gray-100">
+                <button className="text-xs px-3 py-1.5 bg-[#C8102E] text-white rounded">Open intro</button>
+                <button className="text-xs px-3 py-1.5 bg-white border border-gray-300 text-gray-700 rounded">Pass</button>
               </div>
             </div>
+          </div>
+          <div className="absolute -bottom-4 -right-4 bg-[#C8102E] text-white text-xs font-medium px-3 py-1.5 rounded-lg shadow-lg">
+            One match per cohort. Take your time.
+          </div>
+        </div>
+      </section>
 
-            <div className="bg-white/5 rounded-xl p-5 border border-white/10">
-              <p className="text-white/80 text-sm leading-relaxed">
-                Dating apps give you hundreds of options and zero insight.
-                Amorlay gives you one match backed by real compatibility science:
-                attachment style, communication patterns, values alignment, and mutual attraction.
+      {/* Value props */}
+      <section className="bg-rose-50/40 border-y border-rose-100 py-16">
+        <div className="max-w-6xl mx-auto px-6">
+          <h2 className="text-3xl font-bold text-gray-900 mb-2 text-center">A different shape than every other app.</h2>
+          <p className="text-center text-gray-600 mb-12 max-w-2xl mx-auto">
+            Not endless options. Not a brand of yourself you have to maintain. Slow on purpose.
+          </p>
+          <div className="grid md:grid-cols-3 gap-6">
+            <div className="bg-white rounded-xl p-6 border border-gray-200">
+              <div className="w-10 h-10 bg-rose-100 rounded-lg flex items-center justify-center mb-4 text-rose-700 font-bold">1</div>
+              <h3 className="font-bold text-gray-900 mb-2">You answer in your own words</h3>
+              <p className="text-sm text-gray-600">
+                Open-ended questions about your life, your past, what you want. No bio to write, no
+                witty hooks. The intake takes 10–15 minutes and feels like a real conversation.
+              </p>
+            </div>
+            <div className="bg-white rounded-xl p-6 border border-gray-200">
+              <div className="w-10 h-10 bg-rose-100 rounded-lg flex items-center justify-center mb-4 text-rose-700 font-bold">2</div>
+              <h3 className="font-bold text-gray-900 mb-2">Cohorts open by area</h3>
+              <p className="text-sm text-gray-600">
+                Once enough thoughtful people in your area have signed up, your cohort opens. We email
+                you when it does. You see your waitlist position any time.
+              </p>
+            </div>
+            <div className="bg-white rounded-xl p-6 border border-gray-200">
+              <div className="w-10 h-10 bg-rose-100 rounded-lg flex items-center justify-center mb-4 text-rose-700 font-bold">3</div>
+              <h3 className="font-bold text-gray-900 mb-2">One match, one memo</h3>
+              <p className="text-sm text-gray-600">
+                We pick one person we think you should meet and write you a memo explaining why —
+                and where to be careful. You decide whether to open the intro.
               </p>
             </div>
           </div>
+        </div>
+      </section>
 
-          {/* Right: Auth form */}
-          <div className="bg-white rounded-2xl shadow-2xl p-8 space-y-6">
-            <div className="flex gap-2 bg-[#F3F0ED] p-1.5 rounded-lg">
-              <button
-                onClick={() => { setIsLogin(true); setError(''); setSuccess(''); }}
-                className={`flex-1 py-2.5 font-semibold rounded-md transition-all ${
-                  isLogin ? 'bg-white text-[#2E1A47] shadow-md' : 'text-[#9CA3AF] hover:text-[#6B7280]'
-                }`}
-              >
-                Login
-              </button>
-              <button
-                onClick={() => { setIsLogin(false); setError(''); setSuccess(''); }}
-                className={`flex-1 py-2.5 font-semibold rounded-md transition-all ${
-                  !isLogin ? 'bg-white text-[#2E1A47] shadow-md' : 'text-[#9CA3AF] hover:text-[#6B7280]'
-                }`}
-              >
-                Sign Up
-              </button>
-            </div>
+      <section className="max-w-3xl mx-auto px-6 py-20 text-center">
+        <h2 className="text-3xl font-bold text-gray-900 mb-3">No browsing. No performance. Just a thoughtful intro when it&apos;s ready.</h2>
+        <p className="text-gray-600 mb-8">Built for people who already know dating apps don&apos;t work for them.</p>
+        <Link href="/dashboard" className="inline-block bg-[#C8102E] hover:bg-[#A50D26] text-white px-8 py-3 rounded-lg font-semibold transition">
+          Start the conversation
+        </Link>
+        <p className="text-xs text-gray-500 mt-4">Free during research preview. 18+ only. No credit card.</p>
+      </section>
 
-            <form onSubmit={handleAuth} className="space-y-4">
-              <div>
-                <label htmlFor="email" className="block text-sm font-semibold text-[#1F2937] mb-2">Email</label>
-                <input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" className="w-full px-4 py-3 border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#D4537E] focus:border-transparent" required />
-              </div>
-              <div>
-                <label htmlFor="password" className="block text-sm font-semibold text-[#1F2937] mb-2">Password</label>
-                <input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;" className="w-full px-4 py-3 border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#D4537E] focus:border-transparent" required />
-              </div>
-              {!isLogin && (
-                <div>
-                  <label htmlFor="confirmPassword" className="block text-sm font-semibold text-[#1F2937] mb-2">Confirm Password</label>
-                  <input id="confirmPassword" type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;" className="w-full px-4 py-3 border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#D4537E] focus:border-transparent" required />
-                </div>
-              )}
-
-              {error && (
-                <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
-                  <p className="text-sm text-red-700">{error}</p>
-                </div>
-              )}
-              {success && (
-                <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
-                  <p className="text-sm text-green-700">{success}</p>
-                </div>
-              )}
-
-              <button type="submit" disabled={loading} className="w-full bg-gradient-to-r from-[#D4537E] to-[#C04870] text-white font-semibold py-3 rounded-lg hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed">
-                {loading ? (isLogin ? 'Logging in...' : 'Creating account...') : isLogin ? 'Login' : 'Create Account'}
-              </button>
-            </form>
-
-            <p className="text-xs text-center text-[#9CA3AF]">
-              Free to try. No credit card required.
-            </p>
+      <footer className="border-t border-gray-200 py-6">
+        <div className="max-w-6xl mx-auto px-6 flex justify-between text-xs text-gray-500">
+          <span>&copy; 2026 Amorlay</span>
+          <div className="flex gap-4">
+            <Link href="/privacy" className="hover:text-gray-700">Privacy</Link>
+            <Link href="/terms" className="hover:text-gray-700">Terms</Link>
           </div>
         </div>
-
-        {/* Footer */}
-        <div className="text-center mt-12">
-          <p className="text-sm text-white/40">
-            Amorlay &bull; Privacy-first. Science-backed. No swiping.
-          </p>
-        </div>
-      </div>
-    </div>
+      </footer>
+    </main>
   );
 }
