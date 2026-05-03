@@ -1030,6 +1030,67 @@ export default function Dashboard() {
       <div className="max-w-6xl mx-auto px-6 py-12">
         {activeTab === 'home' && (
           <div className="space-y-8">
+            {/* What I heard from you — renders the user's open-ended answers back so the post-intake
+                screen feels substantive, not like a profile-strength wheel. */}
+            {(coreIntakeData.q6Response || coreIntakeData.q7Response || coreIntakeData.q8Response || coreIntakeData.q9Response || coreIntakeData.q10Response || profileData.bio) && (
+              <div className="bg-gradient-to-br from-[#FBF7F4] to-white rounded-2xl p-8 shadow-sm border border-[#F0E2D6]">
+                <div className="flex items-baseline justify-between mb-4">
+                  <h2 className="text-2xl font-bold text-[#1F2937]">Here&apos;s what I heard from you{profileData.name ? `, ${profileData.name.split(' ')[0]}` : ''}</h2>
+                  <button
+                    onClick={() => {
+                      const updated = { ...profile!, onboardingStep: 'profile' as OnboardingStep, profileStrength: 0 };
+                      saveProfile(updated);
+                    }}
+                    className="text-xs text-[#6B7280] hover:text-[#C8102E] underline"
+                  >Re-do the conversation</button>
+                </div>
+                <p className="text-sm text-[#6B7280] mb-6">This is the picture I&apos;ll use to find your match. If anything is off, redo the conversation any time — I won&apos;t lose your other answers.</p>
+                <dl className="space-y-5">
+                  {coreIntakeData.q6Response && (
+                    <div>
+                      <dt className="text-xs uppercase tracking-wide text-[#C8102E] font-semibold mb-1">What brings you here</dt>
+                      <dd className="text-sm text-[#1F2937] whitespace-pre-wrap leading-relaxed">{coreIntakeData.q6Response}</dd>
+                    </div>
+                  )}
+                  {coreIntakeData.q7Response && (
+                    <div>
+                      <dt className="text-xs uppercase tracking-wide text-[#C8102E] font-semibold mb-1">What&apos;s been hard about dating so far</dt>
+                      <dd className="text-sm text-[#1F2937] whitespace-pre-wrap leading-relaxed">{coreIntakeData.q7Response}</dd>
+                    </div>
+                  )}
+                  {coreIntakeData.q8Response && (
+                    <div>
+                      <dt className="text-xs uppercase tracking-wide text-[#C8102E] font-semibold mb-1">A version of life that&apos;s gone really well</dt>
+                      <dd className="text-sm text-[#1F2937] whitespace-pre-wrap leading-relaxed">{coreIntakeData.q8Response}</dd>
+                    </div>
+                  )}
+                  {coreIntakeData.q9Response && (
+                    <div>
+                      <dt className="text-xs uppercase tracking-wide text-[#C8102E] font-semibold mb-1">What past relationships taught you</dt>
+                      <dd className="text-sm text-[#1F2937] whitespace-pre-wrap leading-relaxed">{coreIntakeData.q9Response}</dd>
+                    </div>
+                  )}
+                  {coreIntakeData.q10Response && (
+                    <div>
+                      <dt className="text-xs uppercase tracking-wide text-[#C8102E] font-semibold mb-1">A regular Saturday you&apos;d actually want</dt>
+                      <dd className="text-sm text-[#1F2937] whitespace-pre-wrap leading-relaxed">{coreIntakeData.q10Response}</dd>
+                    </div>
+                  )}
+                  {profileData.bio && (
+                    <div>
+                      <dt className="text-xs uppercase tracking-wide text-[#C8102E] font-semibold mb-1">What else I should know</dt>
+                      <dd className="text-sm text-[#1F2937] whitespace-pre-wrap leading-relaxed">{profileData.bio}</dd>
+                    </div>
+                  )}
+                </dl>
+                <div className="mt-6 pt-5 border-t border-[#F0E2D6] grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+                  {profileData.gender && <div><span className="text-[#9CA3AF]">You</span><br/><span className="text-[#1F2937] font-medium">{profileData.gender}{profileData.pronouns ? ` · ${profileData.pronouns}` : ''}</span></div>}
+                  {profileData.interestedIn && <div><span className="text-[#9CA3AF]">Looking for</span><br/><span className="text-[#1F2937] font-medium capitalize">{profileData.interestedIn}{coreIntakeData.ageMin && coreIntakeData.ageMax ? `, ${coreIntakeData.ageMin}–${coreIntakeData.ageMax}` : ''}</span></div>}
+                  {coreIntakeData.location && <div><span className="text-[#9CA3AF]">Where</span><br/><span className="text-[#1F2937] font-medium">{coreIntakeData.location}</span></div>}
+                </div>
+              </div>
+            )}
+
             {/* Profile Strength */}
             <div className="bg-white rounded-2xl p-8 shadow-sm border border-[#E5E7EB]">
               <h2 className="text-2xl font-bold text-[#1F2937] mb-6">Profile Strength</h2>
