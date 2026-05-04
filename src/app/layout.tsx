@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import PostHogInit from '@/components/PostHogInit'
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -28,7 +29,7 @@ export default function RootLayout({
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col bg-[#FBF9F7]">{children}
+      <body className="min-h-full flex flex-col bg-[#FBF9F7]"><PostHogInit />{children}
         <footer className="py-6 text-center text-xs text-gray-500">
           <a href="/privacy" className="hover:underline">Privacy</a>
           <span className="mx-2">·</span>
