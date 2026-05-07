@@ -82,7 +82,7 @@ const TURNS: Turn[] = [
     field: 'name',
     input: 'text',
     prompt: () =>
-      "Hi — I'm going to talk with you for a bit before I ask any of the typical profile stuff. Answer however you want. What should I call you?",
+      "Hey — what should I call you?",
     ack: (a) => `Nice to meet you, ${a.trim().split(/\s+/)[0]}.`,
     validate: (a) => (a.trim().length === 0 ? 'I need something to call you.' : null),
   },
