@@ -18,9 +18,9 @@ export async function POST(request: NextRequest) {
     if (!rl.success) {
       return NextResponse.json({ error: 'Rate limit exceeded. Try again in a minute.' }, { status: 429, headers: { 'Retry-After': String(rl.retryAfter || 60) } })
     }
-    const apiKey = process.env.OPENAI_API_KEY
+    const apiKey = process.env.ANTHROPIC_API_KEY
     if (!apiKey) {
-      return NextResponse.json({ error: 'OPENAI_API_KEY not configured' }, { status: 500 })
+      return NextResponse.json({ error: 'ANTHROPIC_API_KEY not configured'ANTHROPIC_API_KEY }, { status: 500 })
     }
     const body = await request.json()
     const { user, candidate, breakdown, score, notes } = body || {}
@@ -45,25 +45,24 @@ export async function POST(request: NextRequest) {
       notes: notes || [],
     })
 
-    const r = await fetch('https://api.openai.com/v1/chat/completions', {
+    const r = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
+      headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
-        messages: [
-          { role: 'system', content: system },
-          { role: 'user', content: userMsg },
-        ],
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 500,
         temperature: 0.55,
-        max_tokens: 320,
+        system,
+        messages: [{ role: 'user', content: userMsg }],
       }),
     })
     if (!r.ok) {
       const errText = await r.text()
-      return NextResponse.json({ error: 'OpenAI: ' + errText.slice(0, 200) }, { status: 502 })
+      const friendly = /quota|insufficient|billing|rate_limit/i.test(errText) ? 'AI service usage limit reached. Please try again later.' : 'AI service temporarily unavailable. Please try again.'
+      return NextResponse.json({ error: friendly }, { status: 502 })
     }
     const data = await r.json()
-    const memo = data?.choices?.[0]?.message?.content?.trim() || ''
+    const memo = data?.content?.[0]?.text?.trim() || ''
     return NextResponse.json({ memo })
   } catch (error) {
     return NextResponse.json({ error: error instanceof Error ? error.message : 'Failed' }, { status: 500 })
