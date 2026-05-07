@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
     }
     const apiKey = process.env.ANTHROPIC_API_KEY
     if (!apiKey) {
-      return NextResponse.json({ error: 'ANTHROPIC_API_KEY not configured'ANTHROPIC_API_KEY }, { status: 500 })
+      return NextResponse.json({ error: 'ANTHROPIC_API_KEY not configured' }, { status: 500 })
     }
     const body = await request.json()
     const { user, candidate, breakdown, score, notes } = body || {}
