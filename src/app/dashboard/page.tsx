@@ -322,7 +322,7 @@ export default function Dashboard() {
     const checkAuth = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
-        router.push('/');
+        router.push('/auth');
         return;
       }
       setUser(session.user);
@@ -585,7 +585,7 @@ export default function Dashboard() {
           <p className="text-gray-600 mb-6">Looks like we lost the thread of your last session. Start the intake fresh — it&apos;ll only take a few minutes.</p>
           <button
             onClick={() => {
-              if (!user) { router.push('/'); return; }
+              if (!user) { router.push('/auth'); return; }
               const fresh: UserProfile = {
                 userId: user.id,
                 onboardingStep: 'profile',
