@@ -23,7 +23,7 @@ export default function Home() {
       <nav className="border-b border-rose-100">
         <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
           <img src="/logo.svg" alt="Amorlay" className="h-9" />
-          <Link href="/dashboard" className="text-sm font-medium text-gray-600 hover:text-gray-900">Sign in</Link>
+          <Link href="/auth" className="text-sm font-medium text-gray-600 hover:text-gray-900">Sign in</Link>
         </div>
       </nav>
 
@@ -42,10 +42,10 @@ export default function Home() {
             explaining why I think it's worth your night.
           </p>
           <div className="flex flex-col sm:flex-row gap-3">
-            <Link href="/dashboard" className="bg-[#C8102E] hover:bg-[#A50D26] text-white px-7 py-3 rounded-lg font-semibold text-base transition">
+            <Link href="/auth" className="bg-[#C8102E] hover:bg-[#A50D26] text-white px-7 py-3 rounded-lg font-semibold text-base transition">
               Start the conversation
             </Link>
-            <Link href="/dashboard" className="text-gray-700 hover:text-gray-900 px-5 py-3 rounded-lg font-medium border border-gray-300 hover:border-gray-400">
+            <Link href="/auth" className="text-gray-700 hover:text-gray-900 px-5 py-3 rounded-lg font-medium border border-gray-300 hover:border-gray-400">
               See how matching works &rarr;
             </Link>
           </div>
@@ -135,7 +135,7 @@ export default function Home() {
       <section className="max-w-3xl mx-auto px-6 py-20 text-center">
         <h2 className="text-3xl font-bold text-gray-900 mb-3">No browsing. No performance. Just a thoughtful intro when it&apos;s ready.</h2>
         <p className="text-gray-600 mb-8">Built for people who already know dating apps don&apos;t work for them.</p>
-        <Link href="/dashboard" className="inline-block bg-[#C8102E] hover:bg-[#A50D26] text-white px-8 py-3 rounded-lg font-semibold transition">
+        <Link href="/auth" className="inline-block bg-[#C8102E] hover:bg-[#A50D26] text-white px-8 py-3 rounded-lg font-semibold transition">
           Start the conversation
         </Link>
         <p className="text-xs text-gray-500 mt-4">Free during research preview. 18+ only. No credit card.</p>
