@@ -50,8 +50,8 @@ export default function AuthPage() {
     <main className="min-h-screen bg-gradient-to-b from-rose-50 to-white flex items-center justify-center">
       <div className="w-full max-w-sm mx-auto px-6">
         <h1 className="text-3xl font-bold text-[#3D1820] mb-2 text-center">Amorlay</h1>
-        <p className="text-gray-500 text-sm mb-8 text-center">{isSignUp ? 'Create your account' : 'Sign in to your account'}</p>
-        <form onSubmit={handleSubmit} className="space-y-4">
+                <p className="text-gray-500 text-sm mb-8 text-center">{isSignUp ? 'One match. One memo. One date. Free during research preview.' : 'Welcome back. Your match might be brewing.'}</p>p>
+      </p><form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
             <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-rose-300" placeholder="you@example.com" />
