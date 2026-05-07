@@ -62,7 +62,16 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: friendly }, { status: 502 })
     }
     const data = await r.json()
-    const memo = data?.content?.[0]?.text?.trim() || ''
+    let text = (data?.content?.[0]?.text || '').trim()
+    const fence = String.fromCharCode(96, 96, 96)
+    if (text.startsWith(fence)) {
+      text = text.slice(fence.length)
+      if (text.toLowerCase().startsWith('json')) text = text.slice(4)
+      text = text.trim()
+      const endIdx = text.lastIndexOf(fence)
+      if (endIdx !== -1) text = text.slice(0, endIdx).trim()
+    }
+    const memo = text
     return NextResponse.json({ memo })
   } catch (error) {
     return NextResponse.json({ error: error instanceof Error ? error.message : 'Failed' }, { status: 500 })
