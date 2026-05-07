@@ -14,7 +14,7 @@ function getSupabase() {
 export default function AuthPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [isSignUp, setIsSignUp] = useState(false)
+  const [isSignUp, setIsSignUp] = useState(() => { if (typeof window === 'undefined') return false; return new URLSearchParams(window.location.search).get('signup') === '1' })
   const [error, setError] = useState('')
   const [message, setMessage] = useState('')
   const [loading, setLoading] = useState(false)
