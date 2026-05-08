@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import OnboardingChat from './OnboardingChat';
+import IntakeInsights from './IntakeInsights';
 import TrialGate from '@/components/TrialGate';
 
 type OnboardingStep = 'profile' | 'core-intake' | 'summary' | 'attraction' | 'photos' | 'complete';
@@ -677,6 +678,8 @@ export default function Dashboard() {
             <h1 className="text-3xl font-bold text-white">Here's what I learned about you</h1>
             <p className="text-[#D4537E]/80 text-sm mt-1">Review and refine before we move on to visual preferences.</p>
           </div>
+
+          <IntakeInsights profileData={profileData} coreIntakeData={coreIntakeData} />
 
           {sectionCard('You', [
             ['Name', profileData.name],
