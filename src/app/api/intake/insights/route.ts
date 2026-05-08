@@ -1,7 +1,30 @@
 import { NextResponse } from 'next/server'
-import { checkRateLimit } from '@/lib/rateLimit'
+import { checkRateLimit, checkWeeklyInsightsLimit, cacheInsights, getCachedInsights } from '@/lib/rateLimit'
+import { createServerClient } from '@supabase/ssr'
+import { cookies } from 'next/headers'
 
 export const runtime = 'nodejs'
+
+async function getUserId(): Promise<string | null> {
+  try {
+    const cookieStore = await cookies()
+    const supa = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          get(n: string) { return cookieStore.get(n)?.value },
+          set() {},
+          remove() {},
+        },
+      }
+    )
+    const { data } = await supa.auth.getUser()
+    return data?.user?.id || null
+  } catch {
+    return null
+  }
+}
 
 export async function POST(req: Request) {
   try {
@@ -15,6 +38,21 @@ export async function POST(req: Request) {
     const { profileData, coreIntakeData } = body
     if (!profileData || !coreIntakeData) {
       return NextResponse.json({ error: 'Missing intake data' }, { status: 400 })
+    }
+
+    // Per-user weekly cap: 5 regenerations per 7-day rolling window. On hit,
+    // serve the cached last-good response so the user always sees SOMETHING.
+    const userId = await getUserId()
+    const cacheKey = userId ? `insights-cache:amorlay-intake:${userId}` : null
+    if (userId) {
+      const cap = await checkWeeklyInsightsLimit('amorlay-intake-insights:' + userId)
+      if (!cap.success) {
+        const cached = await getCachedInsights<{ insights: string[] }>(cacheKey!)
+        if (cached?.insights?.length) {
+          return NextResponse.json({ insights: cached.insights, cached: true, retryAfterDays: Math.ceil(cap.retryAfter / 86400) })
+        }
+        return NextResponse.json({ error: 'You have reached the weekly limit on regenerating insights. Try again in a few days.', retryAfterDays: Math.ceil(cap.retryAfter / 86400) }, { status: 429 })
+      }
     }
 
     const apiKey = process.env.ANTHROPIC_API_KEY
@@ -84,6 +122,9 @@ export async function POST(req: Request) {
       return NextResponse.json({ insights: [] })
     }
     const insights = Array.isArray(parsed.insights) ? parsed.insights.slice(0, 5) : []
+    if (cacheKey && insights.length > 0) {
+      await cacheInsights(cacheKey, { insights })
+    }
     return NextResponse.json({ insights })
   } catch {
     return NextResponse.json({ error: 'Something went wrong.' }, { status: 500 })
