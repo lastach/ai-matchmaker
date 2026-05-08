@@ -1,9 +1,14 @@
 import { NextResponse } from 'next/server'
+import { checkRateLimit } from '@/lib/rateLimit'
 
 export const runtime = 'nodejs'
 
 export async function POST(req: Request) {
   try {
+    const ip = req.headers.get('x-forwarded-for')?.split(',')[0] || 'anon'
+    const rl = await checkRateLimit('intake-insights:' + ip)
+    if (!rl.success) return NextResponse.json({ error: 'Too many requests. Try again in a minute.' }, { status: 429 })
+
     const body = await req.json().catch(() => null)
     if (!body) return NextResponse.json({ error: 'Invalid request' }, { status: 400 })
 
