@@ -366,7 +366,14 @@ function Dashboard_Inner() {
 
   const saveProfile = (updatedProfile: UserProfile) => {
     if (user?.id) {
-      localStorage.setItem(`profile_${user.id}`, JSON.stringify(updatedProfile));
+      try {
+        localStorage.setItem(`profile_${user.id}`, JSON.stringify(updatedProfile));
+      } catch (e) {
+        console.warn('localStorage save failed', e);
+      }
+      setProfile(updatedProfile);
+    } else {
+      console.warn('saveProfile called without user.id - state updated but not persisted');
       setProfile(updatedProfile);
     }
   };
@@ -694,11 +701,11 @@ function Dashboard_Inner() {
     };
     const kidsDisplay = profileData.ownWantChildren ? (kidsLabelMap[profileData.ownWantChildren] || profileData.ownWantChildren) : '-';
     const deepAnswers: Array<[string, string | undefined]> = [
-      ['Ideal future', coreIntakeData.q6Response],
-      ['Handling conflict', coreIntakeData.q7Response],
-      ['Ideal Saturday', coreIntakeData.q8Response],
-      ['Past-relationship lesson', coreIntakeData.q9Response],
-      ['What success looks like', coreIntakeData.q10Response],
+      ['Ideal future', coreIntakeData?.q6Response],
+      ['Handling conflict', coreIntakeData?.q7Response],
+      ['Ideal Saturday', coreIntakeData?.q8Response],
+      ['Past-relationship lesson', coreIntakeData?.q9Response],
+      ['What success looks like', coreIntakeData?.q10Response],
     ];
 
     const sectionCard = (title: string, rows: Array<[string, string | null | undefined]>) => (
@@ -1079,7 +1086,7 @@ function Dashboard_Inner() {
           <div className="space-y-8">
             {/* What I heard from you - renders the user's open-ended answers back so the post-intake
                 screen feels substantive, not like a profile-strength wheel. */}
-            {(coreIntakeData.q6Response || coreIntakeData.q7Response || coreIntakeData.q8Response || coreIntakeData.q9Response || coreIntakeData.q10Response || profileData.bio) && (
+            {(coreIntakeData?.q6Response || coreIntakeData?.q7Response || coreIntakeData?.q8Response || coreIntakeData?.q9Response || coreIntakeData?.q10Response || profileData?.bio) && (
               <div className="bg-gradient-to-br from-[#FBF7F4] to-white rounded-2xl p-8 shadow-sm border border-[#F0E2D6]">
                 <div className="flex items-baseline justify-between mb-4">
                   <h2 className="text-2xl font-bold text-[#1F2937]">Here&apos;s what I heard from you{profileData.name ? `, ${profileData.name.split(' ')[0]}` : ''}</h2>
