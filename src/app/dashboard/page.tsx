@@ -7,6 +7,7 @@ import OnboardingChat from './OnboardingChat';
 import { DashboardErrorBoundary } from './ErrorBoundary';
 import IntakeInsights from './IntakeInsights';
 import SupplyPool from './SupplyPool';
+import FeedbackHistory from './FeedbackHistory';
 import TrialGate from '@/components/TrialGate';
 
 type OnboardingStep = 'welcome' | 'profile' | 'core-intake' | 'summary' | 'attraction' | 'photos' | 'complete';
@@ -223,6 +224,9 @@ function MatchPanel({ profileData, coreIntakeData, userId }: { profileData: any;
       <Waitlist />
       <div className="mt-6">
         <SupplyPool />
+      </div>
+      <div className="mt-4">
+        <FeedbackHistory />
       </div>
       <div className="mb-2 mt-8">
         <div className="flex items-baseline justify-between">
