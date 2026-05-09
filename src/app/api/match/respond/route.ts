@@ -35,7 +35,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ ok: true, refunded: true })
     }
 
-    // Check if partner has also accepted — if so, exchange first names + open chat
+    // Check if partner has also accepted  -  if so, exchange first names + open chat
     const { data: rows } = await supabase.from('matches').select('user_id, status').eq('match_pair_id', matchId)
     const allAccepted = rows && rows.length === 2 && rows.every(r => r.status === 'accepted')
     if (allAccepted) {

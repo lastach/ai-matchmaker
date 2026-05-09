@@ -155,7 +155,7 @@ export async function POST(req: Request) {
     // Filter out dealbreakers, sort by score desc
     const final = scored.filter(s => !s.dealbreaker).sort((a, b) => (b.score || 0) - (a.score || 0))
 
-    // Persist a matchmaker review queue entry — the human pairs / approves before introduction
+    // Persist a matchmaker review queue entry  -  the human pairs / approves before introduction
     if (final.length > 0) {
       try {
         await supabase.from('match_review_queue').insert({

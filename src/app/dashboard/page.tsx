@@ -6,6 +6,7 @@ import { supabase } from '@/lib/supabase';
 import OnboardingChat from './OnboardingChat';
 import { DashboardErrorBoundary } from './ErrorBoundary';
 import IntakeInsights from './IntakeInsights';
+import SupplyPool from './SupplyPool';
 import TrialGate from '@/components/TrialGate';
 
 type OnboardingStep = 'welcome' | 'profile' | 'core-intake' | 'summary' | 'attraction' | 'photos' | 'complete';
@@ -220,6 +221,9 @@ function MatchPanel({ profileData, coreIntakeData, userId }: { profileData: any;
   return (
     <div className="bg-white rounded-2xl p-8 shadow-sm border border-[#E5E7EB]">
       <Waitlist />
+      <div className="mt-6">
+        <SupplyPool />
+      </div>
       <div className="mb-2 mt-8">
         <div className="flex items-baseline justify-between">
           <h2 className="text-lg font-semibold text-[#1F2937]">How matching works</h2>
