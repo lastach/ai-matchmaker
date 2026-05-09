@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { createClient } from '@supabase/supabase-js'
 import { useRouter } from 'next/navigation'
 
@@ -15,6 +15,14 @@ export default function AuthPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [isSignUp, setIsSignUp] = useState(() => { if (typeof window === 'undefined') return false; return new URLSearchParams(window.location.search).get('signup') === '1' })
+
+  // Robust signup default: re-read the URL after mount in case the lazy
+  // initializer was hydrated from server state where window was unavailable.
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const wantsSignup = new URLSearchParams(window.location.search).get('signup') === '1'
+    if (wantsSignup) setIsSignUp(true)
+  }, [])
   const [error, setError] = useState('')
   const [message, setMessage] = useState('')
   const [loading, setLoading] = useState(false)

@@ -18,7 +18,7 @@ export default function Pricing() {
             <h3 className="text-2xl font-bold text-gray-900 mb-2">Free</h3>
             <p className="text-sm text-gray-600 mb-6">Full intake, you stay on the waitlist until your local cohort opens. No card.</p>
             <ul className="text-sm text-gray-700 space-y-2 mb-6">
-              <li>- 20-question conversational intake (AI-led, human-reviewed)</li>
+              <li>- 21-question conversational intake (AI-led, human-reviewed)</li>
               <li>- Cohort waitlist with location and supply-pool transparency</li>
               <li>- Matching engine scores candidates on life-shape / posture / overlap / depth</li>
               <li>- Both-parties-must-accept partner-side flow</li>
