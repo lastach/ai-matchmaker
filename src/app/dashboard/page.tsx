@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import OnboardingChat from './OnboardingChat';
+import { DashboardErrorBoundary } from './ErrorBoundary';
 import IntakeInsights from './IntakeInsights';
 import TrialGate from '@/components/TrialGate';
 
@@ -277,7 +278,7 @@ function MatchPanel({ profileData, coreIntakeData, userId }: { profileData: any;
   );
 }
 
-export default function Dashboard() {
+function Dashboard_Inner() {
   const router = useRouter();
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -1372,3 +1373,8 @@ function DepthChat({ depthResponses, onAnswer }: { depthResponses: { [k: number]
   );
 }
 
+
+
+export default function DashboardWithBoundary() {
+  return <DashboardErrorBoundary><Dashboard_Inner /></DashboardErrorBoundary>;
+}
