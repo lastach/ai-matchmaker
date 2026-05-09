@@ -8,7 +8,7 @@ import { DashboardErrorBoundary } from './ErrorBoundary';
 import IntakeInsights from './IntakeInsights';
 import TrialGate from '@/components/TrialGate';
 
-type OnboardingStep = 'profile' | 'core-intake' | 'summary' | 'attraction' | 'photos' | 'complete';
+type OnboardingStep = 'welcome' | 'profile' | 'core-intake' | 'summary' | 'attraction' | 'photos' | 'complete';
 
 interface ProfileData {
   name?: string;
@@ -348,7 +348,7 @@ function Dashboard_Inner() {
         // Initialize new profile - check if already completed onboarding
         const newProfile: UserProfile = {
           userId: session.user.id,
-          onboardingStep: 'profile',
+          onboardingStep: 'welcome',
           profileData: {},
           coreIntakeData: {},
           attractionRatings: {},
@@ -612,6 +612,49 @@ function Dashboard_Inner() {
   }
 
   // ONBOARDING FLOWS
+  if (profile.onboardingStep === 'welcome') {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-[#2E1A47] via-[#3D2557] to-[#D4537E]/10 flex items-center justify-center p-4">
+        <div className="max-w-2xl w-full bg-white rounded-3xl shadow-2xl p-8 sm:p-12">
+          <p className="text-xs uppercase tracking-widest text-[#C8102E] font-semibold mb-3">Welcome to Amorlay</p>
+          <h1 className="text-3xl sm:text-4xl font-bold text-[#1F2937] mb-4 leading-tight">
+            Hi{profileData?.name ? `, ${profileData.name.split(' ')[0]}` : ''}. Before I match you, I want to know you.
+          </h1>
+          <p className="text-base text-[#4B5563] leading-relaxed mb-6">
+            The next 10-15 minutes is a real conversation, not a profile form. I will ask open-ended questions about your life, what has not worked in dating, and what a good life actually looks like for you. Your answers feed the brief I write for whoever I match you with.
+          </p>
+          <div className="bg-[#F9F5F2] border border-[#E5DDD3] rounded-xl p-4 mb-6">
+            <p className="text-sm font-semibold text-[#3D1820] mb-2">What to expect</p>
+            <ul className="text-sm text-[#4B5563] space-y-1.5">
+              <li>- About 12 questions, mostly open-ended</li>
+              <li>- Type as much or as little as feels honest. Short is fine if it is true.</li>
+              <li>- I save as you go. You can step away and come back.</li>
+              <li>- After: a one-page summary of what I heard, then we set the basics.</li>
+            </ul>
+          </div>
+          <div className="flex flex-col sm:flex-row gap-3">
+            <button
+              onClick={() => {
+                const updated: UserProfile = { ...profile!, onboardingStep: 'profile' };
+                saveProfile(updated);
+              }}
+              className="flex-1 bg-gradient-to-r from-[#D4537E] to-[#C04870] text-white px-6 py-3 rounded-lg font-semibold hover:shadow-lg transition"
+            >
+              Start the conversation
+            </button>
+            <button
+              onClick={handleLogout}
+              className="text-[#6B7280] hover:text-[#1F2937] px-4 py-3 rounded-lg text-sm font-medium"
+            >
+              Sign out
+            </button>
+          </div>
+          <p className="text-xs text-[#9CA3AF] mt-4">Your answers are private. Only used to build your match brief.</p>
+        </div>
+      </div>
+    );
+  }
+
   if (profile.onboardingStep === 'profile' || profile.onboardingStep === 'core-intake') {
     return (
       <OnboardingChat
