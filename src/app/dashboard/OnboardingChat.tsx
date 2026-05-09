@@ -94,7 +94,7 @@ const TURNS: Turn[] = [
     minWords: MIN_DEEP_WORDS,
     prompt: () =>
       "Before we get into any details — what brings you here right now? What made you want to try something different than how dating usually goes?",
-    ack: () => "Got you. That helps me hear where you're starting from.",
+    ack: () => "Got it.",
   },
   {
     id: 'challenge',
@@ -104,7 +104,7 @@ const TURNS: Turn[] = [
     minWords: MIN_DEEP_WORDS,
     prompt: () =>
       "What's been hard about dating so far? Tell me what hasn't worked, or where it tends to go sideways for you.",
-    ack: () => "Useful — that tells me a lot about what to avoid.",
+    ack: () => "Got it.",
   },
   {
     id: 'goodLife',
@@ -114,7 +114,7 @@ const TURNS: Turn[] = [
     minWords: MIN_DEEP_WORDS,
     prompt: () =>
       "Picture your life a few years from now in a version where things have gone really well — not Instagram-well, just actually well. What does that look like, day to day?",
-    ack: () => "That paints a picture.",
+    ack: () => "Got it.",
   },
   {
     id: 'pastLesson',
@@ -124,7 +124,7 @@ const TURNS: Turn[] = [
     minWords: MIN_DEEP_WORDS,
     prompt: () =>
       "What's something you've learned about yourself from past relationships — good or hard — that's changed how you show up now?",
-    ack: () => "That's growth. Got it.",
+    ack: () => "Got it.",
   },
   {
     id: 'idealSaturday',
@@ -134,7 +134,7 @@ const TURNS: Turn[] = [
     minWords: MIN_DEEP_WORDS,
     prompt: () =>
       "Describe a regular Saturday you'd actually want to live — not a vacation, not a highlight reel. The whole picture, who you're with, what you're doing.",
-    ack: () => "Perfect. That tells me a lot.",
+    ack: () => "Got it.",
   },
   {
     id: 'context',
