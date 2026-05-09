@@ -26,15 +26,12 @@ export default function Home() {
         </div>
       </nav>
 
-      {/* Hero */}
-      <section className="max-w-6xl mx-auto px-6 pt-16 pb-20 grid lg:grid-cols-2 gap-12 items-center">
-        <div>
-          <span className="inline-block bg-rose-50 text-[#C8102E] border border-rose-200 text-xs font-semibold px-3 py-1 rounded-full uppercase tracking-wide mb-6">
-            For people done with swiping
-          </span>
-          <h1 className="text-5xl md:text-6xl font-bold text-gray-900 leading-tight mb-6">
-            One match.<br />One memo.<br />One date.
-          </h1>
+      {/* Editorial hero - typography-led, no card-shaped mock above the fold */}
+      <section className="max-w-3xl mx-auto px-6 pt-20 pb-16">
+        <p className="font-serif italic text-base text-[#C8102E] mb-8">For people done with swiping.</p>
+        <h1 className="font-serif text-5xl md:text-7xl font-normal text-gray-900 leading-[1.05] mb-8 tracking-tight">
+          One match.<br /><span className="italic">One memo.</span><br />One date.
+        </h1>
           <p className="text-lg text-gray-600 mb-8 leading-relaxed">
             Tell me about you in your own words - not a profile, a conversation. When enough thoughtful
             people in your area have done the same, I introduce you to one of them with a written memo
@@ -52,49 +49,7 @@ export default function Home() {
           <p className="text-xs text-gray-500 mt-1"><strong>The "I" you talk to is an AI</strong> trained to read your answers carefully. A human reviews every match before it's sent.</p>
         </div>
 
-        {/* Mock match-memo preview */}
-        <div className="relative">
-          <div className="bg-white rounded-2xl border border-gray-200 shadow-xl overflow-hidden">
-            <div className="bg-rose-50 border-b border-rose-100 px-5 py-3 flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-red-300" />
-              <span className="w-2.5 h-2.5 rounded-full bg-yellow-300" />
-              <span className="w-2.5 h-2.5 rounded-full bg-green-300" />
-              <span className="text-xs text-gray-500 ml-3">Your match memo &middot; this Sunday</span>
-            </div>
-            <div className="p-5 space-y-4">
-              <div className="flex items-center gap-3 pb-3 border-b border-gray-100">
-                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-rose-300 to-rose-500" />
-                <div>
-                  <p className="text-sm font-bold text-gray-900">Compatibility: 87%</p>
-                  <p className="text-xs text-gray-500">In your area &middot; cohort opened Tuesday</p>
-                </div>
-              </div>
-              <div>
-                <p className="text-[10px] uppercase tracking-wide text-rose-700 font-semibold mb-1">Why I think you'll like them</p>
-                <p className="text-sm text-gray-700 leading-relaxed">
-                  You both wrote about wanting Sundays that don&apos;t look like vacation Instagram. Their answer
-                  about past relationships had a level of self-awareness that matched yours. Same posture
-                  toward kids. Different careers, but they care about your kind of impact.
-                </p>
-              </div>
-              <div>
-                <p className="text-[10px] uppercase tracking-wide text-rose-700 font-semibold mb-1">Where to be careful</p>
-                <p className="text-sm text-gray-700 leading-relaxed">
-                  They lean direct on conflict - you wrote that you take time to sit with it. That&apos;s not a
-                  dealbreaker but worth knowing on date one.
-                </p>
-              </div>
-              <div className="flex gap-2 pt-2 border-t border-gray-100">
-                <button className="text-xs px-3 py-1.5 bg-[#C8102E] text-white rounded">Open intro</button>
-                <button className="text-xs px-3 py-1.5 bg-white border border-gray-300 text-gray-700 rounded">Pass</button>
-              </div>
-            </div>
-          </div>
-          <div className="absolute -bottom-4 -right-4 bg-[#C8102E] text-white text-xs font-medium px-3 py-1.5 rounded-lg shadow-lg">
-            One match per cohort. Take your time.
-          </div>
-        </div>
-      </section>
+        </section>
 
       {/* Value props */}
       <section className="bg-rose-50/40 border-y border-rose-100 py-16">
