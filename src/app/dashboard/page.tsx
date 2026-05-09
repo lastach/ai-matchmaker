@@ -633,8 +633,8 @@ function Dashboard_Inner() {
           <div className="bg-[#F9F5F2] border border-[#E5DDD3] rounded-xl p-4 mb-6">
             <p className="text-sm font-semibold text-[#3D1820] mb-2">What to expect</p>
             <ul className="text-sm text-[#4B5563] space-y-1.5">
-              <li>- About 12 questions, mostly open-ended</li>
-              <li>- Type as much or as little as feels honest. Short is fine if it is true.</li>
+              <li>- About 20 questions, mostly open-ended (5-6 are deep, the rest quick)</li>
+              <li>- The 5-6 deep questions ask for at least ~20 words. The rest are quick.</li>
               <li>- I save as you go. You can step away and come back.</li>
               <li>- After: a one-page summary of what I heard, then we set the basics.</li>
             </ul>

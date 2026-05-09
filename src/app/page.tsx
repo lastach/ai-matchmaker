@@ -10,11 +10,10 @@ export default function Home() {
   const [checking, setChecking] = useState(true);
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      if (user) router.replace('/dashboard');
-      else setChecking(false);
-    });
-  }, [router]);
+    // Always show the marketing homepage. Logged-in users can navigate to
+    // /dashboard explicitly via the nav.
+    setChecking(false);
+  }, []);
 
   if (checking) return <div className="min-h-screen bg-white" />;
 
@@ -23,7 +22,7 @@ export default function Home() {
       <nav className="border-b border-rose-100">
         <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
           <img src="/logo.svg" alt="Amorlay" className="h-9" />
-          <Link href="/auth" className="text-sm font-medium text-gray-600 hover:text-gray-900">Sign in</Link>
+          <div className="flex items-center gap-5"><Link href="/pricing" className="text-sm text-gray-600 hover:text-gray-900">Pricing</Link><Link href="/safety" className="text-sm text-gray-600 hover:text-gray-900">Safety</Link><Link href="/auth" className="text-sm font-medium text-gray-600 hover:text-gray-900">Sign in</Link></div>
         </div>
       </nav>
 
@@ -50,6 +49,7 @@ export default function Home() {
             </Link>
           </div>
           <p className="text-xs text-gray-500 mt-4">No swiping. No infinite scroll. 18+. Free during research preview.</p>
+          <p className="text-xs text-gray-500 mt-1"><strong>The "I" you talk to is an AI</strong> trained to read your answers carefully. A human reviews every match before it's sent.</p>
         </div>
 
         {/* Mock match-memo preview */}
@@ -145,6 +145,8 @@ export default function Home() {
         <div className="max-w-6xl mx-auto px-6 flex justify-between text-xs text-gray-500">
           <span>&copy; 2026 Amorlay</span>
           <div className="flex gap-4">
+            <Link href="/pricing" className="hover:text-gray-700">Pricing</Link>
+            <Link href="/safety" className="hover:text-gray-700">Safety</Link>
             <Link href="/privacy" className="hover:text-gray-700">Privacy</Link>
             <Link href="/terms" className="hover:text-gray-700">Terms</Link>
           </div>
