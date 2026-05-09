@@ -373,7 +373,7 @@ export default function OnboardingChat({
 
   if (!turn) return null;
 
-  const submit = (rawAnswer: string) => {
+  const submit = async (rawAnswer: string) => {
     setError('');
     const answer = rawAnswer.trim();
 
@@ -410,27 +410,54 @@ export default function OnboardingChat({
     setCore(newCore);
 
     const userMsg: Message = { role: 'user', content: answer || '(skipped)' };
-    const ack = turn.ack ? turn.ack(answer, { profile: newProfile, core: newCore }) : '';
+
+    // Optimistically append the user's message + a typing placeholder for the ack
+    const baseMessages: Message[] = [...messages, userMsg];
+    setMessages([...baseMessages, { role: 'assistant', content: '…' }]);
+    setInput('');
 
     const nextIdx = turnIndex + 1;
     const nextTurn = TURNS[nextIdx];
-    const newMessages: Message[] = [...messages, userMsg];
-    if (ack) newMessages.push({ role: 'assistant', content: ack });
+
+    // For longtext (deep) questions, ask the server for a contextual ack that
+    // actually reads what the user said. For short structured answers, the
+    // canned ack is fine.
+    let ack = ''
+    const wantsClaudeAck = turn.input === 'longtext' && (answer || '').trim().length > 0
+    if (wantsClaudeAck) {
+      try {
+        const r = await fetch('/api/intake/ack', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ prompt: turn.prompt({ profile: newProfile, core: newCore }), answer }),
+        })
+        if (r.ok) {
+          const d = await r.json()
+          ack = String(d?.ack || '').trim()
+        }
+      } catch { /* fall back to canned */ }
+    }
+    if (!ack) {
+      ack = turn.ack ? turn.ack(answer, { profile: newProfile, core: newCore }) : ''
+    }
+
+    // Build the final message list (replacing the typing placeholder)
+    const finalMessages: Message[] = [...baseMessages]
+    if (ack) finalMessages.push({ role: 'assistant', content: ack })
     if (nextTurn) {
-      newMessages.push({
+      finalMessages.push({
         role: 'assistant',
         content: nextTurn.prompt({ profile: newProfile, core: newCore }),
         quickReplies: nextTurn.choices,
       });
     } else {
-      newMessages.push({
+      finalMessages.push({
         role: 'assistant',
         content:
           "Okay — I've got everything I need from this conversation. I'm going to put it all together and show you what I learned. Hit Continue when you're ready.",
       });
     }
-    setMessages(newMessages);
-    setInput('');
+    setMessages(finalMessages);
     setTurnIndex(nextIdx);
   };
 
