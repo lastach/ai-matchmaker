@@ -73,7 +73,7 @@ const MIN_DEEP_WORDS = 20;
 
 const TURNS: Turn[] = [
   // ═══════════════════════════════════════════════════════════
-  // PHASE 1 — OPEN-ENDED CONVERSATION (no profile fields yet, no chips).
+  // PHASE 1 - OPEN-ENDED CONVERSATION (no profile fields yet, no chips).
   // The point: get a real picture in the user's own words BEFORE the form.
   // ═══════════════════════════════════════════════════════════
   {
@@ -82,7 +82,7 @@ const TURNS: Turn[] = [
     field: 'name',
     input: 'text',
     prompt: () =>
-      "Hey — what should I call you?",
+      "Hey - what should I call you?",
     ack: (a) => `Nice to meet you, ${a.trim().split(/\s+/)[0]}.`,
     validate: (a) => (a.trim().length === 0 ? 'I need something to call you.' : null),
   },
@@ -93,7 +93,7 @@ const TURNS: Turn[] = [
     input: 'longtext',
     minWords: MIN_DEEP_WORDS,
     prompt: () =>
-      "Before we get into any details — what brings you here right now? What made you want to try something different than how dating usually goes?",
+      "Before we get into any details - what brings you here right now? What made you want to try something different than how dating usually goes?",
     ack: () => "Got it.",
   },
   {
@@ -113,7 +113,7 @@ const TURNS: Turn[] = [
     input: 'longtext',
     minWords: MIN_DEEP_WORDS,
     prompt: () =>
-      "Picture your life a few years from now in a version where things have gone really well — not Instagram-well, just actually well. What does that look like, day to day?",
+      "Picture your life a few years from now in a version where things have gone really well - not Instagram-well, just actually well. What does that look like, day to day?",
     ack: () => "Got it.",
   },
   {
@@ -123,7 +123,7 @@ const TURNS: Turn[] = [
     input: 'longtext',
     minWords: MIN_DEEP_WORDS,
     prompt: () =>
-      "What's something you've learned about yourself from past relationships — good or hard — that's changed how you show up now?",
+      "What's something you've learned about yourself from past relationships - good or hard - that's changed how you show up now?",
     ack: () => "Got it.",
   },
   {
@@ -133,7 +133,7 @@ const TURNS: Turn[] = [
     input: 'longtext',
     minWords: MIN_DEEP_WORDS,
     prompt: () =>
-      "Describe a regular Saturday you'd actually want to live — not a vacation, not a highlight reel. The whole picture, who you're with, what you're doing.",
+      "Describe a regular Saturday you'd actually want to live - not a vacation, not a highlight reel. The whole picture, who you're with, what you're doing.",
     ack: () => "Got it.",
   },
   {
@@ -143,14 +143,14 @@ const TURNS: Turn[] = [
     input: 'longtext',
     optional: true,
     prompt: () =>
-      "Anything else about your life right now that I should understand — work, family, where your time goes, what you're navigating? Whatever you'd want me to actually know. (Or say \"skip\".)",
+      "Anything else about your life right now that I should understand - work, family, where your time goes, what you're navigating? Whatever you'd want me to actually know. (Or say \"skip\".)",
     ack: (a) =>
       a.trim().toLowerCase() === 'skip' || !a.trim()
-        ? "All good — you can fill this in later." : "Thanks. That helps the picture.",
+        ? "All good - you can fill this in later." : "Thanks. That helps the picture.",
   },
 
   // ═══════════════════════════════════════════════════════════
-  // PHASE 2 — PROFILE BASICS (the minimum I need to match anyone at all).
+  // PHASE 2 - PROFILE BASICS (the minimum I need to match anyone at all).
   // ═══════════════════════════════════════════════════════════
   {
     id: 'birthDate',
@@ -166,7 +166,7 @@ const TURNS: Turn[] = [
       const now = new Date();
       const age = Math.floor((now.getTime() - d.getTime()) / (365.25 * 24 * 60 * 60 * 1000));
       if (age < 18) return 'Amorlay is 18+ only.';
-      if (age > 99) return 'That can\'t be right — give it another shot.';
+      if (age > 99) return 'That can\'t be right - give it another shot.';
       return null;
     },
   },
@@ -186,7 +186,7 @@ const TURNS: Turn[] = [
     input: 'choices',
     choices: ['women', 'men', 'nonbinary', 'anyone'],
     prompt: () => "Who are you looking to date?",
-    ack: (a) => `Okay — I'll look for ${a}.`,
+    ack: (a) => `Okay - I'll look for ${a}.`,
   },
   {
     id: 'pronouns',
@@ -196,7 +196,7 @@ const TURNS: Turn[] = [
     optional: true,
     prompt: () => "What pronouns should I use for you? (Type them, or say \"skip\".)",
     ack: (a) =>
-      a.trim().toLowerCase() === 'skip' || !a.trim() ? "No problem." : `Cool — ${a.trim()}.`,
+      a.trim().toLowerCase() === 'skip' || !a.trim() ? "No problem." : `Cool - ${a.trim()}.`,
   },
   {
     id: 'location',
@@ -231,21 +231,21 @@ const TURNS: Turn[] = [
       "Age range you'd actually consider? Give me a span like \"28 to 38\" or \"mid 30s to mid 40s\".",
     ack: (_, ctx) =>
       ctx.core.ageMin && ctx.core.ageMax
-        ? `Got it — ${ctx.core.ageMin} to ${ctx.core.ageMax}.`
+        ? `Got it - ${ctx.core.ageMin} to ${ctx.core.ageMax}.`
         : "Got it.",
     validate: (a) => {
       const nums = (a.match(/\d{1,2}/g) || []).map(Number);
-      if (nums.length < 2) return 'I need two numbers — a min age and a max age.';
+      if (nums.length < 2) return 'I need two numbers - a min age and a max age.';
       const [min, max] = [Math.min(...nums), Math.max(...nums)];
       if (min < 18) return 'Minimum age has to be 18 or over.';
       if (max > 99) return 'Max age over 99 isn\'t plausible.';
-      if (max - min > 40) return 'That\'s a huge range — narrow it a bit.';
+      if (max - min > 40) return 'That\'s a huge range - narrow it a bit.';
       return null;
     },
   },
 
   // ═══════════════════════════════════════════════════════════
-  // PHASE 3 — STRUCTURED CHOICES (last, after we have the picture).
+  // PHASE 3 - STRUCTURED CHOICES (last, after we have the picture).
   // ═══════════════════════════════════════════════════════════
   {
     id: 'priorityChoice',
@@ -282,7 +282,7 @@ const TURNS: Turn[] = [
     input: 'choices',
     choices: ['Build career', 'Start a family', 'Travel often', 'Health & wellness', 'Creative work', 'Service / impact'],
     prompt: () => "Biggest life focus over the next few years?",
-    ack: (a) => `${a} — that helps.`,
+    ack: (a) => `${a} - that helps.`,
   },
   {
     id: 'topValue',
@@ -291,7 +291,7 @@ const TURNS: Turn[] = [
     input: 'choices',
     choices: ['Honesty', 'Family', 'Adventure', 'Wellness', 'Creativity', 'Spirituality', 'Ambition', 'Independence'],
     prompt: () => "Of these, which matters MOST to you?",
-    ack: (a) => `${a} — noted.`,
+    ack: (a) => `${a} - noted.`,
   },
   {
     id: 'attachmentSelf',
@@ -313,7 +313,7 @@ const TURNS: Turn[] = [
     field: 'attractionImportance',
     input: 'choices',
     choices: [
-      "Very important — has to be someone I'm drawn to",
+      "Very important - has to be someone I'm drawn to",
       'Matters, but chemistry can grow',
       'Less important than compatibility',
     ],
@@ -327,10 +327,10 @@ const TURNS: Turn[] = [
     input: 'longtext',
     optional: true,
     prompt: () =>
-      "Last one — any absolute dealbreakers? Things you won't budge on. (Type them out, or say \"none\".)",
+      "Last one - any absolute dealbreakers? Things you won't budge on. (Type them out, or say \"none\".)",
     ack: (a) =>
       ['none', 'no', 'nope', 'nah'].includes(a.trim().toLowerCase())
-        ? "Fair enough — I'll keep things open."
+        ? "Fair enough - I'll keep things open."
         : "Noted. I'll filter on that.",
   },
 ];
@@ -383,7 +383,7 @@ export default function OnboardingChat({
       return;
     }
     if (turn.minWords && answer && countWords(answer) < turn.minWords) {
-      setError(`Please give this question at least ${turn.minWords} words — a thoughtful answer is the whole point.`);
+      setError(`Please give this question at least ${turn.minWords} words - a thoughtful answer is the whole point.`);
       return;
     }
     if (turn.validate) {
@@ -454,7 +454,7 @@ export default function OnboardingChat({
       finalMessages.push({
         role: 'assistant',
         content:
-          "Okay — I've got everything I need from this conversation. I'm going to put it all together and show you what I learned. Hit Continue when you're ready.",
+          "Okay - I've got everything I need from this conversation. I'm going to put it all together and show you what I learned. Hit Continue when you're ready.",
       });
     }
     setMessages(finalMessages);

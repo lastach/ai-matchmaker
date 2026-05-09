@@ -96,7 +96,7 @@ export async function loadProfile(userId: string): Promise<AmorlayProfile> {
     if (error) throw error
     if (data) return fromRow(data)
   } catch (e) {
-    // Table missing or auth issue — fall through to localStorage
+    // Table missing or auth issue - fall through to localStorage
   }
   // Fallback: read from per-user localStorage keys
   if (typeof window === 'undefined') return {}

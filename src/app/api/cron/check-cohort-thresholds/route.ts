@@ -83,14 +83,14 @@ export async function GET(request: Request) {
           <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 540px; margin: 0 auto; padding: 24px; color: #1f2937;">
             <h1 style="font-size: 22px; font-weight: 600; margin: 0 0 8px;">Your cohort is open, ${firstName}.</h1>
             <p style="font-size: 14px; line-height: 1.6; color: #374151;">
-              Enough thoughtful people in your area have signed up — Amorlay is opening matching for your cohort.
+              Enough thoughtful people in your area have signed up - Amorlay is opening matching for your cohort.
               Open the app to confirm your intake is complete; we'll start drafting your first match memo this week.
             </p>
             <p style="margin-top: 24px;">
               <a href="${APP_HOME}/dashboard" style="background: #c8102e; color: #fff; padding: 10px 18px; border-radius: 6px; text-decoration: none; font-size: 14px;">Open Amorlay</a>
             </p>
             <hr style="border: 0; border-top: 1px solid #e5e7eb; margin: 32px 0;" />
-            <p style="font-size: 12px; color: #9ca3af;">Amorlay — one match, one memo, one date.</p>
+            <p style="font-size: 12px; color: #9ca3af;">Amorlay - one match, one memo, one date.</p>
           </div>
         `
         try {

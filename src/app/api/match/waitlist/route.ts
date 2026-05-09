@@ -37,7 +37,7 @@ export async function GET() {
     // Global count regardless of location (sanity)
     const { count: globalTotal } = await supabase.from('matchmaker_profiles').select('*', { count: 'exact', head: true })
     totalGlobal = globalTotal || 0
-    // Cohort total — anyone whose location matches the same area (case-insensitive substring on city/region)
+    // Cohort total - anyone whose location matches the same area (case-insensitive substring on city/region)
     if (userLocation) {
       const firstToken = userLocation.split(/[\s,]/).filter(Boolean)[0] || userLocation
       const { count: areaTotal } = await supabase.from('matchmaker_profiles').select('*', { count: 'exact', head: true }).ilike('location', `%${firstToken}%`)
@@ -57,7 +57,7 @@ export async function GET() {
       position = total + 1
     }
   } catch {
-    // Table missing pre-migration — fall back to "you're #1"
+    // Table missing pre-migration - fall back to "you're #1"
     position = 1
     total = 1
   }

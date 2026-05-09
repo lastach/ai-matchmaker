@@ -37,7 +37,7 @@ export default function Home() {
             One match.<br />One memo.<br />One date.
           </h1>
           <p className="text-lg text-gray-600 mb-8 leading-relaxed">
-            Tell me about you in your own words — not a profile, a conversation. When enough thoughtful
+            Tell me about you in your own words - not a profile, a conversation. When enough thoughtful
             people in your area have done the same, I introduce you to one of them with a written memo
             explaining why I think it's worth your night.
           </p>
@@ -80,7 +80,7 @@ export default function Home() {
               <div>
                 <p className="text-[10px] uppercase tracking-wide text-rose-700 font-semibold mb-1">Where to be careful</p>
                 <p className="text-sm text-gray-700 leading-relaxed">
-                  They lean direct on conflict — you wrote that you take time to sit with it. That&apos;s not a
+                  They lean direct on conflict - you wrote that you take time to sit with it. That&apos;s not a
                   dealbreaker but worth knowing on date one.
                 </p>
               </div>
@@ -109,7 +109,7 @@ export default function Home() {
               <h3 className="font-bold text-gray-900 mb-2">You answer in your own words</h3>
               <p className="text-sm text-gray-600">
                 Open-ended questions about your life, your past, what you want. No bio to write, no
-                witty hooks. The intake takes 10–15 minutes and feels like a real conversation.
+                witty hooks. The intake takes 10-15 minutes and feels like a real conversation.
               </p>
             </div>
             <div className="bg-white rounded-xl p-6 border border-gray-200">
@@ -124,7 +124,7 @@ export default function Home() {
               <div className="w-10 h-10 bg-rose-100 rounded-lg flex items-center justify-center mb-4 text-rose-700 font-bold">3</div>
               <h3 className="font-bold text-gray-900 mb-2">One match, one memo</h3>
               <p className="text-sm text-gray-600">
-                We pick one person we think you should meet and write you a memo explaining why —
+                We pick one person we think you should meet and write you a memo explaining why -
                 and where to be careful. You decide whether to open the intro.
               </p>
             </div>

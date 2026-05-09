@@ -7,7 +7,7 @@ export const runtime = 'nodejs'
  * Returns a 1-sentence contextual acknowledgment of what the user just said
  * during onboarding. The point is to make the conversation feel heard, not
  * interview-like. The ack must reference SOMETHING SPECIFIC from the answer
- * (a phrase, a feeling, a fact) — never "that tells me a lot" generic filler.
+ * (a phrase, a feeling, a fact) - never "that tells me a lot" generic filler.
  */
 export async function POST(req: Request) {
   try {
@@ -30,14 +30,14 @@ export async function POST(req: Request) {
       "Hard rules:",
       "1. NEVER use generic filler: no 'that tells me a lot', 'useful', 'got it', 'thanks for sharing', 'paints a picture', 'noted'.",
       "2. NEVER claim to have learned something they didn't say. If they said 'nothing has worked,' do NOT respond as if they listed things to avoid.",
-      "3. Reflect back a phrase or a feeling from THEIR answer — show you actually read it.",
+      "3. Reflect back a phrase or a feeling from THEIR answer - show you actually read it.",
       "4. No therapy-speak ('I hear you', 'sounds challenging'). No emojis. No exclamation points.",
-      "5. If their answer is short or evasive, acknowledge that honestly: 'Short answer — that's fine, I'll fill in around it.'",
+      "5. If their answer is short or evasive, acknowledge that honestly: 'Short answer - that's fine, I'll fill in around it.'",
       "Examples:",
-      "Q: 'What's been hard about dating?' A: 'nothing has worked. matchmakers, apps, in person — none of it.'",
+      "Q: 'What's been hard about dating?' A: 'nothing has worked. matchmakers, apps, in person - none of it.'",
       "  → 'Yeah, the matchmaker-app-meetup treadmill is its own kind of exhausting. You\\'ve clearly been trying.'",
       "Q: 'What does a good Saturday look like?' A: 'morning run, brunch with my sister, then puttering in the yard.'",
-      "  → 'A morning-run-and-puttering kind of Saturday — low-key, not performative.'",
+      "  → 'A morning-run-and-puttering kind of Saturday - low-key, not performative.'",
       "Return ONLY the acknowledgment text. No quotes, no preamble.",
     ].join('\n')
 

@@ -27,7 +27,7 @@ export function setItem<T>(userId: string, key: string, value: T): void {
   try {
     window.localStorage.setItem(keyFor(userId, key), JSON.stringify(value));
   } catch {
-    // Quota exceeded or private mode — silently drop; UI state still holds.
+    // Quota exceeded or private mode - silently drop; UI state still holds.
   }
 }
 

@@ -72,7 +72,7 @@ export default function IntakeInsights({ profileData, coreIntakeData }: Props) {
           </li>
         ))}
       </ul>
-      <p className="text-xs text-[#9CA3AF] mt-4 italic">Generated from your intake answers — feeds the brief on whoever I match you with.</p>
+      <p className="text-xs text-[#9CA3AF] mt-4 italic">Generated from your intake answers - feeds the brief on whoever I match you with.</p>
     </div>
   )
 }

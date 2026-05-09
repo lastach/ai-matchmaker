@@ -225,7 +225,7 @@ function MatchPanel({ profileData, coreIntakeData, userId }: { profileData: any;
           <h2 className="text-lg font-semibold text-[#1F2937]">How matching works</h2>
           {result && <p className="text-xs text-[#6B7280]">Sample profile · {result.pool_size}-person demo pool</p>}
         </div>
-        <p className="text-sm text-[#6B7280] mt-1">Below is what the matching engine weighs when your cohort opens — your values, attachment style, communication style, life goals, and relationship priority.</p>
+        <p className="text-sm text-[#6B7280] mt-1">Below is what the matching engine weighs when your cohort opens - your values, attachment style, communication style, life goals, and relationship priority.</p>
       </div>
       {loading && <p className="text-[#6B7280]">Scoring compatibility across attachment style, values, communication, and life goals…</p>}
       {error && <p className="text-red-600">{error}</p>}
@@ -256,7 +256,7 @@ function MatchPanel({ profileData, coreIntakeData, userId }: { profileData: any;
               {m.notes.map((n: string, i: number) => (<li key={i}>{n}</li>))}
             </ul>
           )}
-          {/* No Report on demo profile — only meaningful once real users are matched */}
+          {/* No Report on demo profile - only meaningful once real users are matched */}
           {memoLoading && !memo && (
             <p className="mt-4 pt-4 border-t border-[#E5E7EB] text-sm text-[#6B7280] italic">Writing your match memo...</p>
           )}
@@ -267,7 +267,7 @@ function MatchPanel({ profileData, coreIntakeData, userId }: { profileData: any;
             </div>
           )}
           <div className="mt-4 pt-4 border-t border-[#E5E7EB] text-xs text-[#6B7280]">
-            Score components above show how the engine weighs the five dimensions — values, attachment style, communication style, life goals, relationship priority — and produces a composite. When a verified member matches your profile, you'll see them here with a memo.
+            Score components above show how the engine weighs the five dimensions - values, attachment style, communication style, life goals, relationship priority - and produces a composite. When a verified member matches your profile, you'll see them here with a memo.
           </div>
         </div>
       )}
@@ -292,7 +292,7 @@ function Dashboard_Inner() {
 
   useEffect(() => { if (user?.id) { refreshPhotos() } }, [user?.id])
 
-  // Hard age gate — required for app store + ToS compliance. If the user's stored
+  // Hard age gate - required for app store + ToS compliance. If the user's stored
   // birth date computes to <18, block the dashboard and sign them out.
   useEffect(() => {
     if (!profileData?.birthDate) return;
@@ -497,7 +497,7 @@ function Dashboard_Inner() {
     saveProfile(newProfile);
   };
 
-  // Photo handlers — upload to Supabase Storage via /api/photos/upload, then refresh via /api/photos/list
+  // Photo handlers - upload to Supabase Storage via /api/photos/upload, then refresh via /api/photos/list
   const refreshPhotos = async () => {
     try {
       const r = await fetch('/api/photos/list');
@@ -584,7 +584,7 @@ function Dashboard_Inner() {
       <div className="min-h-screen flex items-center justify-center p-6">
         <div className="bg-white rounded-2xl border border-gray-200 shadow p-8 max-w-md text-center">
           <h1 className="text-2xl font-bold text-gray-900 mb-2">Welcome back to Amorlay</h1>
-          <p className="text-gray-600 mb-6">Looks like we lost the thread of your last session. Start the intake fresh — it&apos;ll only take a few minutes.</p>
+          <p className="text-gray-600 mb-6">Looks like we lost the thread of your last session. Start the intake fresh - it&apos;ll only take a few minutes.</p>
           <button
             onClick={() => {
               if (!user) { router.push('/auth'); return; }
@@ -649,7 +649,7 @@ function Dashboard_Inner() {
       'have-and-done': 'Has kids and is done',
       'I have kids and am done': 'Has kids and is done',
     };
-    const kidsDisplay = profileData.ownWantChildren ? (kidsLabelMap[profileData.ownWantChildren] || profileData.ownWantChildren) : '—';
+    const kidsDisplay = profileData.ownWantChildren ? (kidsLabelMap[profileData.ownWantChildren] || profileData.ownWantChildren) : '-';
     const deepAnswers: Array<[string, string | undefined]> = [
       ['Ideal future', coreIntakeData.q6Response],
       ['Handling conflict', coreIntakeData.q7Response],
@@ -727,7 +727,7 @@ function Dashboard_Inner() {
               }}
               className="flex-1 py-3 px-4 bg-gradient-to-r from-[#D4537E] to-[#C04870] text-white font-semibold rounded-lg hover:shadow-lg"
             >
-              Looks right — continue
+              Looks right - continue
             </button>
           </div>
         </div>
@@ -1034,7 +1034,7 @@ function Dashboard_Inner() {
       <div className="max-w-6xl mx-auto px-6 py-12">
         {activeTab === 'home' && (
           <div className="space-y-8">
-            {/* What I heard from you — renders the user's open-ended answers back so the post-intake
+            {/* What I heard from you - renders the user's open-ended answers back so the post-intake
                 screen feels substantive, not like a profile-strength wheel. */}
             {(coreIntakeData.q6Response || coreIntakeData.q7Response || coreIntakeData.q8Response || coreIntakeData.q9Response || coreIntakeData.q10Response || profileData.bio) && (
               <div className="bg-gradient-to-br from-[#FBF7F4] to-white rounded-2xl p-8 shadow-sm border border-[#F0E2D6]">
@@ -1048,7 +1048,7 @@ function Dashboard_Inner() {
                     className="text-xs text-[#6B7280] hover:text-[#C8102E] underline"
                   >Re-do the conversation</button>
                 </div>
-                <p className="text-sm text-[#6B7280] mb-6">This is the picture I&apos;ll use to find your match. If anything is off, redo the conversation any time — I won&apos;t lose your other answers.</p>
+                <p className="text-sm text-[#6B7280] mb-6">This is the picture I&apos;ll use to find your match. If anything is off, redo the conversation any time - I won&apos;t lose your other answers.</p>
                 <dl className="space-y-5">
                   {coreIntakeData.q6Response && (
                     <div>
@@ -1089,7 +1089,7 @@ function Dashboard_Inner() {
                 </dl>
                 <div className="mt-6 pt-5 border-t border-[#F0E2D6] grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
                   {profileData.gender && <div><span className="text-[#9CA3AF]">You</span><br/><span className="text-[#1F2937] font-medium">{profileData.gender}{profileData.pronouns ? ` · ${profileData.pronouns}` : ''}</span></div>}
-                  {profileData.interestedIn && <div><span className="text-[#9CA3AF]">Looking for</span><br/><span className="text-[#1F2937] font-medium capitalize">{profileData.interestedIn}{coreIntakeData.ageMin && coreIntakeData.ageMax ? `, ${coreIntakeData.ageMin}–${coreIntakeData.ageMax}` : ''}</span></div>}
+                  {profileData.interestedIn && <div><span className="text-[#9CA3AF]">Looking for</span><br/><span className="text-[#1F2937] font-medium capitalize">{profileData.interestedIn}{coreIntakeData.ageMin && coreIntakeData.ageMax ? `, ${coreIntakeData.ageMin}-${coreIntakeData.ageMax}` : ''}</span></div>}
                   {coreIntakeData.location && <div><span className="text-[#9CA3AF]">Where</span><br/><span className="text-[#1F2937] font-medium">{coreIntakeData.location}</span></div>}
                 </div>
               </div>
@@ -1219,7 +1219,7 @@ function Dashboard_Inner() {
         )}
       </div>
 
-      {/* Delete Account — GDPR/CCPA */}
+      {/* Delete Account - GDPR/CCPA */}
       <div className="mt-12 pt-6 border-t border-gray-200 px-6 max-w-4xl mx-auto">
         <details className="text-xs text-gray-500">
           <summary className="cursor-pointer hover:text-gray-700">Account & data</summary>
@@ -1227,7 +1227,7 @@ function Dashboard_Inner() {
             <button
               onClick={async () => {
                 if (!confirm('Permanently delete your account and all your data? This cannot be undone.')) return;
-                if (!confirm('Last chance — delete your account?')) return;
+                if (!confirm('Last chance - delete your account?')) return;
                 const r = await fetch('/api/account/delete', { method: 'POST' });
                 const d = await r.json();
                 if (r.ok) {
@@ -1266,7 +1266,7 @@ function Waitlist() {
     <div className="bg-gradient-to-br from-[#F4EDDC] to-[#FAF1E0] rounded-xl p-6 border border-[#E8D8B8]">
       <h2 className="text-2xl font-bold text-[#3D1820] mb-1">{ready ? `Your ${areaLabel} cohort is open` : `You're on the ${areaLabel} waitlist`}</h2>
       <div className="flex items-baseline gap-3 mt-3">
-        <p className="text-5xl font-bold text-[#5E1F2A]">#{position ?? '—'}</p>
+        <p className="text-5xl font-bold text-[#5E1F2A]">#{position ?? '-'}</p>
         <p className="text-sm text-[#6B7280]">of {total} signed up so far in {areaLabel}</p>
       </div>
       {!location && (
@@ -1279,7 +1279,7 @@ function Waitlist() {
       )}
       {ready && (
         <p className="text-sm text-[#1F2937] mt-4">
-          We have hit the cohort threshold for {areaLabel}. Curation has started — expect a match memo by email within 7 days.
+          We have hit the cohort threshold for {areaLabel}. Curation has started - expect a match memo by email within 7 days.
         </p>
       )}
       {typeof totalGlobal === 'number' && totalGlobal > total && (
@@ -1305,7 +1305,7 @@ function DepthChat({ depthResponses, onAnswer }: { depthResponses: { [k: number]
     return [
       { role: 'assistant', content: answeredCount === 0
         ? "Want to go deeper? I'll ask you a few questions one at a time. The more you share, the better I can match you. Skip any with 'skip'."
-        : `You've answered ${answeredCount} of ${total}. Want to keep going? Same as before — answer or say 'skip'.` },
+        : `You've answered ${answeredCount} of ${total}. Want to keep going? Same as before - answer or say 'skip'.` },
       { role: 'assistant', content: unanswered[0].text },
     ];
   })();

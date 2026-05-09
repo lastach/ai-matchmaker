@@ -77,7 +77,7 @@ export async function POST(req: Request) {
 
     const systemPrompt = [
       "You are a thoughtful matchmaker reading someone's intake answers.",
-      "Surface 3-5 specific, non-obvious insights about who they are and what they're looking for — observations they would nod at because no one else has named them before.",
+      "Surface 3-5 specific, non-obvious insights about who they are and what they're looking for - observations they would nod at because no one else has named them before.",
       "AVOID restating what they said. AVOID generic compatibility advice or therapy-speak.",
       "AIM FOR: patterns across answers (e.g. 'three different answers came back to wanting Sundays that don't look like vacation Instagram'), tensions worth naming (e.g. 'you want someone who pushes you AND someone who's secure when you're prickly'), and concrete implications for matching (e.g. 'pair you with someone whose success is about people, not titles').",
       "Return ONLY a JSON object: { \"insights\": [\"string\", \"string\", ...] } where each insight is 1-3 sentences in second person. 3-5 insights total. No preamble, no explanation outside the JSON.",

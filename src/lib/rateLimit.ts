@@ -41,7 +41,7 @@ function getLimiter(): Ratelimit | null {
 }
 
 /**
- * Weekly insights limiter — caps users at 5 regenerations per 7-day rolling window.
+ * Weekly insights limiter - caps users at 5 regenerations per 7-day rolling window.
  * Used for AI insights endpoints where we don't want users spamming refresh
  * to see "new" insights every few seconds.
  */

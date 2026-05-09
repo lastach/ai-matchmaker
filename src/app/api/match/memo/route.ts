@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
 - 3 short paragraphs, max ~150 words total.
 - First paragraph: why this match was picked, anchored to the strongest dimensions in the breakdown.
 - Second paragraph: a specific conversation thread that's likely to land, derived from their shared values, life goals, or attachment style.
-- Third paragraph: one honest caveat — what to watch for, where the data is thin, or one dimension that's lower-scoring.
+- Third paragraph: one honest caveat - what to watch for, where the data is thin, or one dimension that's lower-scoring.
 - No emojis, no exclamation marks, no platitudes. No "you two will be amazing together" type filler.
 - Use the candidate's first name only.
 - Never invent facts not in the inputs.`

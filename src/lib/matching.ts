@@ -137,7 +137,7 @@ const PRIORITY_MATRIX: Record<RelationshipPriority, Record<RelationshipPriority,
 
 // -------- SCORING --------
 
-/** Values alignment — cosine-style similarity over the shared value-rating vector. */
+/** Values alignment - cosine-style similarity over the shared value-rating vector. */
 export function scoreValues(a: MatchProfile, b: MatchProfile): number {
   let dot = 0, na = 0, nb = 0;
   for (const { key } of CORE_VALUES) {
@@ -160,7 +160,7 @@ export function scoreCommunication(a: MatchProfile, b: MatchProfile): number {
   return COMMUNICATION_MATRIX[a.communicationStyle]?.[b.communicationStyle] ?? 0.5;
 }
 
-/** Life-goal overlap — Jaccard-like plus a bonus for the top-priority-like goals aligning. */
+/** Life-goal overlap - Jaccard-like plus a bonus for the top-priority-like goals aligning. */
 export function scoreLifeGoals(a: MatchProfile, b: MatchProfile): number {
   const A = new Set(a.lifeGoals || []);
   const B = new Set(b.lifeGoals || []);
@@ -174,15 +174,15 @@ export function scorePriority(a: MatchProfile, b: MatchProfile): number {
   return PRIORITY_MATRIX[a.relationshipPriority]?.[b.relationshipPriority] ?? 0.5;
 }
 
-/** Hard filters — return [false, reason] to skip a candidate outright. */
+/** Hard filters - return [false, reason] to skip a candidate outright. */
 export function passesHardFilters(user: MatchProfile, cand: MatchProfile): { ok: boolean; reason?: string } {
-  // Age — within the user's window unless flexible
+  // Age - within the user's window unless flexible
   const ageOk = user.ageFlexible
     ? Math.abs(cand.age - (user.preferredAgeMin + user.preferredAgeMax) / 2) <= 10
     : cand.age >= user.preferredAgeMin && cand.age <= user.preferredAgeMax;
   if (!ageOk) return { ok: false, reason: 'age out of requested range' };
 
-  // Gender preference — interestedIn is "women" / "men" / "nonbinary" / "anyone"
+  // Gender preference - interestedIn is "women" / "men" / "nonbinary" / "anyone"
   if (user.interestedIn && user.interestedIn !== 'anyone') {
     const candGender = (cand.gender || '').toLowerCase();
     const preferred = user.interestedIn.toLowerCase();
@@ -191,7 +191,7 @@ export function passesHardFilters(user: MatchProfile, cand: MatchProfile): { ok:
     if (preferred === 'nonbinary' && candGender !== 'nonbinary') return { ok: false, reason: 'gender preference' };
   }
 
-  // Children stance — block classic incompatibilities
+  // Children stance - block classic incompatibilities
   const blockedPairs: Array<[ChildrenStance, ChildrenStance]> = [
     ['yes', 'no'],
     ['no', 'yes'],
@@ -225,12 +225,12 @@ export function scoreCandidate(user: MatchProfile, cand: MatchProfile): MatchRes
 
   const notes: string[] = [];
   if (user.attachmentStyle === 'secure' && cand.attachmentStyle === 'secure') {
-    notes.push('Both secure attachment — strong foundation for steady conflict resolution.');
+    notes.push('Both secure attachment - strong foundation for steady conflict resolution.');
   } else if (
     (user.attachmentStyle === 'anxious' && cand.attachmentStyle === 'avoidant') ||
     (user.attachmentStyle === 'avoidant' && cand.attachmentStyle === 'anxious')
   ) {
-    notes.push('Anxious + avoidant pairing — this combination historically creates pursue-withdraw dynamics. Worth naming early.');
+    notes.push('Anxious + avoidant pairing - this combination historically creates pursue-withdraw dynamics. Worth naming early.');
   }
   if (values >= 0.9) notes.push('Exceptional values alignment on the 12-dimension scale.');
   if (communication >= 0.9) notes.push('Very similar conflict-processing styles.');

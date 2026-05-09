@@ -23,7 +23,7 @@ export class DashboardErrorBoundary extends Component<Props, State> {
         <div className="min-h-screen bg-gradient-to-br from-[#2E1A47] via-[#3D2557] to-[#D4537E]/10 flex items-center justify-center p-6">
           <div className="bg-white rounded-2xl shadow-xl p-8 max-w-lg">
             <h2 className="text-xl font-bold text-[#3D1820] mb-2">Something went wrong rendering this page</h2>
-            <p className="text-sm text-gray-700 mb-4">Your data is safe. The page hit an error trying to display — usually a missing field. You can try reloading or starting fresh.</p>
+            <p className="text-sm text-gray-700 mb-4">Your data is safe. The page hit an error trying to display - usually a missing field. You can try reloading or starting fresh.</p>
             <details className="mb-4 text-xs text-gray-500">
               <summary className="cursor-pointer hover:text-gray-700">Technical details</summary>
               <pre className="mt-2 p-2 bg-gray-50 rounded border whitespace-pre-wrap break-all">{msg}</pre>

@@ -5,7 +5,7 @@ import { cookies } from 'next/headers'
 const APP_NAME = 'Amorlay'
 const APP_HOME = 'https://www.amorlay.com'
 const APP_TAGLINE = 'One match. One memo. One date.'
-const APP_NEXT_STEP = 'Finish your intake so we can start matching against the right values, attachment style, and life goals — not just a swipe.'
+const APP_NEXT_STEP = 'Finish your intake so we can start matching against the right values, attachment style, and life goals - not just a swipe.'
 
 /**
  * POST /api/auth/welcome
@@ -43,7 +43,7 @@ export async function POST() {
         <a href="${APP_HOME}/dashboard" style="background: #1f2937; color: #fff; padding: 10px 18px; border-radius: 6px; text-decoration: none; font-size: 14px;">Open ${APP_NAME}</a>
       </p>
       <hr style="border: 0; border-top: 1px solid #e5e7eb; margin: 32px 0;" />
-      <p style="font-size: 12px; color: #9ca3af;">You received this because you created a ${APP_NAME} account. Reply if you have questions — we read everything.</p>
+      <p style="font-size: 12px; color: #9ca3af;">You received this because you created a ${APP_NAME} account. Reply if you have questions - we read everything.</p>
     </div>
   `
   const r = await fetch('https://api.resend.com/emails', {
