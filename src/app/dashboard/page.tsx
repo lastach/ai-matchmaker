@@ -292,6 +292,7 @@ function Dashboard_Inner() {
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [coreIntakeData, setCoreIntakeData] = useState<CoreIntakeData>({});
   const [profileData, setProfileData] = useState<ProfileData>({});
+  const [ageConfirmed, setAgeConfirmed] = useState<boolean>(false);
 
 
   useEffect(() => { if (user?.id) { refreshPhotos() } }, [user?.id])
@@ -643,13 +644,26 @@ function Dashboard_Inner() {
               <li>- After: a one-page summary of what I heard, then we set the basics.</li>
             </ul>
           </div>
+          <label className="flex items-start gap-2 mb-4 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={ageConfirmed}
+              onChange={(e) => setAgeConfirmed(e.target.checked)}
+              className="mt-1 h-4 w-4 rounded border-[#9CA3AF] text-[#C8102E] focus:ring-[#C8102E]"
+            />
+            <span className="text-sm text-[#4B5563]">
+              I confirm I am 18 or older. Amorlay is adults-only. We will verify ID at general availability.
+            </span>
+          </label>
           <div className="flex flex-col sm:flex-row gap-3">
             <button
               onClick={() => {
+                if (!ageConfirmed) return;
                 const updated: UserProfile = { ...profile!, onboardingStep: 'profile' };
                 saveProfile(updated);
               }}
-              className="flex-1 bg-gradient-to-r from-[#D4537E] to-[#C04870] text-white px-6 py-3 rounded-lg font-semibold hover:shadow-lg transition"
+              disabled={!ageConfirmed}
+              className="flex-1 bg-gradient-to-r from-[#D4537E] to-[#C04870] text-white px-6 py-3 rounded-lg font-semibold hover:shadow-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Start the conversation
             </button>
