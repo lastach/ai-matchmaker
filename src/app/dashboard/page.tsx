@@ -877,8 +877,11 @@ function Dashboard_Inner() {
           {/* Attraction Grid */}
           <div className="bg-white rounded-2xl shadow-2xl p-8 mb-8">
             <h2 className="text-2xl font-bold text-[#1F2937] mb-2">Rate their vibe</h2>
-            <p className="text-[#6B7280] mb-8">
+            <p className="text-[#6B7280] mb-2">
               Click to rate each person. Your ratings help us find your match.
+            </p>
+            <p className="text-xs text-[#9CA3AF] mb-8 italic">
+              These are sample faces from a free stock-photo API, used to calibrate your aesthetic preferences. They are not real candidates and they are not in the matching pool. Real matches arrive only after a human reviewer approves them.
             </p>
 
             <div className="grid grid-cols-4 gap-4 mb-12 max-w-2xl">
