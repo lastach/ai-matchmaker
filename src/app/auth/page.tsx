@@ -58,7 +58,7 @@ export default function AuthPage() {
     <main className="min-h-screen bg-gradient-to-b from-rose-50 to-white flex items-center justify-center">
       <div className="w-full max-w-sm mx-auto px-6">
         <h1 className="text-3xl font-bold text-[#3D1820] mb-2 text-center">Amorlay</h1>
-                <p className="text-gray-500 text-sm mb-8 text-center">{isSignUp ? 'One match. One memo. One date. Free during research preview.' : 'Welcome back. Your match might be brewing.'}</p>
+                <p className="text-gray-500 text-sm mb-8 text-center">{isSignUp ? 'One match. One memo. One date. Free during research preview.' : 'Sign in to continue. New here? Use the Sign up link below.'}</p>
         <button
           type="button"
           onClick={async () => {
