@@ -36,7 +36,7 @@ export async function GET(req: Request) {
     .limit(limit)
 
   if (primary.data && primary.data.length > 0) {
-    return NextResponse.json({ users: primary.data, table: 'matchmaker_profiles', error: primary.error?.message || null })
+    return NextResponse.json({ users: primary.data, table: 'matchmaker_profiles', error: (primary as any).error?.message || null })
   }
 
   // Fallback: user_profiles (pre-threshold or playtest data).
@@ -69,6 +69,6 @@ export async function GET(req: Request) {
     users,
     table: 'user_profiles (fallback)',
     note: users.length > 0 ? 'matchmaker_profiles is empty in this environment - showing pre-cohort intake data from user_profiles' : 'no completed intakes found in either table',
-    error: fallback.error?.message || null,
+    error: (fallback as any).error?.message || null,
   })
 }
