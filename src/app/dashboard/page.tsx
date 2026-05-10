@@ -299,6 +299,7 @@ function Dashboard_Inner() {
 
   // Core Intake state
   const [currentQuestion, setCurrentQuestion] = useState(0);
+  const saveDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [coreIntakeData, setCoreIntakeData] = useState<CoreIntakeData>({});
   const [profileData, setProfileData] = useState<ProfileData>({});
   const [ageConfirmed, setAgeConfirmed] = useState<boolean>(false);
