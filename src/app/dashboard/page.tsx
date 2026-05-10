@@ -521,18 +521,33 @@ function Dashboard_Inner() {
     setAttractionRatings(updated);
   };
 
+  const [attractionError, setAttractionError] = useState('');
+
   const completeAttractionStep = () => {
     const ratingsCount = Object.keys(attractionRatings).length;
-    if (ratingsCount < 5) {
-      alert('Please rate at least 5 people before continuing.');
+    if (ratingsCount < 3) {
+      setAttractionError('Rate at least 3 of these sample faces, or use Skip for now to move on.');
       return;
     }
+    setAttractionError('');
     const newProfile: UserProfile = {
       ...profile!,
       attractionRatings,
       attractionPhotos,
       onboardingStep: 'photos',
       profileStrength: 70,
+    };
+    saveProfile(newProfile);
+  };
+
+  const skipAttractionStep = () => {
+    setAttractionError('');
+    const newProfile: UserProfile = {
+      ...profile!,
+      attractionRatings: attractionRatings || {},
+      attractionPhotos,
+      onboardingStep: 'photos',
+      profileStrength: 60,
     };
     saveProfile(newProfile);
   };
@@ -989,6 +1004,17 @@ function Dashboard_Inner() {
                 className="flex-1 py-3 px-4 bg-gradient-to-r from-[#D4537E] to-[#C04870] text-white font-semibold rounded-lg hover:shadow-lg"
               >
                 Next: Upload Photos
+              </button>
+            </div>
+            {attractionError && (
+              <p className="text-xs text-red-700 mt-3 text-center">{attractionError}</p>
+            )}
+            <div className="text-center mt-4">
+              <button
+                onClick={skipAttractionStep}
+                className="text-sm text-[#6B7280] underline hover:text-[#1F2937]"
+              >
+                Skip for now (you can add preferences later)
               </button>
             </div>
           </div>
