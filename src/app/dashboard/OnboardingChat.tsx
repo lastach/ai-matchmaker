@@ -409,6 +409,18 @@ export default function OnboardingChat({
     setProfile(newProfile);
     setCore(newCore);
 
+    // Persist progress to localStorage so a page refresh during the intake doesn't lose answers.
+    try {
+      const allKeys = Object.keys(localStorage).filter(k => k.startsWith('sb-') && k.includes('-auth-token'));
+      const sess = allKeys.length > 0 ? JSON.parse(localStorage.getItem(allKeys[0]) || '{}') : null;
+      const uid = sess?.user?.id;
+      if (uid) {
+        const existing = JSON.parse(localStorage.getItem(`profile_${uid}`) || '{}');
+        const persisted = { ...existing, profileData: newProfile, coreIntakeData: newCore };
+        localStorage.setItem(`profile_${uid}`, JSON.stringify(persisted));
+      }
+    } catch {}
+
     const userMsg: Message = { role: 'user', content: answer || '(skipped)' };
 
     // Optimistically append the user's message + a typing placeholder for the ack
