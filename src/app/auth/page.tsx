@@ -65,11 +65,27 @@ export default function AuthPage() {
             setError('');
             setLoading(true);
             try {
-              const { error } = await getSupabase().auth.signInWithOAuth({
+              const { data, error } = await getSupabase().auth.signInWithOAuth({
                 provider: 'google',
-                options: { redirectTo: typeof window !== 'undefined' ? window.location.origin + '/dashboard' : undefined },
+                options: {
+                  redirectTo: typeof window !== 'undefined' ? window.location.origin + '/dashboard' : undefined,
+                  skipBrowserRedirect: true,
+                },
               });
               if (error) throw error;
+              if (!data?.url) throw new Error('Could not start Google sign-in');
+              // Pre-flight: detect provider-not-enabled before navigating
+              try {
+                const head = await fetch(data.url, { method: 'HEAD', redirect: 'manual' });
+                // Supabase returns 400 with JSON when provider is not enabled
+                if (head.status >= 400 && head.status < 500) {
+                  throw new Error('Google sign-in is not yet enabled. Use email + password for now, or contact support.');
+                }
+              } catch (preflightErr: any) {
+                if (preflightErr?.message?.includes('Google sign-in is not yet enabled')) throw preflightErr;
+                // Network/CORS error on preflight is OK; proceed to redirect
+              }
+              if (typeof window !== 'undefined') window.location.href = data.url;
             } catch (err: any) {
               setError(err?.message || 'Could not start Google sign-in');
             } finally {
