@@ -471,6 +471,18 @@ export default function OnboardingChat({
     }
     setMessages(finalMessages);
     setTurnIndex(nextIdx);
+
+    // If this was the last question, immediately advance to the summary view.
+    // This avoids the dependency on a manual click that was leaving users stuck
+    // on a white screen post-Q21 in production.
+    if (!nextTurn) {
+      try {
+        // Give React a tick to flush the message-update render, then move on.
+        setTimeout(() => {
+          try { onComplete(newProfile, newCore) } catch (e) { console.error('onComplete failed', e) }
+        }, 800)
+      } catch {}
+    }
   };
 
   const finished = turnIndex >= TURNS.length;
