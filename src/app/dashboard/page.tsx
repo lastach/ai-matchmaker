@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import OnboardingChat from './OnboardingChat';
@@ -386,6 +386,24 @@ function Dashboard_Inner() {
         console.warn('localStorage save failed', e);
       }
       setProfile(updatedProfile);
+      // Server persistence: debounced. Snapshot the relevant slice and POST.
+      try {
+        if (saveDebounceRef.current) clearTimeout(saveDebounceRef.current as any);
+        const intakeCompleted = updatedProfile.onboardingStep === 'summary' || updatedProfile.onboardingStep === 'attraction' || updatedProfile.onboardingStep === 'photos' || updatedProfile.onboardingStep === 'complete';
+        saveDebounceRef.current = setTimeout(() => {
+          fetch('/api/intake/save', {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({
+              profileData: updatedProfile.profileData,
+              coreIntakeData: updatedProfile.coreIntakeData,
+              profileStrength: updatedProfile.profileStrength,
+              userPhotos: updatedProfile.userPhotos,
+              intakeCompleted,
+            }),
+          }).catch(() => {});
+        }, 800) as any;
+      } catch {}
     } else {
       console.warn('saveProfile called without user.id - state updated but not persisted');
       setProfile(updatedProfile);
