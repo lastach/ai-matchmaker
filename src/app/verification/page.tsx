@@ -5,11 +5,11 @@ export default function VerificationPage() {
     <main className="max-w-3xl mx-auto px-6 py-12 text-gray-900">
       <h1 className="text-3xl font-bold mb-2">Verification</h1>
       <p className="text-gray-600 mb-8">
-        How we will verify members at general availability, and what we are doing during research preview.
+        How we will verify members at general availability, and what we are doing during early access.
       </p>
 
       <section className="space-y-4 text-sm leading-6 text-gray-700">
-        <h2 className="text-lg font-semibold text-gray-900 mt-6">During research preview</h2>
+        <h2 className="text-lg font-semibold text-gray-900 mt-6">During early access</h2>
         <p>
           Accounts are email-verified only. We are not delivering matches yet, so no identity or
           photo verification is required to enter the intake. The cohort is opt-in and small.
@@ -43,7 +43,7 @@ export default function VerificationPage() {
         </p>
 
         <p className="text-xs text-gray-500 mt-8">
-          Amorlay is in research preview, run by a single founder. This is an evolving page; tell us
+          Amorlay is in early access, run by a single founder. This is an evolving page; tell us
           what is missing.
         </p>
       </section>

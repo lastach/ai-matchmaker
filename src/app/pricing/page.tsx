@@ -11,10 +11,10 @@ export default function Pricing() {
       </nav>
       <section className="max-w-4xl mx-auto px-6 py-16">
         <h1 className="text-4xl font-bold text-gray-900 mb-3">Pricing</h1>
-        <p className="text-lg text-gray-600 mb-10">Honest about where this is. Free during research preview while we build the cohort.</p>
+        <p className="text-lg text-gray-600 mb-10">Honest about where this is. Free during early access while we build the cohort.</p>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="border-2 border-[#C8102E] rounded-xl p-6">
-            <p className="text-xs uppercase tracking-wider text-[#C8102E] font-semibold mb-2">Research preview</p>
+            <p className="text-xs uppercase tracking-wider text-[#C8102E] font-semibold mb-2">Early access</p>
             <h3 className="text-2xl font-bold text-gray-900 mb-2">Free</h3>
             <p className="text-sm text-gray-600 mb-6">Full intake, you stay on the waitlist until your local cohort opens. No card.</p>
             <ul className="text-sm text-gray-700 space-y-2 mb-6">

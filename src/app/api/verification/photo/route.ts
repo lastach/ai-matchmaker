@@ -10,7 +10,7 @@ export const maxDuration = 30
  * Photo verification - confirm the user's profile photos show the same person
  * as a fresh selfie. Uses Claude vision to compare. Not as strong as Persona
  * liveness but useful for "is this a stock photo?" / "is this a different person?"
- * spot-checks at scale during preview.
+ * spot-checks at scale during early access.
  */
 async function getSupa() {
   const cookieStore = await cookies()

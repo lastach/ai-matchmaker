@@ -15,7 +15,7 @@ export default function Safety() {
         <div className="space-y-8 text-sm text-gray-800 leading-relaxed">
           <div>
             <h2 className="text-lg font-semibold mb-2">Verification (we are building this)</h2>
-            <p>Every Amorlay account at GA will go through ID verification (gov ID + selfie liveness check) and photo verification (selfies cross-checked against profile photos) before any match is delivered. During the research preview, accounts are email-verified only - no IDs. We do not deliver matches during preview without manual matchmaker review.</p>
+            <p>Every Amorlay account at GA will go through ID verification (gov ID + selfie liveness check) and photo verification (selfies cross-checked against profile photos) before any match is delivered. During the early access, accounts are email-verified only - no IDs. We do not deliver matches during early access without manual matchmaker review.</p>
           </div>
           <div>
             <h2 className="text-lg font-semibold mb-2">Who is "the I" you are talking to</h2>
@@ -39,7 +39,7 @@ export default function Safety() {
           </div>
           <div>
             <h2 className="text-lg font-semibold mb-2">Honest read on where we are</h2>
-            <p>Amorlay is in research preview. ID verification, photo verification, and the human matchmaker review queue are scaffolded but not all live yet. We are honest about this; we will not deliver matches before the safety floor is in place.</p>
+            <p>Amorlay is in early access. ID verification, photo verification, and the human matchmaker review queue are scaffolded but not all live yet. We are honest about this; we will not deliver matches before the safety floor is in place.</p>
           </div>
         </div>
       </section>

@@ -45,7 +45,7 @@ export default function Home() {
               See how matching works &rarr;
             </Link>
           </div>
-          <p className="text-xs text-gray-500 mt-4">No swiping. No infinite scroll. 18+. Free during research preview.</p>
+          <p className="text-xs text-gray-500 mt-4">No swiping. No infinite scroll. 18+. Free during early access.</p>
           <p className="text-xs text-gray-500 mt-1"><strong>The "I" you talk to is an AI</strong> trained to read your answers carefully. A human reviews every match before it's sent.</p>
 
         </section>
@@ -92,7 +92,7 @@ export default function Home() {
         <Link href="/auth" className="inline-block bg-[#C8102E] hover:bg-[#A50D26] text-white px-8 py-3 rounded-lg font-semibold transition">
           Start the conversation
         </Link>
-        <p className="text-xs text-gray-500 mt-4">Free during research preview. 18+ only. No credit card.</p>
+        <p className="text-xs text-gray-500 mt-4">Free during early access. 18+ only. No credit card.</p>
       </section>
 
       <footer className="border-t border-gray-200 py-6">

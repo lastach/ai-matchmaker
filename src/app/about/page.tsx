@@ -12,7 +12,7 @@ export default function Page() {
         <h2 className="text-lg font-semibold text-gray-900 mt-6">What it is not</h2>
         <p>Not a swipe app. Not a chatroom. Not a lead-gen tool for matchmaking concierges who upsell you. The matchmaker is in the loop, not above the loop.</p>
         <h2 className="text-lg font-semibold text-gray-900 mt-6">Status</h2>
-        <p>Research preview. Free during preview while we build the cohort. Pricing posted on <a className="text-rose-700 hover:underline" href="/pricing">/pricing</a>; safety on <a className="text-rose-700 hover:underline" href="/safety">/safety</a>; verification on <a className="text-rose-700 hover:underline" href="/verification">/verification</a>.</p>
+        <p>Early access. Free during early access while we build the cohort. Pricing posted on <a className="text-rose-700 hover:underline" href="/pricing">/pricing</a>; safety on <a className="text-rose-700 hover:underline" href="/safety">/safety</a>; verification on <a className="text-rose-700 hover:underline" href="/verification">/verification</a>.</p>
       </section>
     </main>
   )
