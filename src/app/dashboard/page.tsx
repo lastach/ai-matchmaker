@@ -740,11 +740,11 @@ function Dashboard_Inner() {
     };
     const kidsDisplay = _profileData.ownWantChildren ? (kidsLabelMap[_profileData.ownWantChildren] || _profileData.ownWantChildren) : '-';
     const deepAnswers: Array<[string, string | undefined]> = [
-      ['Ideal future', __coreIntakeData.q6Response],
-      ['Handling conflict', __coreIntakeData.q7Response],
-      ['Ideal Saturday', __coreIntakeData.q8Response],
-      ['Past-relationship lesson', __coreIntakeData.q9Response],
-      ['What success looks like', __coreIntakeData.q10Response],
+      ['Ideal future', _coreIntakeData.q6Response],
+      ['Handling conflict', _coreIntakeData.q7Response],
+      ['Ideal Saturday', _coreIntakeData.q8Response],
+      ['Past-relationship lesson', _coreIntakeData.q9Response],
+      ['What success looks like', _coreIntakeData.q10Response],
     ];
 
     const sectionCard = (title: string, rows: Array<[string, string | null | undefined]>) => (
