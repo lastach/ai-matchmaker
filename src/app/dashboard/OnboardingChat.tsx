@@ -463,6 +463,19 @@ export default function OnboardingChat({
 
   const finished = turnIndex >= TURNS.length;
 
+  // Auto-advance: once the last question is answered, give the user a moment to
+  // see the closing message, then push them to the summary view automatically.
+  // Manual button is kept as a fallback.
+  useEffect(() => {
+    if (finished) {
+      const t = setTimeout(() => {
+        try { onComplete(profile, core); } catch (e) { console.error('auto onComplete failed', e); }
+      }, 1500);
+      return () => clearTimeout(t);
+    }
+  }, [finished]);
+
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#2E1A47] via-[#3D2557] to-[#D4537E]/10 p-4">
       <div className="max-w-2xl mx-auto">
