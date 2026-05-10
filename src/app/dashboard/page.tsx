@@ -690,24 +690,41 @@ function Dashboard_Inner() {
         initialProfile={profileData}
         initialCore={coreIntakeData}
         onComplete={(newProfile, newCore) => {
-          setProfileData(newProfile);
-          setCoreIntakeData(newCore);
-          const updated: UserProfile = {
-            ...profile!,
-            profileData: newProfile,
-            coreIntakeData: newCore,
-            onboardingStep: 'summary',
-            profileStrength: 50,
-          };
-          saveProfile(updated);
+          try {
+            // 1. Eagerly persist to localStorage in the click handler so we don't
+            //    depend on React batching to flush state before navigation.
+            const safeProfile = newProfile || {};
+            const safeCore = newCore || {};
+            const updated: UserProfile = {
+              ...(profile as UserProfile),
+              profileData: safeProfile,
+              coreIntakeData: safeCore,
+              onboardingStep: 'summary',
+              profileStrength: 50,
+            };
+            if (user?.id) {
+              try { localStorage.setItem(`profile_${user.id}`, JSON.stringify(updated)); } catch {}
+            }
+            // 2. Push state synchronously so the next render uses the new values.
+            setProfileData(safeProfile);
+            setCoreIntakeData(safeCore);
+            setProfile(updated);
+          } catch (err) {
+            console.error('Intake completion error:', err);
+            // Defensive fallback: at least try to update profile step so summary renders.
+            setProfile({ ...(profile as UserProfile), onboardingStep: 'summary', profileStrength: 50 });
+          }
         }}
       />
     );
   }
 
   if (profile.onboardingStep === 'summary') {
+    // Defensive: ensure both data buckets are objects so destructuring + property access never throws.
+    const _profileData: any = profileData || {};
+    const _coreIntakeData: any = coreIntakeData || {};
     const today = new Date();
-    const birth = profileData.birthDate ? new Date(profileData.birthDate) : null;
+    const birth = _profileData.birthDate ? new Date(_profileData.birthDate) : null;
     const age = birth ? Math.floor((today.getTime() - birth.getTime()) / (365.25 * 24 * 60 * 60 * 1000)) : null;
     const kidsLabelMap: { [k: string]: string } = {
       'yes': 'Yes, definitely',
@@ -721,13 +738,13 @@ function Dashboard_Inner() {
       'have-and-done': 'Has kids and is done',
       'I have kids and am done': 'Has kids and is done',
     };
-    const kidsDisplay = profileData.ownWantChildren ? (kidsLabelMap[profileData.ownWantChildren] || profileData.ownWantChildren) : '-';
+    const kidsDisplay = _profileData.ownWantChildren ? (kidsLabelMap[_profileData.ownWantChildren] || _profileData.ownWantChildren) : '-';
     const deepAnswers: Array<[string, string | undefined]> = [
-      ['Ideal future', coreIntakeData?.q6Response],
-      ['Handling conflict', coreIntakeData?.q7Response],
-      ['Ideal Saturday', coreIntakeData?.q8Response],
-      ['Past-relationship lesson', coreIntakeData?.q9Response],
-      ['What success looks like', coreIntakeData?.q10Response],
+      ['Ideal future', __coreIntakeData.q6Response],
+      ['Handling conflict', __coreIntakeData.q7Response],
+      ['Ideal Saturday', __coreIntakeData.q8Response],
+      ['Past-relationship lesson', __coreIntakeData.q9Response],
+      ['What success looks like', __coreIntakeData.q10Response],
     ];
 
     const sectionCard = (title: string, rows: Array<[string, string | null | undefined]>) => (
@@ -755,21 +772,21 @@ function Dashboard_Inner() {
           <IntakeInsights profileData={profileData} coreIntakeData={coreIntakeData} />
 
           {sectionCard('You', [
-            ['Name', profileData.name],
+            ['Name', _profileData.name],
             ['Age', age !== null ? String(age) : null],
-            ['Gender', profileData.gender],
-            ['Pronouns', profileData.pronouns],
-            ['Interested in dating', profileData.interestedIn],
+            ['Gender', _profileData.gender],
+            ['Pronouns', _profileData.pronouns],
+            ['Interested in dating', _profileData.interestedIn],
             ['Own stance on kids', kidsDisplay],
-            ['Self-description', profileData.bio],
+            ['Self-description', _profileData.bio],
           ])}
 
           {sectionCard('What you\'re looking for', [
-            ['Location', coreIntakeData.location],
-            ['Location flexibility', coreIntakeData.locationFlexibility],
-            ['Age range', (coreIntakeData.ageMin && coreIntakeData.ageMax) ? `${coreIntakeData.ageMin} to ${coreIntakeData.ageMax}` : null],
-            ['Physical attraction', coreIntakeData.attractionImportance],
-            ['Dealbreakers', coreIntakeData.dealbreakersOther],
+            ['Location', _coreIntakeData.location],
+            ['Location flexibility', _coreIntakeData.locationFlexibility],
+            ['Age range', (_coreIntakeData.ageMin && _coreIntakeData.ageMax) ? `${_coreIntakeData.ageMin} to ${_coreIntakeData.ageMax}` : null],
+            ['Physical attraction', _coreIntakeData.attractionImportance],
+            ['Dealbreakers', _coreIntakeData.dealbreakersOther],
           ])}
 
           {sectionCard('Deeper picture', deepAnswers.map(([k, v]) => [k, v]))}
