@@ -1191,6 +1191,25 @@ function Dashboard_Inner() {
                   >Re-do the conversation</button>
                 </div>
                 <p className="text-sm text-[#6B7280] mb-6">This is the picture I&apos;ll use to find your match. If anything is off, redo the conversation any time - I won&apos;t lose your other answers.</p>
+                {(() => {
+                  // Surface a warning when 3+ deep-question answers are identical. The intake submit logic
+                  // doesn't enforce uniqueness, so a user who pasted the same paragraph into multiple prompts
+                  // ends up with corrupted source data feeding the matching engine. We can't auto-fix it
+                  // (that's the user's words), but we can flag it and prompt them to redo.
+                  const deep = [coreIntakeData.q7Response, coreIntakeData.q8Response, coreIntakeData.q9Response, coreIntakeData.q10Response].filter(Boolean).map(s => (s || '').trim().toLowerCase());
+                  if (deep.length < 3) return null;
+                  const counts: Record<string, number> = {};
+                  for (const t of deep) counts[t] = (counts[t] || 0) + 1;
+                  const maxDup = Math.max(...Object.values(counts));
+                  if (maxDup < 3) return null;
+                  return (
+                    <div className="mb-5 p-4 rounded-lg border border-amber-300 bg-amber-50">
+                      <p className="text-sm font-semibold text-amber-900 mb-1">Looks like {maxDup} of your answers are identical</p>
+                      <p className="text-xs text-amber-900">The matching engine reads each prompt separately. If the same text answers multiple questions, your match scores will be skewed. Redo the conversation and give each prompt its own answer for better matches.</p>
+                      <button onClick={() => { const updated = { ...profile!, onboardingStep: 'profile' as OnboardingStep, profileStrength: 0 }; saveProfile(updated); }} className="mt-2 text-xs font-medium text-amber-900 underline">Redo the conversation</button>
+                    </div>
+                  );
+                })()}
                 <dl className="space-y-5">
                   {coreIntakeData.q6Response && (
                     <div>
@@ -1406,11 +1425,13 @@ function Waitlist() {
   const areaLabel = location || 'your area';
   return (
     <div className="bg-gradient-to-br from-[#F4EDDC] to-[#FAF1E0] rounded-xl p-6 border border-[#E8D8B8]">
-      <h2 className="text-2xl font-bold text-[#3D1820] mb-1">{ready ? `Your ${areaLabel} cohort is open` : `You're on the ${areaLabel} waitlist`}</h2>
-      <div className="flex items-baseline gap-3 mt-3">
-        <p className="text-5xl font-bold text-[#5E1F2A]">#{position ?? '-'}</p>
-        <p className="text-sm text-[#6B7280]">of {total} signed up so far in {areaLabel}</p>
-      </div>
+      <h2 className="text-2xl font-bold text-[#3D1820] mb-1">{ready ? `Your ${areaLabel} cohort is open` : (location ? `You're on the waitlist for ${areaLabel}` : `You're on the waitlist`)}</h2>
+      {position !== null && location && (
+        <div className="flex items-baseline gap-3 mt-3">
+          <p className="text-5xl font-bold text-[#5E1F2A]">#{position}</p>
+          <p className="text-sm text-[#6B7280]">of {total} signed up so far in {areaLabel}</p>
+        </div>
+      )}
       {!location && (
         <p className="text-xs text-[#9C3E3E] mt-2">Add your location in the intake to see your area-specific cohort.</p>
       )}
