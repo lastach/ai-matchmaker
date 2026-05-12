@@ -34,9 +34,7 @@ export default function AuthPage() {
     if (!email) { setError('Enter your email first.'); return }
     setLoading(true)
     try {
-      const sb = typeof getSupabase === 'function' ? getSupabase() : (typeof supabase !== 'undefined' ? supabase : null)
-      if (!sb) throw new Error('Auth client unavailable')
-      const { error } = await sb.auth.signInWithOtp({
+      const { error } = await getSupabase().auth.signInWithOtp({
         email,
         options: {
           shouldCreateUser: false,
@@ -45,7 +43,7 @@ export default function AuthPage() {
       })
       if (error) throw error
       setMessage('Check your email - we sent you a one-click sign-in link.')
-    } catch (err) {
+    } catch (err: any) {
       const msg = (err && err.message) || 'Could not send sign-in link'
       setError(msg)
     } finally {
