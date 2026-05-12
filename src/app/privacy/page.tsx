@@ -41,7 +41,7 @@ export default function PrivacyPage() {
 
       <h2 className="text-xl font-semibold mt-8 mb-2">Your rights</h2>
       <ul className="list-disc pl-6 space-y-1 text-sm">
-        <li>Access and download your data by emailing laurie.stach+amorlay@gmail.com.</li>
+        <li>Access and download your data by emailing support@amorlay.com.</li>
         <li>Correct or update your data from inside the app.</li>
         <li>Delete your account from Settings. Deletion is immediate; processor copies are purged within 30 days.</li>
         <li>If you are in the EEA or UK, object to processing or lodge a complaint with your data protection authority.</li>
@@ -50,7 +50,7 @@ export default function PrivacyPage() {
 
       <h2 className="text-xl font-semibold mt-8 mb-2">Children</h2>
       <p className="text-sm">
-        Amorlay is not intended for anyone under 13 (or 16 in the EEA/UK). We do not knowingly collect data from children. If you believe a child has created an account, email laurie.stach+amorlay@gmail.com and we will delete it.
+        Amorlay is not intended for anyone under 13 (or 16 in the EEA/UK). We do not knowingly collect data from children. If you believe a child has created an account, email support@amorlay.com and we will delete it.
       </p>
 
       <h2 className="text-xl font-semibold mt-8 mb-2">Google API Services User Data Policy</h2>
@@ -60,7 +60,7 @@ export default function PrivacyPage() {
 
       <h2 className="text-xl font-semibold mt-8 mb-2">Contact</h2>
       <p className="text-sm">
-        Privacy questions: laurie.stach+amorlay@gmail.com<br/>
+        Privacy questions: support@amorlay.com<br/>
         Mailing address: c/o DelawareRegisteredAgent.com, 8 The Green, Suite A, Dover, DE 19901
       </p>
 

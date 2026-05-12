@@ -17,7 +17,7 @@ export default function Page() {
           <li>Cal.com or Calendly for first-date scheduling once both members opt in.</li>
           <li>SMS notifications via Twilio for match-brief alerts.</li>
         </ul>
-        <p className="text-xs text-gray-500 mt-8">Questions: <a className="text-rose-700 hover:underline" href="mailto:laurie.stach@gmail.com">laurie.stach@gmail.com</a>.</p>
+        <p className="text-xs text-gray-500 mt-8">Questions: <a className="text-rose-700 hover:underline" href="mailto:support@amorlay.com">support@amorlay.com</a>.</p>
       </section>
     </main>
   )

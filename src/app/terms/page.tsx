@@ -20,7 +20,7 @@ export default function TermsPage() {
 
       <h2 className="text-xl font-semibold mt-8 mb-2">Your account</h2>
       <p className="text-sm">
-        You are responsible for keeping your account credentials secure. Notify us at laurie.stach+amorlay@gmail.com immediately if you suspect unauthorized access. You may delete your account at any time from Settings.
+        You are responsible for keeping your account credentials secure. Notify us at support@amorlay.com immediately if you suspect unauthorized access. You may delete your account at any time from Settings.
       </p>
 
       <h2 className="text-xl font-semibold mt-8 mb-2">Your content</h2>
@@ -72,7 +72,7 @@ export default function TermsPage() {
       </p>
 
       <h2 className="text-xl font-semibold mt-8 mb-2">Contact</h2>
-      <p className="text-sm">Questions: laurie.stach+amorlay@gmail.com</p>
+      <p className="text-sm">Questions: support@amorlay.com</p>
 
       <p className="text-xs text-gray-400 mt-10">
         Values shown in curly-brace placeholders will be replaced with real legal entity information before public release.

@@ -41,7 +41,7 @@ export default function SecurityPage() {
 
         <h2 className="text-lg font-semibold text-gray-900 mt-6">Account deletion</h2>
         <p>
-          Email <a className="text-rose-700 hover:underline" href="mailto:laurie.stach@gmail.com">laurie.stach@gmail.com</a> to delete
+          Email <a className="text-rose-700 hover:underline" href="mailto:support@amorlay.com">support@amorlay.com</a> to delete
           your account. Intake answers, brief drafts, and any sent briefs are removed within 30
           days.
         </p>
