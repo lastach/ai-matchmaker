@@ -1213,44 +1213,79 @@ function Dashboard_Inner() {
                     </div>
                   );
                 })()}
-                <dl className="space-y-5">
-                  {coreIntakeData.q6Response && (
+                {(() => {
+                  // Synthesis on the 5 matching dimensions: Values, Attachment, Communication, Goals, Priority.
+                  // Derived from the structured intake choices the user already made (topValue, attachmentSelf,
+                  // q7Response, topLifeGoal, priorityChoice). NOT a regurgitation of their longtext answers.
+                  // Each row shows what the engine will match on; user confirms or hits Redo.
+                  const attachmentReads: Record<string, { label: string; line: string }> = {
+                    'i feel comfortable being close and depending on others': { label: 'Secure', line: 'You feel comfortable being close and depending on a partner.' },
+                    'i worry about whether my partner really cares about me': { label: 'Anxious', line: 'You worry about whether a partner really cares about you.' },
+                    'i feel uncomfortable when things get too close': { label: 'Avoidant', line: 'You feel uncomfortable when things get too close.' },
+                    'it feels intense and confusing': { label: 'Disorganized', line: 'Closeness can feel intense and confusing.' },
+                  }
+                  const priorityReads: Record<string, { label: string; line: string }> = {
+                    'actively looking for a serious partner': { label: 'Actively looking', line: 'You are actively looking for a serious partner.' },
+                    'open to something serious if it clicks': { label: 'Open if it clicks', line: 'You are open to something serious if it clicks.' },
+                    'casually open, not in a rush': { label: 'Casually open', line: 'You are casually open, not in a rush.' },
+                  }
+                  const goalReads: Record<string, string> = {
+                    'build career': 'Building your career is your biggest focus over the next few years.',
+                    'start a family': 'Starting a family is your biggest focus over the next few years.',
+                    'travel often': 'Traveling often is your biggest focus over the next few years.',
+                    'health & wellness': 'Health and wellness is your biggest focus over the next few years.',
+                    'creative work': 'Creative work is your biggest focus over the next few years.',
+                    'service / impact': 'Service and impact is your biggest focus over the next few years.',
+                  }
+                  // Communication style is inferred from q7Response per the matching-engine logic
+                  const q7 = (coreIntakeData?.q7Response || '').toLowerCase()
+                  const commStyle = q7.includes('right away') ? 'direct-when-upset' : 'sit-with-it'
+                  const commReads: Record<string, { label: string; line: string }> = {
+                    'direct-when-upset': { label: 'Direct when upset', line: 'When something is wrong, you bring it up directly rather than waiting.' },
+                    'sit-with-it': { label: 'Sits with it first', line: 'When something is wrong, you tend to sit with it before bringing it up.' },
+                  }
+                  const topValue = coreIntakeData?.topValue || ''
+                  const valueLine = topValue ? `${topValue} matters most to you.` : null
+                  const attachKey = (coreIntakeData?.attachmentSelf || '').toLowerCase()
+                  const attach = attachmentReads[attachKey] || null
+                  const comm = commReads[commStyle]
+                  const goalKey = (coreIntakeData?.topLifeGoal || '').toLowerCase()
+                  const goalLine = goalReads[goalKey] || (coreIntakeData?.topLifeGoal ? coreIntakeData.topLifeGoal + ' is your biggest focus.' : null)
+                  const priKey = (coreIntakeData?.priorityChoice || '').toLowerCase()
+                  const pri = priorityReads[priKey] || null
+                  const rows: Array<{ key: string; label: string; chip: string; line: string }> = []
+                  if (valueLine) rows.push({ key: 'values', label: 'Values', chip: topValue, line: valueLine })
+                  if (attach) rows.push({ key: 'attach', label: 'Attachment style', chip: attach.label, line: attach.line })
+                  if (comm) rows.push({ key: 'comm', label: 'Communication', chip: comm.label, line: comm.line })
+                  if (goalLine) rows.push({ key: 'goals', label: 'Life goals', chip: coreIntakeData?.topLifeGoal || '', line: goalLine })
+                  if (pri) rows.push({ key: 'pri', label: 'Relationship priority', chip: pri.label, line: pri.line })
+                  if (rows.length === 0) return (
+                    <p className="text-sm text-[#6B7280]">Finish the intake to see how the matching engine reads you.</p>
+                  )
+                  return (
                     <div>
-                      <dt className="text-xs uppercase tracking-wide text-[#C8102E] font-semibold mb-1">What brings you here</dt>
-                      <dd className="text-sm text-[#1F2937] whitespace-pre-wrap leading-relaxed">{coreIntakeData.q6Response}</dd>
+                      <p className="text-sm text-[#6B7280] mb-5">Here is how the matching engine reads you on each dimension. If a row is off, redo the conversation.</p>
+                      <ul className="divide-y divide-[#F0E2D6]">
+                        {rows.map((r) => (
+                          <li key={r.key} className="py-3 flex items-start gap-4">
+                            <div className="w-32 shrink-0">
+                              <p className="text-[10px] uppercase tracking-wider text-[#C8102E] font-semibold">{r.label}</p>
+                              {r.chip && <p className="text-sm font-semibold text-[#1F2937] mt-1">{r.chip}</p>}
+                            </div>
+                            <p className="text-sm text-[#1F2937] flex-1 leading-relaxed">{r.line}</p>
+                          </li>
+                        ))}
+                      </ul>
+                      <div className="mt-5 pt-4 border-t border-[#F0E2D6] flex items-center justify-between">
+                        <p className="text-xs text-[#6B7280]">Does this sound like you?</p>
+                        <button
+                          onClick={() => { const updated = { ...profile!, onboardingStep: 'profile' as OnboardingStep, profileStrength: 0 }; saveProfile(updated); }}
+                          className="text-xs text-[#C8102E] underline font-medium"
+                        >Not quite, redo the conversation</button>
+                      </div>
                     </div>
-                  )}
-                  {coreIntakeData.q7Response && (
-                    <div>
-                      <dt className="text-xs uppercase tracking-wide text-[#C8102E] font-semibold mb-1">What&apos;s been hard about dating so far</dt>
-                      <dd className="text-sm text-[#1F2937] whitespace-pre-wrap leading-relaxed">{coreIntakeData.q7Response}</dd>
-                    </div>
-                  )}
-                  {coreIntakeData.q8Response && (
-                    <div>
-                      <dt className="text-xs uppercase tracking-wide text-[#C8102E] font-semibold mb-1">A version of life that&apos;s gone really well</dt>
-                      <dd className="text-sm text-[#1F2937] whitespace-pre-wrap leading-relaxed">{coreIntakeData.q8Response}</dd>
-                    </div>
-                  )}
-                  {coreIntakeData.q9Response && (
-                    <div>
-                      <dt className="text-xs uppercase tracking-wide text-[#C8102E] font-semibold mb-1">What past relationships taught you</dt>
-                      <dd className="text-sm text-[#1F2937] whitespace-pre-wrap leading-relaxed">{coreIntakeData.q9Response}</dd>
-                    </div>
-                  )}
-                  {coreIntakeData.q10Response && (
-                    <div>
-                      <dt className="text-xs uppercase tracking-wide text-[#C8102E] font-semibold mb-1">A regular Saturday you&apos;d actually want</dt>
-                      <dd className="text-sm text-[#1F2937] whitespace-pre-wrap leading-relaxed">{coreIntakeData.q10Response}</dd>
-                    </div>
-                  )}
-                  {profileData.bio && (
-                    <div>
-                      <dt className="text-xs uppercase tracking-wide text-[#C8102E] font-semibold mb-1">What else I should know</dt>
-                      <dd className="text-sm text-[#1F2937] whitespace-pre-wrap leading-relaxed">{profileData.bio}</dd>
-                    </div>
-                  )}
-                </dl>
+                  )
+                })()}
                 <div className="mt-6 pt-5 border-t border-[#F0E2D6] grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
                   {(() => {
                     // Defensive: free-text fields (pronouns, location) often get garbage like 'fine' or 'asdf'

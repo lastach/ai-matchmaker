@@ -106,6 +106,12 @@ export default function AdminPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <section className="lg:col-span-1 bg-white rounded-xl p-5 shadow-sm border">
           <h2 className="font-semibold text-gray-900 mb-3">Members ({users.length})</h2>
+          {users.length === 0 && !loading && (
+            <div className="mb-3 text-xs text-gray-500 bg-amber-50 border border-amber-200 rounded p-3">
+              <p className="font-semibold text-amber-900 mb-1">No members visible</p>
+              <p>If you've completed intakes and still see zero, the most common cause is that SUPABASE_SERVICE_ROLE_KEY is missing on the Vercel env for ai-matchmaker. With it set, this admin view bypasses RLS and shows all rows. Without it, RLS restricts you to your own user_profiles row only.</p>
+            </div>
+          )}
           <div className="space-y-2 max-h-[70vh] overflow-y-auto">
             {users.map((u) => (
               <button

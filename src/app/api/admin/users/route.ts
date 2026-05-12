@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
+import { createClient } from '@supabase/supabase-js'
 import { cookies } from 'next/headers'
 import { isAdminEmail } from '@/lib/isAdmin'
 
@@ -28,8 +29,17 @@ export async function GET(req: Request) {
   const url = new URL(req.url)
   const limit = Math.min(200, parseInt(url.searchParams.get('limit') || '50', 10))
 
+  // After the email check passes, use the service-role client to bypass RLS so the admin
+  // sees ALL members, not just their own row. The cookie-scoped supa client above is
+  // RLS-restricted to the caller's user_id, which is why /admin was showing Members (0)
+  // even after multiple test plays - the other test users' rows were invisible.
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+  const admin = serviceKey
+    ? createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, serviceKey, { auth: { autoRefreshToken: false, persistSession: false } })
+    : supa
+
   // Primary source: matchmaker_profiles (post-threshold)
-  const primary = await supa
+  const primary = await admin
     .from('matchmaker_profiles')
     .select('user_id, name, location, intake_completed_at, top_value, top_life_goal, attachment_self, priority_choice, profile_strength, updated_at')
     .order('updated_at', { ascending: false })
@@ -41,7 +51,7 @@ export async function GET(req: Request) {
 
   // Fallback: user_profiles (pre-threshold or playtest data).
   // Map to the same shape the admin UI expects so it just renders.
-  const fallback = await supa
+  const fallback = await admin
     .from('user_profiles')
     .select('id, profile_data, core_intake_data, location, intake_completed_at, updated_at')
     .not('intake_completed_at', 'is', null)
