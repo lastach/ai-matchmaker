@@ -431,6 +431,39 @@ export default function OnboardingChat({
       }
     }
 
+    // Duplicate-answer guard for the deep longtext questions (q7-q10).
+    // The matching engine reads each q*Response field independently for scoring,
+    // so pasting the same paragraph against multiple prompts skews compatibility
+    // scores. The 5/11 playtest dashboard surfaced a test account where four
+    // consecutive deep answers were identical, producing visibly bad data.
+    // Prevent the corruption at the source by rejecting the answer at submit
+    // when it matches a prior deep answer; user must rephrase before continuing.
+    if (turn.input === 'longtext' && turn.field && /^q(7|8|9|10)Response$/.test(turn.field) && answer.length > 0) {
+      const norm = (s: string) => s.trim().toLowerCase().replace(/\s+/g, ' ');
+      const current = norm(answer);
+      const priors: Array<[string, string]> = [
+        ['q7Response', 'What\'s been hard about dating'],
+        ['q8Response', 'A version of life that\'s gone really well'],
+        ['q9Response', 'What past relationships taught you'],
+        ['q10Response', 'A regular Saturday you\'d actually want'],
+      ];
+      for (const [field, label] of priors) {
+        if (field === turn.field) continue;
+        const prior = norm((core as any)[field] || '');
+        if (!prior) continue;
+        // Exact match OR 90%+ character overlap on a >40-char answer
+        const isDup = prior === current || (
+          current.length > 40 && prior.length > 40 && (
+            prior === current || (current.startsWith(prior.slice(0, Math.min(80, prior.length))) || prior.startsWith(current.slice(0, Math.min(80, current.length))))
+          )
+        );
+        if (isDup) {
+          setError(`This looks identical to your answer for "${label}". Each prompt is scored separately - give this one its own answer so the matching engine has fresh signal.`);
+          return;
+        }
+      }
+    }
+
     // Save
     const newProfile = { ...profile };
     const newCore = { ...core };
