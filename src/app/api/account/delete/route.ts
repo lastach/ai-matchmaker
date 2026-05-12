@@ -32,7 +32,7 @@ export async function POST() {
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
   if (!serviceKey) {
     return NextResponse.json({
-      error: 'Server is missing SUPABASE_SERVICE_ROLE_KEY. Account deletion is currently unavailable. Please email support@amorlay.com to request manual deletion.',
+      error: 'Server is missing SUPABASE_SERVICE_ROLE_KEY. Account deletion is currently unavailable. Please email laurie.stach+amorlay@gmail.com to request manual deletion.',
     }, { status: 500 })
   }
 
