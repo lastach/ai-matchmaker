@@ -33,7 +33,7 @@ export default function SecurityPage() {
 
         <h2 className="text-lg font-semibold text-gray-900 mt-6">Compliance posture (honest read)</h2>
         <p>
-          We are a early access run by a single founder. We are not SOC 2 certified yet, and
+          We are an early-access product run by a single founder. We are not SOC 2 certified yet, and
           we do not currently offer EU data residency. We follow least-privilege access, audit
           logging, encryption in transit and at rest, and access reviews. SOC 2 Type 1 is on the
           roadmap before general availability.
