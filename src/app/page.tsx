@@ -41,7 +41,7 @@ export default function Home() {
             <Link href="/auth" className="bg-[#C8102E] hover:bg-[#A50D26] text-white px-7 py-3 rounded-lg font-semibold text-base transition">
               Start the conversation
             </Link>
-            <Link href="/auth" className="text-gray-700 hover:text-gray-900 px-5 py-3 rounded-lg font-medium border border-gray-300 hover:border-gray-400">
+            <Link href="#how-it-works" className="text-gray-700 hover:text-gray-900 px-5 py-3 rounded-lg font-medium border border-gray-300 hover:border-gray-400">
               See how matching works &rarr;
             </Link>
           </div>
@@ -51,7 +51,7 @@ export default function Home() {
         </section>
 
       {/* Value props */}
-      <section className="bg-rose-50/40 border-y border-rose-100 py-16">
+      <section id="how-it-works" className="bg-rose-50/40 border-y border-rose-100 py-16 scroll-mt-20">
         <div className="max-w-6xl mx-auto px-6">
           <h2 className="text-3xl font-bold text-gray-900 mb-2 text-center">A different shape than every other app.</h2>
           <p className="text-center text-gray-600 mb-12 max-w-2xl mx-auto">
