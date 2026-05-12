@@ -63,7 +63,7 @@ export default function Home() {
               <h3 className="font-bold text-gray-900 mb-2">You answer in your own words</h3>
               <p className="text-sm text-gray-600">
                 Open-ended questions about your life, your past, what you want. No bio to write, no
-                witty hooks. The intake takes 10-15 minutes and feels like a real conversation.
+                witty hooks. It is a conversation, not a form.
               </p>
             </div>
             <div className="bg-white rounded-xl p-6 border border-gray-200">
@@ -90,7 +90,7 @@ export default function Home() {
       <section className="bg-white border-t border-rose-100 py-16">
         <div className="max-w-3xl mx-auto px-6">
           <h2 className="font-serif text-3xl font-normal text-gray-900 mb-2 text-center">What a match memo looks like</h2>
-          <p className="text-center text-gray-600 mb-10">An anonymized example. This is what arrives in your inbox when your cohort opens.</p>
+          <p className="text-center text-gray-600 mb-10">Illustrative example, not a real memo. The shape and length match what arrives in your inbox when your cohort opens.</p>
           <div className="bg-rose-50/40 border border-rose-200 rounded-2xl p-6 md:p-8">
             <div className="flex items-baseline justify-between mb-4 pb-4 border-b border-rose-200">
               <div>
