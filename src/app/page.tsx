@@ -86,6 +86,48 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Sample match memo - the actual deliverable, shown before signup */}
+      <section className="bg-white border-t border-rose-100 py-16">
+        <div className="max-w-3xl mx-auto px-6">
+          <h2 className="font-serif text-3xl font-normal text-gray-900 mb-2 text-center">What a match memo looks like</h2>
+          <p className="text-center text-gray-600 mb-10">An anonymized example. This is what arrives in your inbox when your cohort opens.</p>
+          <div className="bg-rose-50/40 border border-rose-200 rounded-2xl p-6 md:p-8">
+            <div className="flex items-baseline justify-between mb-4 pb-4 border-b border-rose-200">
+              <div>
+                <p className="text-[10px] uppercase tracking-widest text-[#C8102E] font-semibold">Match Memo - Sample</p>
+                <p className="font-serif text-2xl text-gray-900 mt-1">Someone I think you should meet</p>
+              </div>
+              <span className="text-2xl font-bold text-[#C8102E]">82</span>
+            </div>
+            <p className="text-sm text-gray-700 mb-4 leading-relaxed">
+              <strong className="text-gray-900">Why I picked her.</strong> You both named honesty as your top value. Her attachment description maps cleanly onto secure, and so does yours. You both wrote at length about wanting a partner who shows up consistently rather than someone who performs. Where you said your version of a good Saturday is a long walk and a slow dinner, she wrote about the same shape of day in different words.
+            </p>
+            <p className="text-sm text-gray-700 mb-4 leading-relaxed">
+              <strong className="text-gray-900">Where to be careful.</strong> She is more direct than you are about disagreement. You said you tend to soften and circle back. That gap is workable but worth naming on the first date - if you avoid it, the second date will be the one that doesn&apos;t happen.
+            </p>
+            <p className="text-sm text-gray-700 mb-4 leading-relaxed">
+              <strong className="text-gray-900">First date suggestion.</strong> 90 minutes max. Daytime. Walking somewhere with a turnaround point so you can leave if it isn&apos;t there, or stay if it is. Don&apos;t pre-plan dinner.
+            </p>
+            <div className="grid grid-cols-5 gap-2 mt-6 pt-4 border-t border-rose-200">
+              <div className="text-center"><p className="text-[9px] uppercase tracking-wider text-gray-500">Values</p><p className="text-sm font-semibold text-gray-900 mt-1">88</p></div>
+              <div className="text-center"><p className="text-[9px] uppercase tracking-wider text-gray-500">Attach</p><p className="text-sm font-semibold text-gray-900 mt-1">85</p></div>
+              <div className="text-center"><p className="text-[9px] uppercase tracking-wider text-gray-500">Comm</p><p className="text-sm font-semibold text-gray-900 mt-1">71</p></div>
+              <div className="text-center"><p className="text-[9px] uppercase tracking-wider text-gray-500">Goals</p><p className="text-sm font-semibold text-gray-900 mt-1">90</p></div>
+              <div className="text-center"><p className="text-[9px] uppercase tracking-wider text-gray-500">Priority</p><p className="text-sm font-semibold text-gray-900 mt-1">76</p></div>
+            </div>
+          </div>
+          <p className="text-center text-xs text-gray-500 mt-6">Every memo is reviewed by a human matchmaker before sending. You decide whether to open the intro.</p>
+        </div>
+      </section>
+
+      {/* Pricing teaser */}
+      <section className="border-t border-rose-100 py-12">
+        <div className="max-w-3xl mx-auto px-6 text-center">
+          <p className="text-xs uppercase tracking-widest text-gray-500 font-semibold mb-3">Pricing</p>
+          <p className="text-gray-700 mb-3">Free during early access. After GA: a one-time intake fee plus a per-match fee, well below what traditional matchmakers charge. <Link href="/pricing" className="text-[#C8102E] underline">See the pricing page</Link>.</p>
+        </div>
+      </section>
+
       <section className="max-w-3xl mx-auto px-6 py-20 text-center">
         <h2 className="text-3xl font-bold text-gray-900 mb-3">No browsing. No performance. Just a thoughtful intro when it&apos;s ready.</h2>
         <p className="text-gray-600 mb-8">Built for people who already know dating apps don&apos;t work for them.</p>
