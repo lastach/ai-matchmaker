@@ -61,7 +61,7 @@ export default function TrialGate({
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
         <div className="max-w-lg w-full bg-white rounded-2xl shadow-lg border p-8 text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Your free trial of {productName} has ended</h1>
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">Your early access to {productName} has ended</h1>
           <p className="text-gray-600 mb-6">
             You had {status.trialDays} days to try every feature. To keep using {productName}, subscribe below. Your data stays attached to your account.
           </p>
@@ -96,7 +96,7 @@ export default function TrialGate({
         <div className="bg-gradient-to-r from-rose-50 to-amber-50 border-b border-rose-200">
           <div className="max-w-6xl mx-auto px-4 py-2 flex items-center justify-between text-sm">
             <span className="text-rose-900">
-              <strong>{status.daysRemaining}</strong> day{status.daysRemaining === 1 ? "" : "s"} left in your free trial of {productName}.
+              Free for now during early access. <strong>{status.daysRemaining}</strong> day{status.daysRemaining === 1 ? "" : "s"} of {productName} access remaining in this early access window.
             </span>
             <button
               onClick={() => setDismissedBanner(true)}
