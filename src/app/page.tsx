@@ -124,7 +124,7 @@ export default function Home() {
       <section className="border-t border-rose-100 py-12">
         <div className="max-w-3xl mx-auto px-6 text-center">
           <p className="text-xs uppercase tracking-widest text-gray-500 font-semibold mb-3">Pricing</p>
-          <p className="text-gray-700 mb-3">Free during early access. After GA: a one-time intake fee plus a per-match fee, well below what traditional matchmakers charge. <Link href="/pricing" className="text-[#C8102E] underline">See the pricing page</Link>.</p>
+          <p className="text-gray-700 mb-3">Free during early access. <Link href="/pricing" className="text-[#C8102E] underline">See the pricing page</Link> for post-GA details.</p>
         </div>
       </section>
 
