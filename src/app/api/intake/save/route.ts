@@ -37,6 +37,27 @@ export async function POST(req: Request) {
   const body = await req.json().catch(() => ({} as any))
   const profileData = body?.profileData || {}
   const coreIntakeData = body?.coreIntakeData || {}
+
+  // Defensive: if multiple deep-question answers are identical, blank out the duplicates instead
+  // of writing corrupt source data to user_profiles. The matching engine treats each qNResponse
+  // as an independent signal; storing the same paragraph against 3-4 prompts skews every match
+  // score for that user. The dashboard already surfaces a warning + Redo CTA when this happens,
+  // but the server is the last line of defense if the client validation is bypassed.
+  try {
+    const deepFields = ['q6Response','q7Response','q8Response','q9Response','q10Response'] as const
+    const seen = new Map<string, string>()
+    for (const f of deepFields) {
+      const v = coreIntakeData?.[f]
+      if (typeof v !== 'string' || !v.trim()) continue
+      const key = v.trim().toLowerCase().replace(/\s+/g, ' ')
+      if (seen.has(key)) {
+        // Keep the first occurrence (whatever field it was), blank later duplicates.
+        coreIntakeData[f] = ''
+      } else {
+        seen.set(key, f)
+      }
+    }
+  } catch {}
   const profileStrength = typeof body?.profileStrength === 'number' ? body.profileStrength : null
   const userPhotos = Array.isArray(body?.userPhotos) ? body.userPhotos.slice(0, 12) : []
   const intakeCompleted = !!body?.intakeCompleted

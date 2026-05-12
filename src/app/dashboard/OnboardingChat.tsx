@@ -197,6 +197,16 @@ const TURNS: Turn[] = [
     prompt: () => "What pronouns should I use for you? (Type them, or say \"skip\".)",
     ack: (a) =>
       a.trim().toLowerCase() === 'skip' || !a.trim() ? "No problem." : `Cool - ${a.trim()}.`,
+    validate: (a) => {
+      const t = a.trim().toLowerCase();
+      if (!t || t === 'skip' || t === 'any' || t === 'none') return null;
+      // Accept pronoun-shaped inputs (she/her, they/them, he/him, ze/zir, etc.)
+      if (/(she|he|they|ze|xe|fae|per|it)\s*\/\s*\w+/i.test(t)) return null;
+      // Accept single-word pronouns if known.
+      const known = new Set(['she','her','hers','he','him','his','they','them','their','ze','zir','xe','fae']);
+      if (known.has(t)) return null;
+      return "I need an actual pronoun set (like she/her, they/them) or 'skip'.";
+    },
   },
   {
     id: 'location',
@@ -206,7 +216,15 @@ const TURNS: Turn[] = [
     prompt: () =>
       "Where do you live? City, region, or area is fine.",
     ack: (a) => `${a.trim()}. Okay.`,
-    validate: (a) => (a.trim().length < 2 ? 'I need at least a city or region.' : null),
+    validate: (a) => {
+      const t = a.trim();
+      if (t.length < 2) return 'I need at least a city or region.';
+      const trivial = new Set(['fine','none','tbd','test','asdf','idk','dunno','anywhere','everywhere','na','n/a','-']);
+      if (trivial.has(t.toLowerCase())) return 'I need a real location, city, region, or area.';
+      // Must contain at least one letter (rejects pure punctuation/numbers).
+      if (!/[a-zA-Z]/.test(t)) return 'I need at least a city or region.';
+      return null;
+    },
   },
   {
     id: 'locationFlexibility',
@@ -385,6 +403,25 @@ export default function OnboardingChat({
     if (turn.minWords && answer && countWords(answer) < turn.minWords) {
       setError(`Please give this question at least ${turn.minWords} words - a thoughtful answer is the whole point.`);
       return;
+    }
+    // Reject answers that duplicate a prior deep-question response. The intake schema scores each
+    // qNResponse field independently in the matching engine, so paste-and-hit-enter across q7-q10
+    // corrupts the source data. Compare case-insensitive trimmed text against earlier core fields
+    // and force the user to write something distinct.
+    if (turn.target === 'core' && turn.input === 'longtext' && answer) {
+      const normalized = answer.trim().toLowerCase().replace(/\s+/g, ' ');
+      const priorDeepFields: string[] = ['q6Response','q7Response','q8Response','q9Response','q10Response'];
+      const currentField = turn.field as string;
+      const dupField = priorDeepFields.find((f) => {
+        if (f === currentField) return false;
+        const v = (core as any)[f];
+        if (typeof v !== 'string' || !v) return false;
+        return v.trim().toLowerCase().replace(/\s+/g, ' ') === normalized;
+      });
+      if (dupField) {
+        setError("That's the same answer you gave a different question. Each prompt scores separately, so the match engine needs distinct answers, even if your underlying feeling is the same.");
+        return;
+      }
     }
     if (turn.validate) {
       const v = turn.validate(answer);
