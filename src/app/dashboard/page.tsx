@@ -244,6 +244,9 @@ function MatchPanel({ profileData, coreIntakeData, userId }: { profileData: any;
       {error && <p className="text-red-600">{error}</p>}
       {m && !loading && (
         <div className="bg-gradient-to-br from-[#D4537E]/10 to-[#2E1A47]/10 rounded-lg p-6">
+          <div className="mb-3">
+            <span className="inline-block bg-amber-100 border border-amber-300 text-amber-900 text-[10px] uppercase tracking-widest font-bold px-2 py-1 rounded">Sample, not a real candidate</span>
+          </div>
           <div className="flex items-baseline justify-between mb-4">
             <p className="text-xl font-semibold text-[#2E1A47]">Sample profile <span className="text-sm font-normal text-[#9CA3AF]">(age {m.candidate.age})</span></p>
             <span className="text-2xl font-bold text-[#D4537E]">{m.score}</span>
@@ -1249,9 +1252,29 @@ function Dashboard_Inner() {
                   )}
                 </dl>
                 <div className="mt-6 pt-5 border-t border-[#F0E2D6] grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
-                  {profileData.gender && <div><span className="text-[#9CA3AF]">You</span><br/><span className="text-[#1F2937] font-medium">{profileData.gender}{profileData.pronouns ? ` · ${profileData.pronouns}` : ''}</span></div>}
-                  {profileData.interestedIn && <div><span className="text-[#9CA3AF]">Looking for</span><br/><span className="text-[#1F2937] font-medium capitalize">{profileData.interestedIn}{coreIntakeData.ageMin && coreIntakeData.ageMax ? `, ${coreIntakeData.ageMin}-${coreIntakeData.ageMax}` : ''}</span></div>}
-                  {coreIntakeData.location && <div><span className="text-[#9CA3AF]">Where</span><br/><span className="text-[#1F2937] font-medium">{coreIntakeData.location}</span></div>}
+                  {(() => {
+                    // Defensive: free-text fields (pronouns, location) often get garbage like 'fine' or 'asdf'
+                    // typed in during testing. Showing 'Woman · fine' or 'Where: fine' makes the profile
+                    // look broken. Detect short/nonsense values and surface a setup CTA instead.
+                    const NONSENSE = new Set(['fine','asdf','test','none','n/a','na','xx','xxx','idk','tbd'])
+                    const isNonsense = (v?: string) => !v || v.length < 2 || NONSENSE.has(v.trim().toLowerCase())
+                    const goodPronouns = !isNonsense(profileData.pronouns)
+                    const goodLocation = !isNonsense(coreIntakeData.location)
+                    return (
+                      <>
+                        {profileData.gender && <div><span className="text-[#9CA3AF]">You</span><br/><span className="text-[#1F2937] font-medium">{profileData.gender}{goodPronouns ? ` · ${profileData.pronouns}` : ''}</span></div>}
+                        {profileData.interestedIn && <div><span className="text-[#9CA3AF]">Looking for</span><br/><span className="text-[#1F2937] font-medium capitalize">{profileData.interestedIn}{coreIntakeData.ageMin && coreIntakeData.ageMax ? `, ${coreIntakeData.ageMin}-${coreIntakeData.ageMax}` : ''}</span></div>}
+                        <div>
+                          <span className="text-[#9CA3AF]">Where</span><br/>
+                          {goodLocation ? (
+                            <span className="text-[#1F2937] font-medium">{coreIntakeData.location}</span>
+                          ) : (
+                            <span className="text-amber-700 font-medium">Add a city in the intake</span>
+                          )}
+                        </div>
+                      </>
+                    )
+                  })()}
                 </div>
               </div>
             )}
