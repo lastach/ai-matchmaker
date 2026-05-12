@@ -70,8 +70,7 @@ export default function Home() {
               <div className="w-10 h-10 bg-rose-100 rounded-lg flex items-center justify-center mb-4 text-rose-700 font-bold">2</div>
               <h3 className="font-bold text-gray-900 mb-2">Cohorts open by area</h3>
               <p className="text-sm text-gray-600">
-                Once enough thoughtful people in your area have signed up, your cohort opens. We email
-                you when it does. You see your waitlist position any time.
+                Cohorts open at 50 verified members in your area. We email you when yours opens. You see your waitlist position and how many slots remain any time.
               </p>
             </div>
             <div className="bg-white rounded-xl p-6 border border-gray-200">
