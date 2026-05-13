@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { createClient } from '@supabase/supabase-js'
 import { cookies } from 'next/headers'
-import { isAdminEmail } from '@/lib/isAdmin'
+import { isAdmin } from '@/lib/isAdmin'
 
 export const runtime = 'nodejs'
 
@@ -24,7 +24,7 @@ export async function GET(req: Request) {
   )
   const { data: { user } } = await supa.auth.getUser()
   if (!user) return NextResponse.json({ error: 'auth required' }, { status: 401 })
-  if (!isAdminEmail(user.email)) return NextResponse.json({ error: 'forbidden' }, { status: 403 })
+  if (!(await isAdmin(user.email, supa))) return NextResponse.json({ error: 'forbidden' }, { status: 403 })
 
   const url = new URL(req.url)
   const limit = Math.min(200, parseInt(url.searchParams.get('limit') || '50', 10))

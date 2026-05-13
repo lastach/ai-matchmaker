@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { createClient } from '@supabase/supabase-js'
-import { isAdminEmail } from '@/lib/isAdmin'
+import { isAdmin } from '@/lib/isAdmin'
 
 export const runtime = 'nodejs'
 
@@ -21,7 +21,7 @@ export async function POST(req: Request) {
   )
   const { data: { user } } = await supa.auth.getUser()
   if (!user) return NextResponse.json({ error: 'auth required' }, { status: 401 })
-  if (!isAdminEmail(user.email)) return NextResponse.json({ error: 'forbidden' }, { status: 403 })
+  if (!(await isAdmin(user.email, supa))) return NextResponse.json({ error: 'forbidden' }, { status: 403 })
 
   const body = await req.json().catch(() => ({} as any))
   const userId: string = body?.userId
