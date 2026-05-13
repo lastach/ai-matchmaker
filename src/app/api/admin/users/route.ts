@@ -29,18 +29,20 @@ export async function GET(req: Request) {
   const url = new URL(req.url)
   const limit = Math.min(200, parseInt(url.searchParams.get('limit') || '50', 10))
 
-  // After the email check passes, use the service-role client to bypass RLS so the admin
-  // sees ALL members, not just their own row. The cookie-scoped supa client above is
-  // RLS-restricted to the caller's user_id, which is why /admin was showing Members (0)
-  // even after multiple test plays (other test users' rows were invisible).
-  if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
-    return NextResponse.json({ users: [], table: 'misconfigured', note: 'SUPABASE_SERVICE_ROLE_KEY is not set on this deployment. The admin route needs it to bypass RLS and see all members.' })
-  }
-  const admin = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    { auth: { autoRefreshToken: false, persistSession: false } }
-  )
+  // RLS-aware path: if the admins-table migration has been applied (see
+  // supabase/migrations/20260513120000_admin_table_and_rls.sql), the policies on
+  // user_profiles and matchmaker_profiles grant SELECT to any JWT whose email
+  // appears in the public.admins table. So the regular cookie-scoped client
+  // can read all rows for an admin, no service-role key needed.
+  // If a service-role key happens to also be configured, use it (it bypasses RLS
+  // either way). Otherwise, fall through to the admin-policy path.
+  const admin = process.env.SUPABASE_SERVICE_ROLE_KEY
+    ? createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!,
+        { auth: { autoRefreshToken: false, persistSession: false } }
+      )
+    : supa  // RLS-aware fallback once admin policies are in place
 
   // Primary source: matchmaker_profiles (post-threshold)
   const primary = await admin

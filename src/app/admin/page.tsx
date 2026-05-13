@@ -109,7 +109,12 @@ export default function AdminPage() {
           {users.length === 0 && !loading && (
             <div className="mb-3 text-xs text-gray-500 bg-amber-50 border border-amber-200 rounded p-3">
               <p className="font-semibold text-amber-900 mb-1">No members visible</p>
-              <p>If you've completed intakes and still see zero, the most common cause is that SUPABASE_SERVICE_ROLE_KEY is missing on the Vercel env for ai-matchmaker. With it set, this admin view bypasses RLS and shows all rows. Without it, RLS restricts you to your own user_profiles row only.</p>
+              <p className="mb-2">RLS is hiding other test users' rows from this admin view. Fix path (pick one):</p>
+              <ul className="list-disc list-inside mb-2 space-y-1">
+                <li><strong>Database migration (recommended).</strong> One-time SQL paste, no Vercel env var needed. Open Supabase Studio for project <code>ipkgrnvnqrlinifxcriy</code> &rarr; SQL Editor &rarr; paste the contents of <code>supabase/migrations/20260513120000_admin_table_and_rls.sql</code> from this repo &rarr; Run. After that, refresh /admin. The migration creates a public.admins table seeded with laurie.stach@gmail.com and adds SELECT policies on user_profiles, matchmaker_profiles, and matches.</li>
+                <li><strong>Service-role env var.</strong> Open vercel.com/dashboard &rarr; ai-matchmaker &rarr; Settings &rarr; Environment Variables &rarr; add <code>SUPABASE_SERVICE_ROLE_KEY</code> with the service_role JWT from Supabase Project Settings &rarr; API. Redeploy.</li>
+              </ul>
+              <p className="text-xs">Either path works. The migration is more durable because it does not require any Vercel-side config and survives env-var loss.</p>
             </div>
           )}
           <div className="space-y-2 max-h-[70vh] overflow-y-auto">
