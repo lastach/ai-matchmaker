@@ -36,6 +36,25 @@ export default function AdminPage() {
 
   useEffect(() => {
     (async () => {
+      // Pre-flight: explicitly migrate any legacy bare-createClient session token from
+      // localStorage into the SSR client + cookie BEFORE checking auth. Closes the race
+      // where module-init session-sync hasn't completed before this useEffect runs and
+      // the user gets redirected to /auth even with a valid token in storage.
+      try {
+        const url = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
+        const projectRef = (url.match(/https:\/\/([^\.]+)\./) || [])[1]
+        if (projectRef) {
+          const raw = typeof window !== 'undefined' ? localStorage.getItem(`sb-${projectRef}-auth-token`) : null
+          if (raw) {
+            const parsed = JSON.parse(raw)
+            const at = parsed?.access_token || parsed?.currentSession?.access_token
+            const rt = parsed?.refresh_token || parsed?.currentSession?.refresh_token
+            if (at && rt) {
+              await supabase.auth.setSession({ access_token: at, refresh_token: rt })
+            }
+          }
+        }
+      } catch {}
       const { data: { session } } = await supabase.auth.getSession()
       if (!session) {
         window.location.href = '/auth?next=/admin'
