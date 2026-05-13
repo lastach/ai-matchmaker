@@ -14,7 +14,7 @@ function getSupabase() {
 export default function AuthPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [isSignUp, setIsSignUp] = useState(() => { if (typeof window === 'undefined') return false; return new URLSearchParams(window.location.search).get('signup') === '1' })
+  const [isSignUp, setIsSignUp] = useState(false) // Hydration-safe: server renders with false, useEffect re-reads URL post-mount and flips if ?signup=1
 
   // Robust signup default: re-read the URL after mount in case the lazy
   // initializer was hydrated from server state where window was unavailable.
@@ -136,6 +136,9 @@ export default function AuthPage() {
         </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
+          {isSignUp && (
+            <p className="text-xs text-gray-500 bg-rose-50 border border-rose-100 rounded-md px-3 py-2">No password needed to sign up. We'll email you a one-click sign-in link.</p>
+          )}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
             <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-rose-300" placeholder="you@example.com" />
