@@ -337,7 +337,16 @@ function Dashboard_Inner() {
   const [uploadedPhotosCount, setUploadedPhotosCount] = useState(0);
 
   // Tab state for post-onboarding
-  const [activeTab, setActiveTab] = useState<'home' | 'improve' | 'settings'>('home');
+  const [openSections, setOpenSections] = useState<Set<string>>(() => new Set(['home','improve','settings']))
+  const toggleSection = (sec: string) => setOpenSections(prev => { const n = new Set(prev); if (n.has(sec)) n.delete(sec); else n.add(sec); return n })
+  const [activeTab, _setActiveTabBase] = useState<'home' | 'improve' | 'settings'>('home');
+  const setActiveTab = (s: 'home' | 'improve' | 'settings') => {
+    _setActiveTabBase(s)
+    setOpenSections(prev => { const n = new Set(prev); n.add(s); return n })
+    if (typeof window !== 'undefined') {
+      setTimeout(() => document.getElementById(`section-${s}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50)
+    }
+  }
   const [currentDepthQuestion, setCurrentDepthQuestion] = useState(0);
   const [depthResponses, setDepthResponses] = useState<{ [key: number]: string }>({});
 
@@ -1160,28 +1169,33 @@ function Dashboard_Inner() {
         </button>
       </div>
 
-      {/* Tabs */}
+      {/* Section toggles: every section renders below; click a chip to scroll/expand, click again to collapse */}
       <div className="border-b border-[#E5E7EB] bg-white sticky top-0 z-10">
-        <div className="max-w-6xl mx-auto px-6 flex gap-6">
-          {(['home', 'improve', 'settings'] as const).map((tab) => (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              className={`py-4 px-2 font-semibold border-b-2 transition-all capitalize ${
-                activeTab === tab
-                  ? 'border-[#D4537E] text-[#D4537E]'
-                  : 'border-transparent text-[#6B7280] hover:text-[#D4537E]'
-              }`}
-            >
-              {tab === 'home' ? 'Home' : tab === 'improve' ? 'Improve Profile' : 'Settings'}
-            </button>
-          ))}
+        <div className="max-w-6xl mx-auto px-6 py-3 flex flex-wrap gap-2">
+          {(['home', 'improve', 'settings'] as const).map((tab) => {
+            const open = openSections.has(tab)
+            const label = tab === 'home' ? 'Home' : tab === 'improve' ? 'Improve Profile' : 'Settings'
+            return (
+              <button
+                key={tab}
+                onClick={() => { if (open) toggleSection(tab); else setActiveTab(tab) }}
+                className={`px-3 py-1.5 rounded-md text-xs font-medium transition flex items-center gap-1 ${open ? 'bg-[#D4537E] text-white' : 'bg-white border border-[#E5E7EB] text-[#6B7280] hover:border-[#D4537E]'}`}
+                title={open ? `Collapse ${label}` : `Show & scroll to ${label}`}
+              >
+                <span>{open ? '▾' : '▸'}</span>
+                {label}
+              </button>
+            )
+          })}
+          <button onClick={() => setOpenSections(new Set(['home','improve','settings']))} className="px-3 py-1.5 rounded-md text-xs font-medium bg-gray-200 hover:bg-gray-300 text-gray-700 ml-2">Show all</button>
+          <button onClick={() => setOpenSections(new Set())} className="px-3 py-1.5 rounded-md text-xs font-medium bg-gray-200 hover:bg-gray-300 text-gray-700">Hide all</button>
         </div>
       </div>
 
       {/* Content */}
       <div className="max-w-6xl mx-auto px-6 py-12">
-        {activeTab === 'home' && (
+        {openSections.has('home') && (
+          <div id="section-home" className="scroll-mt-4 mb-3"><div className="flex items-center justify-between rounded-lg px-3 py-2 bg-[#3D1820] text-white text-sm font-semibold"><span>Home</span><button onClick={() => toggleSection('home')} className="text-xs text-pink-200 hover:text-white">collapse</button></div></div>
           <div className="space-y-8">
             {/* What I heard from you - renders the user's open-ended answers back so the post-intake
                 screen feels substantive, not like a profile-strength wheel. */}
@@ -1378,11 +1392,13 @@ function Dashboard_Inner() {
 </div>
         )}
 
-        {activeTab === 'improve' && (
+        {openSections.has('improve') && (
+          <div id="section-improve" className="scroll-mt-4 mb-3"><div className="flex items-center justify-between rounded-lg px-3 py-2 bg-[#3D1820] text-white text-sm font-semibold"><span>Improve Profile</span><button onClick={() => toggleSection('improve')} className="text-xs text-pink-200 hover:text-white">collapse</button></div></div>
           <DepthChat depthResponses={depthResponses} onAnswer={handleDepthResponse} />
         )}
 
-        {activeTab === 'settings' && (
+        {openSections.has('settings') && (
+          <div id="section-settings" className="scroll-mt-4 mb-3"><div className="flex items-center justify-between rounded-lg px-3 py-2 bg-[#3D1820] text-white text-sm font-semibold"><span>Settings</span><button onClick={() => toggleSection('settings')} className="text-xs text-pink-200 hover:text-white">collapse</button></div></div>
           <div className="space-y-8 max-w-2xl">
             <div>
               <h2 className="text-3xl font-bold text-[#1F2937] mb-6">Profile Settings</h2>
