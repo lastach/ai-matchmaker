@@ -38,6 +38,10 @@ interface CoreIntakeData {
   q8Response?: string;
   q9Response?: string;
   q10Response?: string;
+  topValue?: string;
+  attachmentSelf?: string;
+  topLifeGoal?: string;
+  priorityChoice?: string;
 }
 
 interface UserProfile {
