@@ -32,11 +32,15 @@ export async function GET(req: Request) {
   // After the email check passes, use the service-role client to bypass RLS so the admin
   // sees ALL members, not just their own row. The cookie-scoped supa client above is
   // RLS-restricted to the caller's user_id, which is why /admin was showing Members (0)
-  // even after multiple test plays - the other test users' rows were invisible.
-  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
-  const admin = serviceKey
-    ? createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, serviceKey, { auth: { autoRefreshToken: false, persistSession: false } })
-    : supa
+  // even after multiple test plays (other test users' rows were invisible).
+  if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    return NextResponse.json({ users: [], table: 'misconfigured', note: 'SUPABASE_SERVICE_ROLE_KEY is not set on this deployment. The admin route needs it to bypass RLS and see all members.' })
+  }
+  const admin = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    { auth: { autoRefreshToken: false, persistSession: false } }
+  )
 
   // Primary source: matchmaker_profiles (post-threshold)
   const primary = await admin
