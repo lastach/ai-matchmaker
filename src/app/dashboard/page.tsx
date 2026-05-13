@@ -1194,7 +1194,7 @@ function Dashboard_Inner() {
 
       {/* Content */}
       <div className="max-w-6xl mx-auto px-6 py-12">
-        {openSections.has('home') && (
+        {openSections.has('home') && (<>
           <div id="section-home" className="scroll-mt-4 mb-3"><div className="flex items-center justify-between rounded-lg px-3 py-2 bg-[#3D1820] text-white text-sm font-semibold"><span>Home</span><button onClick={() => toggleSection('home')} className="text-xs text-pink-200 hover:text-white">collapse</button></div></div>
           <div className="space-y-8">
             {/* What I heard from you - renders the user's open-ended answers back so the post-intake
@@ -1390,14 +1390,14 @@ function Dashboard_Inner() {
             <MatchPanel profileData={profileData} coreIntakeData={coreIntakeData} userId={user?.id} />
 
 </div>
-        )}
+        </>)}
 
-        {openSections.has('improve') && (
+        {openSections.has('improve') && (<>
           <div id="section-improve" className="scroll-mt-4 mb-3"><div className="flex items-center justify-between rounded-lg px-3 py-2 bg-[#3D1820] text-white text-sm font-semibold"><span>Improve Profile</span><button onClick={() => toggleSection('improve')} className="text-xs text-pink-200 hover:text-white">collapse</button></div></div>
           <DepthChat depthResponses={depthResponses} onAnswer={handleDepthResponse} />
-        )}
+        </>)}
 
-        {openSections.has('settings') && (
+        {openSections.has('settings') && (<>
           <div id="section-settings" className="scroll-mt-4 mb-3"><div className="flex items-center justify-between rounded-lg px-3 py-2 bg-[#3D1820] text-white text-sm font-semibold"><span>Settings</span><button onClick={() => toggleSection('settings')} className="text-xs text-pink-200 hover:text-white">collapse</button></div></div>
           <div className="space-y-8 max-w-2xl">
             <div>
@@ -1455,7 +1455,7 @@ function Dashboard_Inner() {
               </div>
             </div>
           </div>
-        )}
+        </>)}
       </div>
 
       {/* Delete Account - GDPR/CCPA */}
