@@ -23,17 +23,36 @@ export const supabase = buildClient();
 // SSR client writes the auth token into the cookie jar. After this runs once,
 // server-side /api/* routes will see the JWT.
 if (typeof window !== 'undefined') {
-  (async () => {
+  ;(async () => {
     try {
       const { data } = await supabase.auth.getSession();
-      const hasSession = !!data?.session;
       const hasCookie = document.cookie.split(';').some(c => c.trim().startsWith('sb-'));
-      if (hasSession && !hasCookie) {
-        // Force the SSR client to write the cookie by triggering a refresh.
+      // Case A: session in store (cookie or new localStorage), no cookie yet -> refresh to write cookie.
+      if (data?.session && !hasCookie) {
         await supabase.auth.refreshSession();
+        return;
+      }
+      // Case B: no session via the new SSR client, but the OLD bare-createClient
+      // stored a token under sb-<project>-auth-token in localStorage. Read it and
+      // call setSession() so the SSR client adopts it AND writes the cookie.
+      if (!data?.session && !hasCookie) {
+        const projectRef = (supabaseUrl.match(/https:\/\/([^\.]+)\./) || [])[1];
+        if (projectRef) {
+          const raw = localStorage.getItem(`sb-${projectRef}-auth-token`);
+          if (raw) {
+            try {
+              const parsed = JSON.parse(raw);
+              const access_token = parsed?.access_token || parsed?.currentSession?.access_token;
+              const refresh_token = parsed?.refresh_token || parsed?.currentSession?.refresh_token;
+              if (access_token && refresh_token) {
+                await supabase.auth.setSession({ access_token, refresh_token });
+              }
+            } catch {}
+          }
+        }
       }
     } catch {
-      // ignore - this is best-effort
+      // best-effort - ignore
     }
   })();
 }
