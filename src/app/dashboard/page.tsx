@@ -387,33 +387,28 @@ function Dashboard_Inner() {
     };
 
     if (hasAuthHash) {
-      // Magic-link callback. The URL hash gets parsed by supabase-js (createBrowserClient
-      // with detectSessionInUrl=true). Poll for session up to 6 seconds; if INITIAL_SESSION
-      // already fired before our subscribe, getSession will return it. If still null, subscribe
-      // and wait. Either way, the bounce-to-/auth path only fires if hash parsing fails.
-      const sub = supabase.auth.onAuthStateChange((event, session) => {
-        if ((event === 'INITIAL_SESSION' || event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && session) {
-          proceed(session);
-          sub.data.subscription.unsubscribe();
-        }
-      });
-      unsub = () => sub.data.subscription.unsubscribe();
-      // Polling fallback: getSession every 200ms for up to 6s
-      let attempts = 0;
-      const poll = setInterval(async () => {
-        attempts++;
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session) {
-          clearInterval(poll);
-          proceed(session);
-          if (unsub) unsub();
-        } else if (attempts >= 30) {
-          clearInterval(poll);
-          if (unsub) unsub();
+      // Magic-link callback. Explicitly parse the URL hash and call setSession so we don't
+      // rely on detectSessionInUrl timing (which can race the React component mount).
+      const params = new URLSearchParams(window.location.hash.slice(1));
+      const access_token = params.get('access_token');
+      const refresh_token = params.get('refresh_token');
+      if (access_token && refresh_token) {
+        supabase.auth.setSession({ access_token, refresh_token }).then(({ data, error }) => {
+          if (error || !data?.session) {
+            router.push('/auth');
+            return;
+          }
+          // Clear the hash so a refresh doesn't try to re-process it
+          history.replaceState(null, '', window.location.pathname);
+          proceed(data.session);
+        }).catch(() => {
           router.push('/auth');
-        }
-      }, 200);
-      return () => { clearInterval(poll); if (unsub) unsub(); };
+        });
+        return;
+      } else {
+        router.push('/auth');
+        return;
+      }
     }
 
     const checkAuth = async () => {
