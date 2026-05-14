@@ -462,23 +462,32 @@ function Dashboard_Inner() {
         console.warn('localStorage save failed', e);
       }
       setProfile(updatedProfile);
-      // Server persistence: debounced. Snapshot the relevant slice and POST.
+      // Server persistence: debounced. Don't swallow errors silently - if the
+      // first save fails (e.g. cookies not yet propagated after magic-link sign-in),
+      // retry with backoff. After all 5 attempts fail, surface to console at least
+      // so we can see in production logs.
       try {
         if (saveDebounceRef.current) clearTimeout(saveDebounceRef.current as any);
         const intakeCompleted = updatedProfile.onboardingStep === 'summary' || updatedProfile.onboardingStep === 'attraction' || updatedProfile.onboardingStep === 'photos' || updatedProfile.onboardingStep === 'complete';
-        saveDebounceRef.current = setTimeout(() => {
-          fetch('/api/intake/save', {
-            method: 'POST',
-            headers: { 'content-type': 'application/json' },
-            body: JSON.stringify({
-              profileData: updatedProfile.profileData,
-              coreIntakeData: updatedProfile.coreIntakeData,
-              profileStrength: updatedProfile.profileStrength,
-              userPhotos: updatedProfile.userPhotos,
-              intakeCompleted,
-            }),
-          }).catch(() => {});
-        }, 800) as any;
+        const body = JSON.stringify({
+          profileData: updatedProfile.profileData,
+          coreIntakeData: updatedProfile.coreIntakeData,
+          profileStrength: updatedProfile.profileStrength,
+          userPhotos: updatedProfile.userPhotos,
+          intakeCompleted,
+        });
+        const attempt = async (n: number) => {
+          try {
+            const r = await fetch('/api/intake/save', { method: 'POST', headers: { 'content-type': 'application/json' }, body, credentials: 'include' });
+            if (r.ok) return;
+            if (n < 4) setTimeout(() => attempt(n + 1), 500 * (n + 1));
+            else console.warn('intake save failed after retries:', r.status);
+          } catch (e) {
+            if (n < 4) setTimeout(() => attempt(n + 1), 500 * (n + 1));
+            else console.warn('intake save threw after retries:', e);
+          }
+        };
+        saveDebounceRef.current = setTimeout(() => attempt(0), 800) as any;
       } catch {}
     } else {
       console.warn('saveProfile called without user.id - state updated but not persisted');
