@@ -387,20 +387,33 @@ function Dashboard_Inner() {
     };
 
     if (hasAuthHash) {
-      // Magic-link callback. Wait for the hash to be parsed into a session.
-      const { data } = supabase.auth.onAuthStateChange((event, session) => {
-        if (event === 'INITIAL_SESSION' || event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+      // Magic-link callback. The URL hash gets parsed by supabase-js (createBrowserClient
+      // with detectSessionInUrl=true). Poll for session up to 6 seconds; if INITIAL_SESSION
+      // already fired before our subscribe, getSession will return it. If still null, subscribe
+      // and wait. Either way, the bounce-to-/auth path only fires if hash parsing fails.
+      const sub = supabase.auth.onAuthStateChange((event, session) => {
+        if ((event === 'INITIAL_SESSION' || event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && session) {
           proceed(session);
-          if (unsub) unsub();
+          sub.data.subscription.unsubscribe();
         }
       });
-      unsub = () => data.subscription.unsubscribe();
-      // Safety net: if INITIAL_SESSION never fires within 4s, try getSession()
-      setTimeout(async () => {
+      unsub = () => sub.data.subscription.unsubscribe();
+      // Polling fallback: getSession every 200ms for up to 6s
+      let attempts = 0;
+      const poll = setInterval(async () => {
+        attempts++;
         const { data: { session } } = await supabase.auth.getSession();
-        if (session) proceed(session);
-      }, 4000);
-      return () => { if (unsub) unsub(); };
+        if (session) {
+          clearInterval(poll);
+          proceed(session);
+          if (unsub) unsub();
+        } else if (attempts >= 30) {
+          clearInterval(poll);
+          if (unsub) unsub();
+          router.push('/auth');
+        }
+      }, 200);
+      return () => { clearInterval(poll); if (unsub) unsub(); };
     }
 
     const checkAuth = async () => {
