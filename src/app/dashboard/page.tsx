@@ -350,8 +350,59 @@ function Dashboard_Inner() {
   const [currentDepthQuestion, setCurrentDepthQuestion] = useState(0);
   const [depthResponses, setDepthResponses] = useState<{ [key: number]: string }>({});
 
-  // Check auth on mount
+  // Check auth on mount.
+  // If the URL has an access_token hash fragment (post-magic-link callback),
+  // wait for supabase-js to parse it via onAuthStateChange INITIAL_SESSION before
+  // redirecting to /auth. Otherwise we race the URL-hash parser and bounce
+  // newly-verified users back to the sign-in form.
   useEffect(() => {
+    const hasAuthHash = typeof window !== 'undefined' && window.location.hash.includes('access_token');
+    let unsub: (() => void) | undefined;
+
+    const proceed = async (session: any) => {
+      if (!session) {
+        router.push('/auth');
+        return;
+      }
+      setUser(session.user);
+      const savedProfile = localStorage.getItem(`profile_${session.user.id}`);
+      let parsed: any = null;
+      if (savedProfile) { try { parsed = JSON.parse(savedProfile); } catch { parsed = null; } }
+      if (parsed && parsed.onboardingStep) {
+        setProfile(parsed);
+        setCoreIntakeData(parsed.coreIntakeData || {});
+        setProfileData(parsed.profileData || {});
+        setAttractionRatings(parsed.attractionRatings || {});
+        setUserPhotos(parsed.userPhotos || []);
+        setAttractionPhotos(parsed.attractionPhotos || []);
+        setDepthResponses(parsed.depthQuestionResponses || {});
+      } else if (session.user.id) {
+        const newProfile: UserProfile = {
+          userId: session.user.id, onboardingStep: 'welcome', profileData: {}, coreIntakeData: {},
+          attractionRatings: {}, attractionPhotos: [], userPhotos: [], depthQuestionResponses: {}, profileStrength: 0,
+        };
+        setProfile(newProfile);
+      }
+      setLoading(false);
+    };
+
+    if (hasAuthHash) {
+      // Magic-link callback. Wait for the hash to be parsed into a session.
+      const { data } = supabase.auth.onAuthStateChange((event, session) => {
+        if (event === 'INITIAL_SESSION' || event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+          proceed(session);
+          if (unsub) unsub();
+        }
+      });
+      unsub = () => data.subscription.unsubscribe();
+      // Safety net: if INITIAL_SESSION never fires within 4s, try getSession()
+      setTimeout(async () => {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session) proceed(session);
+      }, 4000);
+      return () => { if (unsub) unsub(); };
+    }
+
     const checkAuth = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
