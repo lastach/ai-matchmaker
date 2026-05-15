@@ -1,10 +1,13 @@
+import MarketingHeader from '@/components/MarketingHeader'
 export const metadata = {
   title: 'Privacy Policy | Amorlay',
 };
 
 export default function PrivacyPage() {
   return (
-    <main className="max-w-3xl mx-auto px-6 py-12 text-gray-800 leading-relaxed">
+    <>
+      <MarketingHeader />
+      <main className="max-w-3xl mx-auto px-6 py-12 text-gray-800 leading-relaxed">
       <a href="/" className="text-sm text-gray-500 hover:text-gray-700">&larr; Back</a>
       <h1 className="text-3xl font-bold mt-4 mb-2">Privacy Policy</h1>
       <p className="text-sm text-gray-500 mb-6">Effective April 24, 2026</p>
@@ -68,5 +71,6 @@ export default function PrivacyPage() {
         Values shown in curly-brace placeholders will be replaced with real legal entity information before public release.
       </p>
     </main>
+    </>
   );
 }

@@ -1,8 +1,11 @@
+import MarketingHeader from '@/components/MarketingHeader'
 export const metadata = { title: 'Verification - Amorlay' }
 
 export default function VerificationPage() {
   return (
-    <main className="max-w-3xl mx-auto px-6 py-12 text-gray-900">
+    <>
+      <MarketingHeader />
+      <main className="max-w-3xl mx-auto px-6 py-12 text-gray-900">
       <h1 className="text-3xl font-bold mb-2">Verification</h1>
       <p className="text-gray-600 mb-8">
         How we will verify members at general availability, and what we are doing during early access.
@@ -48,5 +51,6 @@ export default function VerificationPage() {
         </p>
       </section>
     </main>
+    </>
   )
 }

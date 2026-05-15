@@ -1,8 +1,11 @@
+import MarketingHeader from '@/components/MarketingHeader'
 export const metadata = { title: 'Integrations - Amorlay' }
 
 export default function Page() {
   return (
-    <main className="max-w-3xl mx-auto px-6 py-12 text-gray-900">
+    <>
+      <MarketingHeader />
+      <main className="max-w-3xl mx-auto px-6 py-12 text-gray-900">
       <h1 className="text-3xl font-bold mb-2">Integrations</h1>
       <section className="space-y-6 text-sm leading-6 text-gray-700">
         <h2 className="text-lg font-semibold text-gray-900">Live</h2>
@@ -20,5 +23,6 @@ export default function Page() {
         <p className="text-xs text-gray-500 mt-8">Questions: <a className="text-rose-700 hover:underline" href="mailto:support@amorlay.com">support@amorlay.com</a>.</p>
       </section>
     </main>
+    </>
   )
 }

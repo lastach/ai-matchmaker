@@ -1,8 +1,11 @@
+import MarketingHeader from '@/components/MarketingHeader'
 export const metadata = { title: 'Security - Amorlay' }
 
 export default function SecurityPage() {
   return (
-    <main className="max-w-3xl mx-auto px-6 py-12 text-gray-900">
+    <>
+      <MarketingHeader />
+      <main className="max-w-3xl mx-auto px-6 py-12 text-gray-900">
       <h1 className="text-3xl font-bold mb-2">Security and data handling</h1>
       <p className="text-gray-600 mb-8">
         Matchmaking takes deeply personal disclosures. Here is how the bytes are handled.
@@ -52,5 +55,6 @@ export default function SecurityPage() {
         </p>
       </section>
     </main>
+    </>
   )
 }
