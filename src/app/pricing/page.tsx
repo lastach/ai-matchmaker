@@ -1,14 +1,10 @@
 import Link from 'next/link'
+import MarketingHeader from '@/components/MarketingHeader'
 export const metadata = { title: 'Pricing - Amorlay' }
 export default function Pricing() {
   return (
     <main className="min-h-screen bg-white">
-      <nav className="border-b border-rose-100">
-        <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
-          <Link href="/"><img src="/logo.svg" alt="Amorlay" className="h-9" /></Link>
-          <Link href="/auth" className="text-sm font-medium text-gray-600 hover:text-gray-900">Sign in</Link>
-        </div>
-      </nav>
+      <MarketingHeader />
       <section className="max-w-4xl mx-auto px-6 py-16">
         <h1 className="text-4xl font-bold text-gray-900 mb-3">Pricing</h1>
         <p className="text-lg text-gray-600 mb-10">Honest about where this is. Free during early access while we build the cohort.</p>

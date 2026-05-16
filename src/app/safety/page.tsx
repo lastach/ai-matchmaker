@@ -1,14 +1,10 @@
 import Link from 'next/link'
+import MarketingHeader from '@/components/MarketingHeader'
 export const metadata = { title: 'Safety - Amorlay' }
 export default function Safety() {
   return (
     <main className="min-h-screen bg-white">
-      <nav className="border-b border-rose-100">
-        <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
-          <Link href="/"><img src="/logo.svg" alt="Amorlay" className="h-9" /></Link>
-          <Link href="/auth" className="text-sm font-medium text-gray-600 hover:text-gray-900">Sign in</Link>
-        </div>
-      </nav>
+      <MarketingHeader />
       <section className="max-w-3xl mx-auto px-6 py-16">
         <h1 className="text-4xl font-bold text-gray-900 mb-3">Safety</h1>
         <p className="text-lg text-gray-600 mb-10">Matchmaking takes deeply personal disclosures. Here is how we handle them, and where we are vs. where we still need to be.</p>
