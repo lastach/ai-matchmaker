@@ -1185,8 +1185,11 @@ function Dashboard_Inner() {
 
             {userPhotos.length === 0 && (
               <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-8">
-                <p className="text-sm text-yellow-800">
-                  You need at least 1 photo to continue
+                <p className="text-sm text-yellow-900 font-medium mb-1">
+                  At least 1 photo is required before you enter the matching pool.
+                </p>
+                <p className="text-xs text-yellow-800">
+                  Every match is reviewed by a human matchmaker; they look at your photos to evaluate fit. Your photos are never made public outside of an introduced match.
                 </p>
               </div>
             )}
@@ -1212,6 +1215,20 @@ function Dashboard_Inner() {
               >
                 Complete Profile
               </button>
+            </div>
+            <div className="mt-4 text-center">
+              <button
+                type="button"
+                onClick={async () => {
+                  // Persist progress (saveProfile already triggers on field changes; this is an explicit no-op signal).
+                  try { await supabase.auth.signOut() } catch {}
+                  window.location.href = '/'
+                }}
+                className="text-sm text-[#6B7280] hover:text-[#1F2937] underline"
+              >
+                Save and finish later
+              </button>
+              <p className="text-xs text-[#9CA3AF] mt-1">Your intake answers and attraction ratings stay saved. You will land on photos again when you sign back in.</p>
             </div>
           </div>
         </div>

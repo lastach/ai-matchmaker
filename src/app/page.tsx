@@ -1,4 +1,5 @@
 'use client';
+import MarketingHeader from '@/components/MarketingHeader'
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
@@ -19,12 +20,7 @@ export default function Home() {
 
   return (
     <main className="min-h-screen bg-white">
-      <nav className="border-b border-rose-100">
-        <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
-          <img src="/logo.svg" alt="Amorlay" className="h-9" />
-          <div className="flex items-center gap-5"><Link href="/pricing" className="text-sm text-gray-600 hover:text-gray-900">Pricing</Link><Link href="/safety" className="text-sm text-gray-600 hover:text-gray-900">Safety</Link><Link href="/auth" className="text-sm font-medium text-gray-600 hover:text-gray-900">Sign in</Link></div>
-        </div>
-      </nav>
+      <MarketingHeader />
 
       {/* Editorial hero - typography-led, no card-shaped mock above the fold */}
       <section className="max-w-3xl mx-auto px-6 pt-20 pb-16">
