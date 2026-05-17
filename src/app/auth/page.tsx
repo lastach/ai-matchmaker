@@ -159,8 +159,20 @@ export default function AuthPage() {
               Or send me a one-click sign-in link instead
             </button>
           )}
-          {error && <p className="text-red-600 text-sm">{error}</p>}
-          {message && <p className="text-green-600 text-sm">{message}</p>}
+          <div role="status" aria-live="polite" className="min-h-[3rem]">
+            {loading && !error && !message && (
+              <p className="text-gray-600 text-sm flex items-center justify-center gap-2">
+                <span className="inline-block w-3.5 h-3.5 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" aria-hidden="true" />
+                <span>{isSignUp ? 'Sending you a sign-in link...' : 'Signing you in...'}</span>
+              </p>
+            )}
+            {message && (
+              <div className="bg-green-50 border border-green-200 rounded-md px-3 py-2.5 text-sm text-green-800">{message}</div>
+            )}
+            {error && (
+              <p className="text-red-600 text-sm">{error}</p>
+            )}
+          </div>
           <button type="submit" disabled={loading} className="w-full bg-[#3D1820] text-white py-2.5 rounded-lg font-medium text-sm hover:bg-[#2a0f16] transition disabled:opacity-50">{loading ? 'Please wait...' : isSignUp ? 'Create Account' : 'Sign In'}</button>
         </form>
         <p className="text-center text-sm text-gray-500 mt-6">
