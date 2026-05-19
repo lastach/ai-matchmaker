@@ -953,13 +953,20 @@ function Dashboard_Inner() {
         <div className="max-w-4xl mx-auto">
           {/* Header */}
           <div className="flex justify-between items-center mb-12 pt-8">
-            <div>
-              <h1 className="text-3xl font-bold text-white">Show us your type</h1>
-              <p className="text-[#D4537E]/80">Attraction Training • Step 2 of 3</p>
+            <div className="flex items-center gap-4">
+              <a href="/" aria-label="Amorlay home" className="flex items-center gap-2 text-white/90 hover:text-white">
+                <img src="/logo.svg" alt="Amorlay" className="h-7 w-7" />
+                <span className="text-sm font-semibold tracking-wide">Amorlay</span>
+              </a>
+              <span className="text-white/30">|</span>
+              <div>
+                <h1 className="text-2xl sm:text-3xl font-bold text-white leading-tight">Show us your type</h1>
+                <p className="text-[#D4537E]/80 text-sm">Attraction Training, Step 2 of 3</p>
+              </div>
             </div>
             <button
               onClick={handleLogout}
-              className="text-white/60 hover:text-white text-sm font-medium"
+              className="text-white/70 hover:text-white text-sm font-medium px-3 py-1.5 rounded-md border border-white/20 hover:border-white/40 transition"
             >
               Logout
             </button>
@@ -1113,13 +1120,20 @@ function Dashboard_Inner() {
         <div className="max-w-2xl mx-auto">
           {/* Header */}
           <div className="flex justify-between items-center mb-12 pt-8">
-            <div>
-              <h1 className="text-3xl font-bold text-white">Your photos</h1>
-              <p className="text-[#D4537E]/80">Profile Setup • Step 3 of 3</p>
+            <div className="flex items-center gap-4">
+              <a href="/" aria-label="Amorlay home" className="flex items-center gap-2 text-white/90 hover:text-white">
+                <img src="/logo.svg" alt="Amorlay" className="h-7 w-7" />
+                <span className="text-sm font-semibold tracking-wide">Amorlay</span>
+              </a>
+              <span className="text-white/30">|</span>
+              <div>
+                <h1 className="text-2xl sm:text-3xl font-bold text-white leading-tight">Your photos</h1>
+                <p className="text-[#D4537E]/80 text-sm">Profile Setup, Step 3 of 3</p>
+              </div>
             </div>
             <button
               onClick={handleLogout}
-              className="text-white/60 hover:text-white text-sm font-medium"
+              className="text-white/70 hover:text-white text-sm font-medium px-3 py-1.5 rounded-md border border-white/20 hover:border-white/40 transition"
             >
               Logout
             </button>
@@ -1242,9 +1256,16 @@ function Dashboard_Inner() {
     <div className="min-h-screen bg-[#FBF9F7]">
       {/* Header */}
       <div className="bg-gradient-to-r from-[#2E1A47] to-[#3D2557] text-white p-6 flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold">Your Dashboard</h1>
-          <p className="text-[#D4537E]">Welcome to Amorlay</p>
+        <div className="flex items-center gap-4">
+          <a href="/" aria-label="Amorlay home" className="flex items-center gap-2 text-white/90 hover:text-white">
+            <img src="/logo.svg" alt="Amorlay" className="h-8 w-8" />
+            <span className="text-sm font-semibold tracking-wide">Amorlay</span>
+          </a>
+          <span className="text-white/30">|</span>
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold leading-tight">Your Dashboard</h1>
+            <p className="text-[#D4537E] text-sm">Welcome back</p>
+          </div>
         </div>
         <button
           onClick={handleLogout}
