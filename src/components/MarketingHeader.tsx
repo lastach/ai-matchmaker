@@ -12,6 +12,7 @@ export default function MarketingHeader() {
           <Link href="/pricing" className="text-sm font-medium text-gray-600 hover:text-gray-900">Pricing</Link>
           <Link href="/safety" className="text-sm font-medium text-gray-600 hover:text-gray-900">Safety</Link>
           <Link href="/verification" className="text-sm font-medium text-gray-600 hover:text-gray-900">Verification</Link>
+          <Link href="/integrations" className="text-sm font-medium text-gray-600 hover:text-gray-900">Integrations</Link>
           <Link href="/faq" className="text-sm font-medium text-gray-600 hover:text-gray-900">FAQ</Link>
           <Link href="/auth" className="text-sm font-semibold text-gray-900 hover:text-red-600">Sign in</Link>
         </div>
@@ -36,6 +37,7 @@ export default function MarketingHeader() {
             <Link href="/pricing" onClick={() => setOpen(false)} className="block py-2 text-sm text-gray-700 hover:text-gray-900">Pricing</Link>
             <Link href="/safety" onClick={() => setOpen(false)} className="block py-2 text-sm text-gray-700 hover:text-gray-900">Safety</Link>
             <Link href="/verification" onClick={() => setOpen(false)} className="block py-2 text-sm text-gray-700 hover:text-gray-900">Verification</Link>
+            <Link href="/integrations" onClick={() => setOpen(false)} className="block py-2 text-sm text-gray-700 hover:text-gray-900">Integrations</Link>
             <Link href="/faq" onClick={() => setOpen(false)} className="block py-2 text-sm text-gray-700 hover:text-gray-900">FAQ</Link>
             <Link href="/auth" onClick={() => setOpen(false)} className="block py-2 text-sm font-semibold text-gray-900 hover:text-red-600">Sign in</Link>
           </div>
