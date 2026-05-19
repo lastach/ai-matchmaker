@@ -8,7 +8,8 @@ export default function SecurityPage() {
       <main className="max-w-3xl mx-auto px-6 py-12 text-gray-900">
       <h1 className="text-3xl font-bold mb-2">Security and data handling</h1>
       <p className="text-gray-600 mb-8">
-        Matchmaking takes deeply personal disclosures. Here is how the bytes are handled.
+        Matchmaking takes deeply personal disclosures. Here is how the bytes are handled.</p>
+      <p className="text-xs uppercase tracking-wide text-gray-500 mb-8">Last updated May 19, 2026
       </p>
 
       <section className="space-y-4 text-sm leading-6 text-gray-700">
