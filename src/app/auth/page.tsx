@@ -83,7 +83,7 @@ export default function AuthPage() {
   return (
     <main className="min-h-screen bg-gradient-to-b from-rose-50 to-white flex items-center justify-center">
       <div className="w-full max-w-sm mx-auto px-6">
-        <h1 className="text-3xl font-bold text-[#3D1820] mb-2 text-center">Amorlay</h1>
+        <a href="/" aria-label="Amorlay home" className="block mb-3 flex justify-center"><img src="/logo.svg" alt="Amorlay" className="h-10" /></a><h1 className="text-2xl font-semibold text-[#3D1820] mb-2 text-center">Amorlay</h1>
                 <p className="text-gray-500 text-sm mb-8 text-center">{isSignUp ? 'One match. One memo. One date. Free during early access.' : 'Sign in to continue. New here? Use the Sign up link below.'}</p>
         <button
           type="button"
