@@ -138,6 +138,9 @@ export default function Home() {
           <div className="flex gap-4">
             <Link href="/pricing" className="hover:text-gray-700">Pricing</Link>
             <Link href="/safety" className="hover:text-gray-700">Safety</Link>
+            <Link href="/verification" className="hover:text-gray-700">Verification</Link>
+            <Link href="/integrations" className="hover:text-gray-700">Integrations</Link>
+            <Link href="/faq" className="hover:text-gray-700">FAQ</Link>
             <Link href="/privacy" className="hover:text-gray-700">Privacy</Link>
             <Link href="/terms" className="hover:text-gray-700">Terms</Link>
           </div>
