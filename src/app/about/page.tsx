@@ -1,4 +1,5 @@
 import MarketingHeader from '@/components/MarketingHeader'
+import MarketingFooter from '@/components/MarketingFooter'
 export const metadata = { title: 'About - Amorlay' }
 
 export default function Page() {
@@ -18,6 +19,7 @@ export default function Page() {
         <p>Early access. Free during early access while we build the cohort. Pricing posted on <a className="text-rose-700 hover:underline" href="/pricing">/pricing</a>; safety on <a className="text-rose-700 hover:underline" href="/safety">/safety</a>; verification on <a className="text-rose-700 hover:underline" href="/verification">/verification</a>.</p>
       </section>
     </main>
+      <MarketingFooter />
     </>
   )
 }

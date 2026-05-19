@@ -1,4 +1,5 @@
 import MarketingHeader from '@/components/MarketingHeader'
+import MarketingFooter from '@/components/MarketingFooter'
 export const metadata = { title: 'Security - Amorlay' }
 
 export default function SecurityPage() {
@@ -56,6 +57,7 @@ export default function SecurityPage() {
         </p>
       </section>
     </main>
+      <MarketingFooter />
     </>
   )
 }

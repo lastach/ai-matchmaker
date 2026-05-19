@@ -1,4 +1,5 @@
 import MarketingHeader from '@/components/MarketingHeader'
+import MarketingFooter from '@/components/MarketingFooter'
 export const metadata = { title: 'FAQ - Amorlay' }
 
 export default function Page() {
@@ -16,6 +17,7 @@ export default function Page() {
         <details open><summary className="cursor-pointer font-medium text-gray-900">What is it going to cost?</summary><p className="mt-2">Free during early access. After GA, $45 per match (refunded if the other person declines), or $99 per quarter, or a Concierge tier with deeper matchmaker review. <a className="text-rose-700 hover:underline" href="/pricing">/pricing</a>.</p></details>
       </section>
     </main>
+      <MarketingFooter />
     </>
   )
 }

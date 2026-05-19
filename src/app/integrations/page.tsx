@@ -1,4 +1,5 @@
 import MarketingHeader from '@/components/MarketingHeader'
+import MarketingFooter from '@/components/MarketingFooter'
 export const metadata = { title: 'Integrations - Amorlay' }
 
 export default function Page() {
@@ -23,6 +24,7 @@ export default function Page() {
         <p className="text-xs text-gray-500 mt-8">Questions: <a className="text-rose-700 hover:underline" href="mailto:support@amorlay.com">support@amorlay.com</a>.</p>
       </section>
     </main>
+      <MarketingFooter />
     </>
   )
 }

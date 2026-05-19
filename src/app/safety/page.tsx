@@ -1,9 +1,11 @@
 import Link from 'next/link'
 import MarketingHeader from '@/components/MarketingHeader'
+import MarketingFooter from '@/components/MarketingFooter'
 export const metadata = { title: 'Safety - Amorlay' }
 export default function Safety() {
   return (
-    <main className="min-h-screen bg-white">
+    <>
+      <main className="min-h-screen bg-white">
       <MarketingHeader />
       <section className="max-w-3xl mx-auto px-6 py-16">
         <h1 className="text-4xl font-bold text-gray-900 mb-3">Safety</h1>
@@ -40,5 +42,7 @@ export default function Safety() {
         </div>
       </section>
     </main>
+      <MarketingFooter />
+    </>
   )
 }

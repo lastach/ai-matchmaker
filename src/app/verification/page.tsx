@@ -1,4 +1,5 @@
 import MarketingHeader from '@/components/MarketingHeader'
+import MarketingFooter from '@/components/MarketingFooter'
 export const metadata = { title: 'Verification - Amorlay' }
 
 export default function VerificationPage() {
@@ -51,6 +52,7 @@ export default function VerificationPage() {
         </p>
       </section>
     </main>
+      <MarketingFooter />
     </>
   )
 }

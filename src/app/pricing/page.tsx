@@ -1,9 +1,11 @@
 import Link from 'next/link'
 import MarketingHeader from '@/components/MarketingHeader'
+import MarketingFooter from '@/components/MarketingFooter'
 export const metadata = { title: 'Pricing - Amorlay' }
 export default function Pricing() {
   return (
-    <main className="min-h-screen bg-white">
+    <>
+      <main className="min-h-screen bg-white">
       <MarketingHeader />
       <section className="max-w-4xl mx-auto px-6 py-16">
         <h1 className="text-4xl font-bold text-gray-900 mb-3">Pricing</h1>
@@ -39,12 +41,14 @@ export default function Pricing() {
         <div className="mt-12 border-t pt-8">
           <h2 className="text-xl font-semibold text-gray-900 mb-4">FAQ</h2>
           <div className="space-y-4 text-sm text-gray-700">
-            <details><summary className="cursor-pointer font-medium">What does the cohort waitlist mean?</summary><p className="mt-2">Matches are generated when there are enough thoughtful intakes in your area to find a real candidate. Until then, you wait. We tell you your position. No "5,000 active singles in your area" claims here.</p></details>
-            <details><summary className="cursor-pointer font-medium">Can I get a refund?</summary><p className="mt-2">Yes - if the other person declines the introduction, your match credit refunds automatically. After GA, full refund within 7 days of paying if you have not yet received a match.</p></details>
-            <details><summary className="cursor-pointer font-medium">What about safety and verification?</summary><p className="mt-2">See our <Link href="/safety" className="text-rose-700 hover:underline">Safety page</Link> for the full posture.</p></details>
+            <details open><summary className="cursor-pointer font-medium">What does the cohort waitlist mean?</summary><p className="mt-2">Matches are generated when there are enough thoughtful intakes in your area to find a real candidate. Until then, you wait. We tell you your position. No "5,000 active singles in your area" claims here.</p></details>
+            <details open><summary className="cursor-pointer font-medium">Can I get a refund?</summary><p className="mt-2">Yes - if the other person declines the introduction, your match credit refunds automatically. After GA, full refund within 7 days of paying if you have not yet received a match.</p></details>
+            <details open><summary className="cursor-pointer font-medium">What about safety and verification?</summary><p className="mt-2">See our <Link href="/safety" className="text-rose-700 hover:underline">Safety page</Link> for the full posture.</p></details>
           </div>
         </div>
       </section>
     </main>
+      <MarketingFooter />
+    </>
   )
 }
