@@ -711,8 +711,12 @@ function Dashboard_Inner() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#FBF9F7]">
         <div className="text-center">
-          <div className="w-16 h-16 bg-gradient-to-br from-[#D4537E] to-[#2E1A47] rounded-full mx-auto mb-4 animate-pulse"></div>
-          <p className="text-[#6B7280]">Loading...</p>
+          <div className="flex items-center justify-center gap-2 mb-4">
+            <img src="/logo.svg" alt="Amorlay" className="h-8 w-8" />
+            <span className="text-base font-semibold tracking-wide text-[#3D1820]">Amorlay</span>
+          </div>
+          <div className="w-12 h-12 bg-gradient-to-br from-[#D4537E] to-[#2E1A47] rounded-full mx-auto mb-3 animate-pulse"></div>
+          <p className="text-[#6B7280] text-sm">Loading your dashboard</p>
         </div>
       </div>
     );
