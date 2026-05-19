@@ -17,6 +17,8 @@ export default function Page() {
         <p>Not a swipe app. Not a chatroom. Not a lead-gen tool for matchmaking concierges who upsell you. The matchmaker is in the loop, not above the loop.</p>
         <h2 className="text-lg font-semibold text-gray-900 mt-6">Status</h2>
         <p>Early access. Free during early access while we build the cohort. Pricing posted on <a className="text-rose-700 hover:underline" href="/pricing">/pricing</a>; safety on <a className="text-rose-700 hover:underline" href="/safety">/safety</a>; verification on <a className="text-rose-700 hover:underline" href="/verification">/verification</a>.</p>
+        <h2 className="text-lg font-semibold text-gray-900 mt-6">Contact</h2>
+        <p>Questions, feedback, bug reports, or want to talk to a human? Email <a className="text-rose-700 hover:underline" href="mailto:support@amorlay.com">support@amorlay.com</a>. A real person reads every message.</p>
       </section>
     </main>
       <MarketingFooter />
