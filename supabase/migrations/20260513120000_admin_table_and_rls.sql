@@ -9,8 +9,12 @@ create table if not exists public.admins (
   created_at timestamptz not null default now()
 );
 
--- 2. Seed Laurie's admin email
-insert into public.admins (email) values ('laurie.stach@gmail.com')
+-- 2. Seed admin email
+-- Replace with your admin email and re-run, or insert manually via Supabase Studio
+-- (already applied in production; this file is the historical migration record).
+insert into public.admins (email)
+  select email from (values (coalesce(current_setting('app.admin_email', true), 'admin@example.com'))) as v(email)
+  where email <> 'admin@example.com'
 on conflict (email) do nothing;
 
 -- 3. Lock the admins table down: only admins themselves can see it (no public read)
