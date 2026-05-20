@@ -775,17 +775,21 @@ function Dashboard_Inner() {
               <li>- After: a one-page summary of what I heard, then we set the basics.</li>
             </ul>
           </div>
-          <label className="flex items-start gap-2 mb-4 cursor-pointer">
+          <label className="flex items-start gap-2 mb-2 cursor-pointer select-none">
             <input
               type="checkbox"
               checked={ageConfirmed}
               onChange={(e) => setAgeConfirmed(e.target.checked)}
+              onClick={(e) => { /* defensive: ensure React state updates even when synthetic events fire */ setAgeConfirmed((e.target as HTMLInputElement).checked); }}
               className="mt-1 h-4 w-4 rounded border-[#9CA3AF] text-[#C8102E] focus:ring-[#C8102E]"
             />
             <span className="text-sm text-[#4B5563]">
               I confirm I am 18 or older. Amorlay is adults-only. We will verify ID at general availability.
             </span>
           </label>
+          {!ageConfirmed && (
+            <p className="text-xs text-[#9CA3AF] mb-4">Check the box above to enable the conversation.</p>
+          )}
           <div className="flex flex-col sm:flex-row gap-3">
             <button
               onClick={() => {
