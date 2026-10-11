@@ -37,6 +37,11 @@ export async function POST() {
   }
 
   const admin = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, serviceKey)
+  // Remove the optional intro clip; database rows cascade with the auth user.
+  try {
+    const { data: clips } = await admin.storage.from('amorlay-clips').list(user.id, { limit: 100 })
+    if (clips?.length) await admin.storage.from('amorlay-clips').remove(clips.map((f) => `${user.id}/${f.name}`))
+  } catch {}
   const { error: delErr } = await admin.auth.admin.deleteUser(user.id)
   if (delErr) {
     return NextResponse.json({ error: delErr.message }, { status: 500 })

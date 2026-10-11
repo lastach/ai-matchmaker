@@ -3,195 +3,190 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 
-interface User {
-  user_id: string
-  name?: string
-  location?: string
-  intake_completed_at?: string
-  top_value?: string
-  top_life_goal?: string
-  attachment_self?: string
-  priority_choice?: string
-  profile_strength?: number
-  updated_at?: string
+type Person = { id: string; firstName?: string; age?: number | null; photoUrl?: string | null }
+type MatchRow = {
+  id: string
+  cycle: string
+  city_key: string
+  score: number
+  status: string
+  date_idea?: string
+  venue_name?: string
+  venue_address?: string
+  date_at?: string
+  a_attending?: string | null
+  b_attending?: string | null
+  breakdown: { points?: Record<string, number>; flags?: string[]; why?: string; aScore?: number; bScore?: number }
+  a: Person
+  b: Person
 }
 
-interface Candidate {
-  candidate: any
-  score: number
-  breakdown: any
-  notes: string[]
-}
+const LABELS: Record<string, string> = { mustHaves: 'Must-haves', values: 'Values', attraction: 'Attraction', goodPartner: 'Good partner', energy: 'Energy' }
 
 export default function AdminPage() {
   const [authChecked, setAuthChecked] = useState(false)
   const [authorized, setAuthorized] = useState(false)
-  const [users, setUsers] = useState<User[]>([])
-  const [selectedUserId, setSelectedUserId] = useState<string | null>(null)
-  const [candidates, setCandidates] = useState<Candidate[]>([])
-  const [loading, setLoading] = useState(false)
-  const [poolSize, setPoolSize] = useState(0)
-  const [approveBusy, setApproveBusy] = useState<string | null>(null)
-  const [approveStatus, setApproveStatus] = useState<string>('')
+  const [cities, setCities] = useState<Record<string, { members: number; complete: number }>>({})
+  const [matches, setMatches] = useState<MatchRow[]>([])
+  const [running, setRunning] = useState<string | null>(null)
+  const [status, setStatus] = useState('')
+
+  const load = async () => {
+    const r = await fetch('/api/v2/admin/matches', { credentials: 'include' })
+    if (r.status === 403) { setAuthorized(false); setAuthChecked(true); return }
+    const d = await r.json()
+    setCities(d.cities || {})
+    setMatches(d.matches || [])
+    setAuthorized(r.ok)
+    setAuthChecked(true)
+    if (!r.ok) setStatus(d.error || 'Could not load')
+  }
 
   useEffect(() => {
     (async () => {
-      // Pre-flight: explicitly migrate any legacy bare-createClient session token from
-      // localStorage into the SSR client + cookie BEFORE checking auth. Closes the race
-      // where module-init session-sync hasn't completed before this useEffect runs and
-      // the user gets redirected to /auth even with a valid token in storage.
-      try {
-        const url = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
-        const projectRef = (url.match(/https:\/\/([^\.]+)\./) || [])[1]
-        if (projectRef) {
-          const raw = typeof window !== 'undefined' ? localStorage.getItem(`sb-${projectRef}-auth-token`) : null
-          if (raw) {
-            const parsed = JSON.parse(raw)
-            const at = parsed?.access_token || parsed?.currentSession?.access_token
-            const rt = parsed?.refresh_token || parsed?.currentSession?.refresh_token
-            if (at && rt) {
-              await supabase.auth.setSession({ access_token: at, refresh_token: rt })
-            }
-          }
-        }
-      } catch {}
       const { data: { session } } = await supabase.auth.getSession()
-      if (!session) {
-        window.location.href = '/auth?next=/admin'
-        return
-      }
-      const r = await fetch('/api/admin/users')
-      if (r.status === 403) {
-        setAuthorized(false)
-        setAuthChecked(true)
-        return
-      }
-      const d = await r.json()
-      setUsers(d.users || [])
-      setAuthorized(true)
-      setAuthChecked(true)
+      if (!session) { window.location.href = '/auth?next=/admin'; return }
+      await load()
     })()
   }, [])
 
-  async function loadCandidates(userId: string) {
-    setSelectedUserId(userId)
-    setLoading(true)
-    setCandidates([])
+  const run = async (city: string) => {
+    setRunning(city)
+    setStatus('Running matching for ' + city + '…')
     try {
-      const r = await fetch(`/api/admin/candidates?userId=${encodeURIComponent(userId)}`)
-      const d = await r.json()
-      setCandidates(d.candidates || [])
-      setPoolSize(d.pool || 0)
+      for (let i = 0; i < 100; i++) {
+        const r = await fetch('/api/v2/admin/run', { method: 'POST', credentials: 'include', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ city }) })
+        const d = await r.json()
+        if (!r.ok) { setStatus('Failed: ' + (d.error || r.status)); break }
+        if (d.done) {
+          setStatus(`${city}: ${d.members} members, ${d.pairsAfterGates} pairs passed the basic gates, ${d.validPairs} passed every gate, ${d.proposed} matches proposed, ${d.unmatched} unmatched this month.`)
+          break
+        }
+        setStatus(`${city}: evaluating pairs, ${d.remaining} to go…`)
+      }
+      await load()
     } finally {
-      setLoading(false)
+      setRunning(null)
     }
   }
 
-  async function approve(candidateUserId: string, score: number) {
-    if (!selectedUserId) return
-    setApproveBusy(candidateUserId)
-    setApproveStatus('')
-    try {
-      const r = await fetch('/api/admin/approve', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: selectedUserId, candidateUserId, score }),
-      })
-      const d = await r.json()
-      if (r.ok) setApproveStatus(`Match approved. Brief generation queued.`)
-      else setApproveStatus(`Failed: ${d.error || 'unknown'}`)
-    } finally {
-      setApproveBusy(null)
-    }
-  }
-
-  if (!authChecked) return <main className="p-12 text-gray-500">Loading...</main>
+  if (!authChecked) return <main className="p-12 text-gray-500">Loading…</main>
   if (!authorized) {
     return (
       <main className="p-12 text-center">
         <h1 className="text-2xl font-bold text-gray-900 mb-2">Not authorized</h1>
-        <p className="text-gray-600">Your account is not on the admin list.</p>
+        <p className="text-gray-600">{status || 'Your account is not on the admin list.'}</p>
       </main>
     )
   }
 
+  const proposed = matches.filter((m) => m.status === 'proposed')
+  const upcoming = matches.filter((m) => m.status !== 'proposed')
   return (
-    <main className="max-w-7xl mx-auto p-6 text-gray-900">
-      <header className="mb-8">
-        <h1 className="text-3xl font-bold">Amorlay admin</h1>
-        <p className="text-gray-600 mt-1">Review intakes, score candidates, approve a match. Approved matches enter the brief-generation queue.</p>
+    <main className="max-w-6xl mx-auto p-6 text-gray-900">
+      <header className="mb-6">
+        <h1 className="text-3xl font-bold">Amorlay matchmaker</h1>
+        <p className="text-gray-600 mt-1">Run the monthly matching per city, review each proposed pair, then set the date both people will see.</p>
       </header>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <section className="lg:col-span-1 bg-white rounded-xl p-5 shadow-sm border">
-          <h2 className="font-semibold text-gray-900 mb-3">Members ({users.length})</h2>
-          {users.length === 0 && !loading && (
-            <div className="mb-3 text-xs text-gray-500 bg-amber-50 border border-amber-200 rounded p-3">
-              <p className="font-semibold text-amber-900 mb-1">No members visible</p>
-              <p className="mb-2">RLS is hiding other test users' rows from this admin view. Fix path (pick one):</p>
-              <ul className="list-disc list-inside mb-2 space-y-1">
-                <li><strong>Database migration (recommended).</strong> One-time SQL paste, no Vercel env var needed. Open Supabase Studio for project <code>ipkgrnvnqrlinifxcriy</code> &rarr; SQL Editor &rarr; paste the contents of <code>supabase/migrations/20260513120000_admin_table_and_rls.sql</code> from this repo &rarr; Run. After that, refresh /admin. The migration creates a public.admins table seeded with the configured admin email and adds SELECT policies on user_profiles, matchmaker_profiles, and matches.</li>
-                <li><strong>Service-role env var.</strong> Open vercel.com/dashboard &rarr; ai-matchmaker &rarr; Settings &rarr; Environment Variables &rarr; add <code>SUPABASE_SERVICE_ROLE_KEY</code> with the service_role JWT from Supabase Project Settings &rarr; API. Redeploy.</li>
-              </ul>
-              <p className="text-xs">Either path works. The migration is more durable because it does not require any Vercel-side config and survives env-var loss.</p>
-            </div>
-          )}
-          <div className="space-y-2 max-h-[70vh] overflow-y-auto">
-            {users.map((u) => (
-              <button
-                key={u.user_id}
-                onClick={() => loadCandidates(u.user_id)}
-                className={`w-full text-left p-3 rounded-lg border transition ${selectedUserId === u.user_id ? 'border-rose-500 bg-rose-50' : 'border-gray-200 hover:border-gray-300 bg-white'}`}
-              >
-                <p className="text-sm font-medium">{u.name || u.user_id.slice(0, 8)}</p>
-                <p className="text-xs text-gray-500">{u.location || 'no location'}</p>
-                <p className="text-xs text-gray-400">strength: {u.profile_strength ?? '?'} - updated {u.updated_at ? new Date(u.updated_at).toISOString().slice(0, 10) : '?'}</p>
-              </button>
-            ))}
-          </div>
-        </section>
-
-        <section className="lg:col-span-2 bg-white rounded-xl p-5 shadow-sm border">
-          <h2 className="font-semibold text-gray-900 mb-3">
-            Candidates {selectedUserId ? `(pool: ${poolSize})` : ''}
-          </h2>
-          {!selectedUserId && <p className="text-sm text-gray-500">Pick a member on the left to compute their top 3.</p>}
-          {loading && <p className="text-sm text-gray-500">Scoring...</p>}
-          {approveStatus && <p className={`text-sm mb-3 ${approveStatus.startsWith('Failed') ? 'text-red-700' : 'text-emerald-700'}`}>{approveStatus}</p>}
-          {!loading && selectedUserId && candidates.length === 0 && (
-            <p className="text-sm text-gray-500">No candidates yet. Pool may be empty or all candidates filtered out by hard rules (age window, gender preference, children stance).</p>
-          )}
-          <div className="space-y-3">
-            {candidates.map((c, i) => (
-              <div key={i} className="border border-gray-200 rounded-lg p-4">
-                <div className="flex items-baseline justify-between mb-2">
-                  <p className="font-semibold">{c.candidate.name} <span className="text-xs text-gray-500">({c.candidate.age}, {c.candidate.location})</span></p>
-                  <p className="text-lg font-bold text-rose-700">{c.score.toFixed(0)} <span className="text-xs text-gray-500">/100</span></p>
-                </div>
-                <div className="grid grid-cols-5 gap-2 text-xs text-gray-600 mb-3">
-                  <div><div className="font-medium">Values</div><div>{c.breakdown.values.toFixed(0)}</div></div>
-                  <div><div className="font-medium">Attach</div><div>{c.breakdown.attachment.toFixed(0)}</div></div>
-                  <div><div className="font-medium">Comms</div><div>{c.breakdown.communication.toFixed(0)}</div></div>
-                  <div><div className="font-medium">Goals</div><div>{c.breakdown.lifeGoals.toFixed(0)}</div></div>
-                  <div><div className="font-medium">Priority</div><div>{c.breakdown.relationshipPriority.toFixed(0)}</div></div>
-                </div>
-                {c.notes.length > 0 && (
-                  <ul className="text-xs text-gray-700 list-disc list-inside mb-3">
-                    {c.notes.slice(0, 4).map((n, j) => <li key={j}>{n}</li>)}
-                  </ul>
-                )}
-                <button
-                  onClick={() => approve(c.candidate.userId, c.score)}
-                  disabled={approveBusy === c.candidate.userId}
-                  className="text-sm bg-rose-600 hover:bg-rose-700 disabled:opacity-60 text-white px-4 py-2 rounded"
-                >
-                  {approveBusy === c.candidate.userId ? 'Approving...' : 'Approve match'}
-                </button>
+      <section className="bg-white rounded-xl p-5 shadow-sm border mb-6">
+        <h2 className="font-semibold mb-3">Cities</h2>
+        {Object.keys(cities).length === 0 && <p className="text-sm text-gray-500">No members yet.</p>}
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          {Object.entries(cities).sort((a, b) => b[1].complete - a[1].complete).map(([city, c]) => (
+            <div key={city} className="border rounded-lg p-3 flex items-center justify-between gap-3">
+              <div className="min-w-0">
+                <p className="font-medium capitalize">{city}</p>
+                <p className="text-xs text-gray-500">{c.complete} finished intake, {c.members} signed up</p>
               </div>
-            ))}
-          </div>
-        </section>
-      </div>
+              <button onClick={() => run(city)} disabled={!!running} className="shrink-0 text-sm bg-[#2E1A47] text-white px-3 py-1.5 rounded disabled:opacity-50">
+                {running === city ? 'Running…' : 'Run matching'}
+              </button>
+            </div>
+          ))}
+        </div>
+        {status && <p className="text-sm text-gray-700 mt-3">{status}</p>}
+      </section>
+
+      <section className="mb-6">
+        <h2 className="font-semibold mb-3">Proposed matches ({proposed.length})</h2>
+        <div className="space-y-4">
+          {proposed.map((m) => <Proposal key={m.id} m={m} onDone={load} />)}
+          {proposed.length === 0 && <p className="text-sm text-gray-500">None waiting for review.</p>}
+        </div>
+      </section>
+
+      <section>
+        <h2 className="font-semibold mb-3">Scheduled dates ({upcoming.length})</h2>
+        <div className="space-y-2">
+          {upcoming.map((m) => (
+            <div key={m.id} className="bg-white border rounded-lg p-3 text-sm flex flex-wrap items-center justify-between gap-2">
+              <span><b>{m.a.firstName}</b> and <b>{m.b.firstName}</b>, {m.date_at ? new Date(m.date_at).toLocaleString() : 'no time'} at {m.venue_name}</span>
+              <span className="text-xs text-gray-600">
+                {m.status === 'needs_reschedule' ? 'Needs a new time' : m.status} · {m.a.firstName}: {m.a_attending || 'not confirmed'} · {m.b.firstName}: {m.b_attending || 'not confirmed'}
+              </span>
+              {m.status === 'needs_reschedule' && <Reschedule m={m} onDone={load} />}
+            </div>
+          ))}
+        </div>
+      </section>
     </main>
+  )
+}
+
+function ScheduleForm({ m, onDone, label }: { m: MatchRow; onDone: () => void; label: string }) {
+  const [venue, setVenue] = useState(m.venue_name || '')
+  const [address, setAddress] = useState(m.venue_address || '')
+  const [when, setWhen] = useState('')
+  const [err, setErr] = useState('')
+  const post = async (action: string) => {
+    setErr('')
+    const r = await fetch('/api/v2/admin/matches', {
+      method: 'POST', credentials: 'include', headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ matchId: m.id, action, venueName: venue, venueAddress: address, dateAt: when ? new Date(when).toISOString() : '' }),
+    })
+    const d = await r.json()
+    if (!r.ok) setErr(d.error || 'failed')
+    else onDone()
+  }
+  return (
+    <div className="mt-3 grid sm:grid-cols-4 gap-2 items-end">
+      <input value={venue} onChange={(e) => setVenue(e.target.value)} placeholder="Venue" className="border rounded px-2 py-1.5 text-sm" />
+      <input value={address} onChange={(e) => setAddress(e.target.value)} placeholder="Address" className="border rounded px-2 py-1.5 text-sm" />
+      <input type="datetime-local" value={when} onChange={(e) => setWhen(e.target.value)} className="border rounded px-2 py-1.5 text-sm" />
+      <div className="flex gap-2">
+        <button onClick={() => post('schedule')} className="text-sm bg-[#D4537E] text-white px-3 py-1.5 rounded">{label}</button>
+        <button onClick={() => post('cancel')} className="text-sm text-gray-600 underline">Drop</button>
+      </div>
+      {err && <p className="text-xs text-red-700 sm:col-span-4">{err}</p>}
+    </div>
+  )
+}
+
+function Reschedule({ m, onDone }: { m: MatchRow; onDone: () => void }) {
+  return <div className="w-full"><ScheduleForm m={m} onDone={onDone} label="Set new time" /></div>
+}
+
+function Proposal({ m, onDone }: { m: MatchRow; onDone: () => void }) {
+  const pts = m.breakdown?.points || {}
+  return (
+    <div className="bg-white border rounded-xl p-4">
+      <div className="flex flex-wrap items-center gap-4">
+        {[m.a, m.b].map((p) => (
+          <div key={p.id} className="flex items-center gap-2">
+            {p.photoUrl ? <img src={p.photoUrl} alt="" className="h-14 w-14 rounded-lg object-cover" /> : <div className="h-14 w-14 rounded-lg bg-gray-100" />}
+            <div><p className="font-semibold">{p.firstName}</p><p className="text-xs text-gray-500">{p.age ?? '?'}</p></div>
+          </div>
+        ))}
+        <p className="ml-auto text-2xl font-bold text-[#B23F68]">{Math.round(m.score)}<span className="text-xs text-gray-500"> / 100</span></p>
+      </div>
+      <div className="grid grid-cols-5 gap-2 text-xs text-gray-600 mt-3">
+        {Object.keys(LABELS).map((k) => <div key={k}><div className="font-medium">{LABELS[k]}</div><div>{(pts[k] ?? 0).toFixed(1)}</div></div>)}
+      </div>
+      {m.breakdown?.why && <p className="text-sm text-gray-800 mt-3">{m.breakdown.why}</p>}
+      {(m.breakdown?.flags || []).map((f, i) => <p key={i} className="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded px-2 py-1 mt-2">Flag: {f}</p>)}
+      {m.date_idea && <p className="text-sm text-gray-600 mt-2">Date idea: {m.date_idea}</p>}
+      <ScheduleForm m={m} onDone={onDone} label="Schedule date" />
+    </div>
   )
 }

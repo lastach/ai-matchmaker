@@ -54,7 +54,9 @@ export default function TrialGate({
   }, [userId]);
 
   if (status.state === "loading" || status.state === "unavailable" || !userId) {
-    return <>{children}</>;
+    // Same element positions as the loaded branch below, so children are not remounted
+    // (and lose their state) when the trial status arrives.
+    return <>{null}{children}</>;
   }
 
   if (!status.hasAccess) {
