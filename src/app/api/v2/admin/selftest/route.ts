@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { isAdmin } from '@/lib/isAdmin'
-import { callClaude, parseJsonObject } from '@/lib/v2/ai'
+import { callClaudeJson } from '@/lib/v2/ai'
 import { DEBRIEF_SYSTEM, INTAKE_SYSTEM, PREP_SYSTEM, VIDEO_SYSTEM } from '@/lib/v2/prompts'
 import { evaluatePair } from '@/lib/v2/pairEval'
 import { requireUser, serviceClient } from '@/lib/v2/server'
@@ -65,7 +65,7 @@ export async function GET() {
       return { ok: env.anthropicKey && env.serviceRoleKey && tables === 'ok', detail: { ...env, tables } }
     }),
     check('intake', async () => {
-      const raw = await callClaude({
+      const { out, raw } = await callClaudeJson<any>({
         system: INTAKE_SYSTEM, maxTokens: 3000,
         messages: [
           { role: 'user', content: 'Member\'s first name: Sam. City: Boston, MA.\nWhat you know so far (carry it forward): {}' },
@@ -73,43 +73,39 @@ export async function GET() {
           { role: 'user', content: 'I teach high school chemistry, run on weekends, and just moved back to Boston after a breakup a year ago. I feel ready to meet someone serious now.' },
         ],
       })
-      const out = parseJsonObject<any>(raw)
-      return { ok: !!out?.reply && !!out?.profile, detail: { reply: out?.reply, readiness: out?.profile?.readiness, coverage: out?.profile?.coverage } }
+      return { ok: !!out?.reply && !!out?.profile, detail: out ? { reply: out.reply, readiness: out.profile?.readiness, coverage: out.profile?.coverage } : { unparsed: raw.slice(0, 1500) } }
     }),
     check('video', async () => {
-      const raw = await callClaude({
+      const { out, raw } = await callClaudeJson<any>({
         system: VIDEO_SYSTEM, maxTokens: 600,
         messages: [{ role: 'user', content: [
           { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: TEST_FRAME } },
           { type: 'text', text: 'Transcript:\nQ: What do your friends come to you for?\nA: Honestly, advice on hard conversations, and a good hike recommendation. I love helping people think things through.' },
         ] }],
       })
-      const out = parseJsonObject<any>(raw)
-      return { ok: typeof out?.warmth === 'number' && typeof out?.energy === 'number', detail: out }
+      return { ok: typeof out?.warmth === 'number' && typeof out?.energy === 'number', detail: out ?? { unparsed: raw.slice(0, 1500) } }
     }),
     check('pairEvaluation', async () => {
       const ev = await evaluatePair(personA, personB)
       return { ok: ev.aMustHaves.length > 0 && typeof ev.valuesAlignment === 'number' && !!ev.dateIdea, detail: ev }
     }),
     check('coachPrep', async () => {
-      const raw = await callClaude({ system: PREP_SYSTEM, maxTokens: 900, messages: [{ role: 'user', content: JSON.stringify({
+      const { out, raw } = await callClaudeJson<any>({ system: PREP_SYSTEM, maxTokens: 900, messages: [{ role: 'user', content: JSON.stringify({
         you: { firstName: 'Test A', about: personA.ai_profile.about, interests: personA.ai_profile.interests, values: ['honesty', 'adventure'], feelUnderstood: 'when someone asks follow-up questions' },
         yourDate: { firstName: 'Test B', about: personB.ai_profile.about, interests: personB.ai_profile.interests, values: ['honesty', 'craft'], feelUnderstood: 'when someone is curious about why he builds things' },
         whyMatched: 'Both value honesty and are building something of their own.', date: { idea: 'pottery night', venue: 'Mudflat', when: '2026-10-23T23:00:00Z' },
       }) }] })
-      const out = parseJsonObject<any>(raw)
-      return { ok: !!out?.why && Array.isArray(out?.questions) && out.questions.length > 0, detail: out }
+      return { ok: !!out?.why && Array.isArray(out?.questions) && out.questions.length > 0, detail: out ?? { unparsed: raw.slice(0, 1500) } }
     }),
     check('debrief', async () => {
-      const raw = await callClaude({ system: DEBRIEF_SYSTEM, maxTokens: 900, messages: [
+      const { out, raw } = await callClaudeJson<any>({ system: DEBRIEF_SYSTEM, maxTokens: 900, messages: [
         { role: 'user', content: 'Context for you only (do not recite it): {"member":{"firstName":"Test A","mustHaves":[{"item":"kind and direct","flexible":false}],"maximizing":8}}' },
         { role: 'assistant', content: 'Welcome back. How did it go overall?' },
         { role: 'user', content: 'Pretty good. He was kind and direct and we laughed a lot. Conversation flowed easily.' },
         { role: 'assistant', content: 'Did you feel understood?' },
         { role: 'user', content: 'Yes, he asked great follow-up questions. Nothing felt off. I guess I would see him again, though he is a little shorter than I pictured.' },
       ] })
-      const out = parseJsonObject<any>(raw)
-      return { ok: !!out?.reply, detail: out }
+      return { ok: !!out?.reply, detail: out ?? { unparsed: raw.slice(0, 1500) } }
     }),
   ])
   return NextResponse.json({ allPassed: results.every((r) => r.ok), results })

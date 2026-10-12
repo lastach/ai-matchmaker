@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { callClaude, parseJsonObject, type ChatMsg } from '@/lib/v2/ai'
+import { callClaudeJson, type ChatMsg } from '@/lib/v2/ai'
 import { INTAKE_SYSTEM, COVERAGE_AREAS } from '@/lib/v2/prompts'
 import { CRISIS_REPLY, crisisFlags } from '@/lib/v2/safety'
 import { errorResponse, loadProfile, requireService, requireUser, saveProfile } from '@/lib/v2/server'
@@ -59,8 +59,7 @@ export async function POST(req: Request) {
     }
     if (msgs[msgs.length - 1].role === 'assistant') msgs.push({ role: 'user', content: '(continue)' })
 
-    const raw = await callClaude({ system: INTAKE_SYSTEM, messages: msgs, maxTokens: 3000 })
-    const out = parseJsonObject<{ reply?: string; profile?: AiProfile; complete?: boolean; pause?: boolean }>(raw)
+    const { out } = await callClaudeJson<{ reply?: string; profile?: AiProfile; complete?: boolean; pause?: boolean }>({ system: INTAKE_SYSTEM, messages: msgs, maxTokens: 3000 })
     const reply = (out?.reply || '').trim() || 'Tell me a bit more about that?'
     if (out?.profile && typeof out.profile === 'object') aiProfile = { ...aiProfile, ...out.profile }
 

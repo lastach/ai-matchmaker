@@ -93,3 +93,20 @@ export function clampNum(v: unknown, lo: number, hi: number, fallback: number): 
   if (!Number.isFinite(n)) return fallback
   return Math.max(lo, Math.min(hi, n))
 }
+
+/**
+ * Call the model and parse its JSON reply. If the reply is not valid JSON, ask once more
+ * for the JSON object only. Returns the parsed object (or null) and the last raw reply.
+ */
+export async function callClaudeJson<T = any>(opts: Parameters<typeof callClaude>[0]): Promise<{ out: T | null; raw: string }> {
+  const raw = await callClaude(opts)
+  const out = parseJsonObject<T>(raw)
+  if (out) return { out, raw }
+  const retryMessages: ChatMsg[] = [
+    ...opts.messages,
+    { role: 'assistant', content: raw || '(no reply)' },
+    { role: 'user', content: 'Reply again with only the JSON object described in your instructions, and nothing else.' },
+  ]
+  const raw2 = await callClaude({ ...opts, messages: retryMessages })
+  return { out: parseJsonObject<T>(raw2), raw: raw2 }
+}

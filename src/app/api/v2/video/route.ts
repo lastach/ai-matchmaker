@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { callClaude, clampNum, parseJsonObject, type ChatMsg } from '@/lib/v2/ai'
+import { callClaudeJson, clampNum, type ChatMsg } from '@/lib/v2/ai'
 import { VIDEO_SYSTEM } from '@/lib/v2/prompts'
 import { errorResponse, loadProfile, requireService, requireUser, saveProfile } from '@/lib/v2/server'
 import { checkRateLimit } from '@/lib/rateLimit'
@@ -41,8 +41,7 @@ export async function POST(req: Request) {
     blocks.push({ type: 'text', text: `Transcript:\n${transcript || '(no transcript available)'}` })
 
     const msgs: ChatMsg[] = [{ role: 'user', content: blocks }]
-    const raw = await callClaude({ system: VIDEO_SYSTEM, messages: msgs, maxTokens: 600 })
-    const out = parseJsonObject<any>(raw) || {}
+    const out = (await callClaudeJson<any>({ system: VIDEO_SYSTEM, messages: msgs, maxTokens: 600 })).out || {}
     const video: VideoAssessment = {
       warmth: clampNum(out.warmth, 1, 10, 5),
       energy: clampNum(out.energy, 1, 10, 5),

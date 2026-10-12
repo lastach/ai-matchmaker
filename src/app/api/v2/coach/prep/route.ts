@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { callClaude, parseJsonObject } from '@/lib/v2/ai'
+import { callClaudeJson } from '@/lib/v2/ai'
 import { PREP_SYSTEM } from '@/lib/v2/prompts'
 import { errorResponse, requireService, requireUser } from '@/lib/v2/server'
 import { checkRateLimit } from '@/lib/rateLimit'
@@ -44,8 +44,7 @@ export async function GET(req: Request) {
       whyMatched: m.breakdown?.why || '',
       date: { idea: m.date_idea, venue: m.venue_name, when: m.date_at },
     }
-    const raw = await callClaude({ system: PREP_SYSTEM, maxTokens: 900, messages: [{ role: 'user', content: JSON.stringify(input) }] })
-    const out = parseJsonObject<any>(raw) || {}
+    const out = (await callClaudeJson<any>({ system: PREP_SYSTEM, maxTokens: 900, messages: [{ role: 'user', content: JSON.stringify(input) }] })).out || {}
     const prep = {
       why: String(out.why || m.breakdown?.why || ''),
       feelUnderstood: String(out.feelUnderstood || ''),

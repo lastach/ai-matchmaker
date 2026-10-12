@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { callClaude, clampNum, parseJsonObject, type ChatMsg } from '@/lib/v2/ai'
+import { callClaudeJson, clampNum, type ChatMsg } from '@/lib/v2/ai'
 import { DEBRIEF_SYSTEM } from '@/lib/v2/prompts'
 import { updateWeights, type Components } from '@/lib/v2/engine'
 import { errorResponse, loadProfile, requireService, requireUser, saveProfile } from '@/lib/v2/server'
@@ -56,8 +56,7 @@ export async function POST(req: Request) {
     }
     if (msgs[msgs.length - 1].role === 'assistant') msgs.push({ role: 'user', content: '(continue)' })
 
-    const raw = await callClaude({ system: DEBRIEF_SYSTEM, maxTokens: 900, messages: msgs })
-    const out = parseJsonObject<any>(raw) || {}
+    const out = (await callClaudeJson<any>({ system: DEBRIEF_SYSTEM, maxTokens: 900, messages: msgs })).out || {}
     const reply = String(out.reply || 'How did it go?')
     debrief.push({ role: 'assistant', content: reply })
 

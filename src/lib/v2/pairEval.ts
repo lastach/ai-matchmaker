@@ -1,4 +1,4 @@
-import { callClaude, clampNum, MODEL_FAST, parseJsonObject } from './ai'
+import { callClaudeJson, clampNum, MODEL_FAST } from './ai'
 import { PAIR_SYSTEM } from './prompts'
 import type { PairEval, ProfileRow } from './types'
 import { ageFrom } from './server'
@@ -65,11 +65,11 @@ export function sanitizeEval(out: any, a: ProfileRow, b: ProfileRow): PairEval {
 
 /** Evaluate one pair with the AI. `a` must be the person whose id sorts first. */
 export async function evaluatePair(a: ProfileRow, b: ProfileRow): Promise<PairEval> {
-  const raw = await callClaude({
+  const { out } = await callClaudeJson({
     system: PAIR_SYSTEM,
     model: MODEL_FAST,
     maxTokens: 1500,
     messages: [{ role: 'user', content: `Person A:\n${JSON.stringify(view(a))}\n\nPerson B:\n${JSON.stringify(view(b))}` }],
   })
-  return sanitizeEval(parseJsonObject(raw), a, b)
+  return sanitizeEval(out, a, b)
 }
