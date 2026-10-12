@@ -148,3 +148,17 @@ export async function myMatches(session: SupabaseClient): Promise<MyMatch[]> {
   if (error) throw new Error(error.message)
   return (data as MyMatch[] | null) || []
 }
+
+/**
+ * A client bound to the member's access token, for work that continues after the response
+ * is sent (request cookies are no longer readable then).
+ */
+export async function detachedClient(session: SupabaseClient): Promise<SupabaseClient | null> {
+  const { data } = await session.auth.getSession()
+  const token = data?.session?.access_token
+  if (!token) return null
+  return createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, {
+    auth: { autoRefreshToken: false, persistSession: false },
+    global: { headers: { Authorization: `Bearer ${token}` } },
+  })
+}

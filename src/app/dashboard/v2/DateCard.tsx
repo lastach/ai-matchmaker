@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import MicButton from './MicButton'
 import { api, Button, Card, ErrorNote } from './ui'
 
 export type Match = {
@@ -178,7 +179,8 @@ function Debrief({ match, onChange }: { match: Match; onChange: () => void }) {
       )}
       {!done && (
         <div className="mt-3 flex gap-2 items-end">
-          <textarea value={input} onChange={(e) => setInput(e.target.value)} rows={2} placeholder="In your own words…"
+          <MicButton disabled={busy} onText={(t) => setInput((v) => (v.trim() ? v.trimEnd() + ' ' : '') + t)} />
+          <textarea value={input} onChange={(e) => setInput(e.target.value)} rows={2} placeholder="Type, or tap the mic and talk"
             onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); if (input.trim()) { const t = input.trim(); setInput(''); send(t) } } }}
             className="flex-1 px-4 py-3 border border-[#E5E7EB] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D4537E] resize-none" />
           <Button onClick={() => { const t = input.trim(); if (t) { setInput(''); send(t) } }} disabled={busy || !input.trim()}>Send</Button>

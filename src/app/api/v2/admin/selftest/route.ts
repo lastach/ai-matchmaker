@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { isAdmin } from '@/lib/isAdmin'
 import { callClaudeJson } from '@/lib/v2/ai'
-import { DEBRIEF_SYSTEM, INTAKE_SYSTEM, PREP_SYSTEM, VIDEO_SYSTEM } from '@/lib/v2/prompts'
+import { DEBRIEF_SYSTEM, INTAKE_REPLY_SYSTEM, INTAKE_ANALYZE_SYSTEM, PREP_SYSTEM, VIDEO_SYSTEM } from '@/lib/v2/prompts'
 import { evaluatePair } from '@/lib/v2/pairEval'
 import { requireUser } from '@/lib/v2/server'
 import type { ProfileRow } from '@/lib/v2/types'
@@ -71,14 +71,21 @@ export async function GET() {
     }),
     check('intake', async () => {
       const { out, raw } = await callClaudeJson<any>({
-        system: INTAKE_SYSTEM, maxTokens: 3000,
+        system: INTAKE_REPLY_SYSTEM, maxTokens: 700,
         messages: [
           { role: 'user', content: 'Member\'s first name: Sam. City: Boston, MA.\nWhat you know so far (carry it forward): {}' },
           { role: 'assistant', content: 'Hi Sam. What does your life look like right now?' },
           { role: 'user', content: 'I teach high school chemistry, run on weekends, and just moved back to Boston after a breakup a year ago. I feel ready to meet someone serious now.' },
         ],
       })
-      return { ok: !!out?.reply && !!out?.profile, detail: out ? { reply: out.reply, readiness: out.profile?.readiness, coverage: out.profile?.coverage } : { unparsed: raw.slice(0, 1500) } }
+      return { ok: !!out?.reply, detail: out ? { reply: out.reply } : { unparsed: raw.slice(0, 1500) } }
+    }),
+    check('intakeAnalysis', async () => {
+      const { out, raw } = await callClaudeJson<any>({
+        system: INTAKE_ANALYZE_SYSTEM, maxTokens: 3000,
+        messages: [{ role: 'user', content: 'Profile so far:\n{}\n\nConversation:\nMatchmaker: Hi Sam. To start, what does your life look like right now?\n\nMember: I teach high school chemistry, run on weekends, and just moved back to Boston after a breakup a year ago. I feel ready to meet someone serious now.' }],
+      })
+      return { ok: !!out?.coverage && !!out?.readiness, detail: out ? { readiness: out.readiness, coverage: out.coverage } : { unparsed: raw.slice(0, 1500) } }
     }),
     check('video', async () => {
       const { out, raw } = await callClaudeJson<any>({

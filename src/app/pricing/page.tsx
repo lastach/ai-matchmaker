@@ -16,7 +16,7 @@ export default function Pricing() {
             <h3 className="text-2xl font-bold text-gray-900 mb-2">Free</h3>
             <p className="text-sm text-gray-600 mb-6">Full intake, you stay on the waitlist until your local cohort opens. No card.</p>
             <ul className="text-sm text-gray-700 space-y-2 mb-6">
-              <li>- A real conversation, not a form: the AI asks open questions and only follows up on what's missing</li>
+              <li>- Answer open questions in your own words, typed or spoken; the AI only follows up on what's missing</li>
               <li>- A short AI video interview so matches line up on energy and warmth</li>
               <li>- Rate members in your city so every match is mutual attraction</li>
               <li>- Cohort waitlist with location and supply-pool transparency</li>

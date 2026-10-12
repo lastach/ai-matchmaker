@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import MicButton from './MicButton'
 import { api, Button, ErrorNote } from './ui'
 
 type Msg = { role: 'user' | 'assistant'; content: string }
@@ -12,6 +13,7 @@ type Msg = { role: 'user' | 'assistant'; content: string }
 export default function IntakeChat({ initial, progress, onComplete }: { initial: Msg[]; progress: { covered: number; total: number }; onComplete: () => void }) {
   const [messages, setMessages] = useState<Msg[]>(initial)
   const [input, setInput] = useState('')
+  const [heard, setHeard] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [prog, setProg] = useState(progress)
@@ -81,17 +83,19 @@ export default function IntakeChat({ initial, progress, onComplete }: { initial:
         <div className="mt-3 flex justify-end"><Button onClick={onComplete}>Continue to the video interview</Button></div>
       ) : paused ? null : (
         <div className="mt-3 flex gap-2 items-end">
+          <MicButton disabled={busy} onInterim={setHeard} onText={(t) => setInput((v) => (v.trim() ? v.trimEnd() + ' ' : '') + t)} />
           <textarea
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); submit() } }}
             rows={2}
-            placeholder="Answer in your own words…"
+            placeholder={heard ? heard : 'Type, or tap the mic and talk'}
             className="flex-1 px-4 py-3 border border-[#E5E7EB] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D4537E] resize-none"
           />
           <Button onClick={submit} disabled={busy || !input.trim()}>Send</Button>
         </div>
       )}
+      {heard && <p className="mt-1 text-sm italic text-[#6B7280]">{heard}</p>}
       <p className="text-[11px] text-[#9CA3AF] mt-2">Saved as you go. Matches see only a two-line &quot;about you&quot; written from this conversation, and your date&apos;s coach learns what makes you feel understood so they can show up well. Nothing else you say here is shared.</p>
     </div>
   )

@@ -101,12 +101,35 @@ export function clampNum(v: unknown, lo: number, hi: number, fallback: number): 
 export async function callClaudeJson<T = any>(opts: Parameters<typeof callClaude>[0]): Promise<{ out: T | null; raw: string }> {
   const raw = await callClaude(opts)
   const out = parseJsonObject<T>(raw)
-  if (out) return { out, raw }
+  if (out) return { out: scrubDashes(out), raw }
   const retryMessages: ChatMsg[] = [
     ...opts.messages,
     { role: 'assistant', content: raw || '(no reply)' },
     { role: 'user', content: 'Reply again with only the JSON object described in your instructions, and nothing else.' },
   ]
   const raw2 = await callClaude({ ...opts, messages: retryMessages })
-  return { out: parseJsonObject<T>(raw2), raw: raw2 }
+  const out2 = parseJsonObject<T>(raw2)
+  return { out: out2 ? scrubDashes(out2) : null, raw: raw2 }
+}
+
+/** House style: no em or en dashes in anything a member reads. */
+export function noDashes(s: string): string {
+  return s
+    .replace(/\s*\u2014\s*/g, ', ')
+    .replace(/(\d)\s*\u2013\s*(\d)/g, '$1 to $2')
+    .replace(/\s*\u2013\s*/g, ', ')
+    .replace(/ - /g, ', ')
+    .replace(/,\s*,/g, ',')
+}
+
+/** Apply noDashes to every string inside a parsed AI reply. */
+export function scrubDashes<T>(v: T): T {
+  if (typeof v === 'string') return noDashes(v) as unknown as T
+  if (Array.isArray(v)) return v.map((x) => scrubDashes(x)) as unknown as T
+  if (v && typeof v === 'object') {
+    const o: Record<string, unknown> = {}
+    for (const [k, x] of Object.entries(v as Record<string, unknown>)) o[k] = scrubDashes(x)
+    return o as T
+  }
+  return v
 }
