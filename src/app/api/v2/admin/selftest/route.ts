@@ -3,7 +3,7 @@ import { isAdmin } from '@/lib/isAdmin'
 import { callClaudeJson } from '@/lib/v2/ai'
 import { DEBRIEF_SYSTEM, INTAKE_SYSTEM, PREP_SYSTEM, VIDEO_SYSTEM } from '@/lib/v2/prompts'
 import { evaluatePair } from '@/lib/v2/pairEval'
-import { requireUser, serviceClient } from '@/lib/v2/server'
+import { requireUser } from '@/lib/v2/server'
 import type { ProfileRow } from '@/lib/v2/types'
 
 export const runtime = 'nodejs'
@@ -55,14 +55,19 @@ export async function GET() {
 
   const results = await Promise.all([
     check('config', async () => {
-      const svc = serviceClient()
-      const env = { anthropicKey: !!process.env.ANTHROPIC_API_KEY, serviceRoleKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY, envNames: Object.keys(process.env).filter((k) => /SUPA|SERVICE|SECRET|POSTGRES|DATABASE/i.test(k)).sort() }
-      let tables: string | null = null
-      if (svc) {
-        const { error } = await svc.from('amorlay_profiles').select('user_id', { count: 'exact', head: true })
-        tables = error ? error.message : 'ok'
-      }
-      return { ok: env.anthropicKey && env.serviceRoleKey && tables === 'ok', detail: { ...env, tables } }
+      const svc = auth.session
+      const env = { anthropicKey: !!process.env.ANTHROPIC_API_KEY }
+      const checks: Record<string, string> = {}
+      const t1 = await svc.from('amorlay_profiles').select('user_id', { count: 'exact', head: true })
+      checks.profiles = t1.error ? t1.error.message : 'ok'
+      const t2 = await svc.rpc('amorlay_cohort_count')
+      checks.cohortFunction = t2.error ? t2.error.message : 'ok'
+      const t3 = await svc.rpc('amorlay_my_matches')
+      checks.matchesFunction = t3.error ? t3.error.message : 'ok'
+      const t4 = await svc.storage.from('matchmaker-photos').list(auth.user.id, { limit: 1 })
+      checks.photoStorage = t4.error ? t4.error.message : 'ok'
+      const ok = env.anthropicKey && Object.values(checks).every((v) => v === 'ok')
+      return { ok, detail: { ...env, ...checks } }
     }),
     check('intake', async () => {
       const { out, raw } = await callClaudeJson<any>({

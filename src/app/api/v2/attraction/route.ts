@@ -1,7 +1,5 @@
 import { NextResponse } from 'next/server'
-import { ageFits, interestedIn } from '@/lib/v2/engine'
-import { loadCity, toMember } from '@/lib/v2/pool'
-import { clipUrl, errorResponse, firstPhotoUrl, loadProfile, requireService, requireUser } from '@/lib/v2/server'
+import { clipUrl, errorResponse, firstPhotoUrl, loadProfile, requireUser } from '@/lib/v2/server'
 
 export const runtime = 'nodejs'
 export const maxDuration = 30
@@ -20,22 +18,17 @@ const BATCH = 12
 export async function GET(req: Request) {
   const auth = await requireUser()
   if (auth instanceof NextResponse) return auth
-  const svc = requireService()
-  if (svc instanceof NextResponse) return svc
+  const svc = auth.session
   try {
     const stage = new URL(req.url).searchParams.get('stage') === 'video' ? 'video' : 'photo'
     const me = await loadProfile(svc, auth.user.id)
     if (!me.city_key || !me.intake_complete) return NextResponse.json({ items: [], remaining: 0, note: 'Finish the conversation first.' })
-    const meM = toMember(me)
-    const rows = await loadCity(svc, me.city_key)
+    // City members who could be a mutual match on the basics (interest and age, both ways).
+    const { data: pool, error } = await svc.rpc('amorlay_attraction_pool')
+    if (error) throw new Error(error.message)
+    const eligible = (pool || []) as Array<{ user_id: string; first_name: string | null; age: number | null; about: string | null; share_clip: boolean; clip_path: string | null }>
     const { data: mine } = await svc.from('amorlay_ratings').select('target_id, photo_rating, video_rating').eq('rater_id', auth.user.id)
     const rated = new Map((mine || []).map((r) => [r.target_id, r]))
-
-    const eligible = rows.filter((r) => {
-      if (r.user_id === auth.user.id) return false
-      const m = toMember(r)
-      return interestedIn(meM, m) && interestedIn(m, meM) && ageFits(meM, m) && ageFits(m, meM)
-    })
     const todo = eligible.filter((r) => {
       const x = rated.get(r.user_id)
       return stage === 'photo' ? !x?.photo_rating : !!x?.photo_rating && !x?.video_rating
@@ -45,14 +38,13 @@ export async function GET(req: Request) {
     for (const r of todo.slice(0, BATCH)) {
       const photoUrl = await firstPhotoUrl(svc, r.user_id)
       if (!photoUrl) continue
-      const m = toMember(r)
       items.push({
         id: r.user_id,
-        firstName: r.basics?.firstName || '',
-        age: m.age,
+        firstName: r.first_name || '',
+        age: r.age,
         photoUrl,
         clipUrl: stage === 'video' && r.share_clip ? await clipUrl(svc, r.clip_path) : null,
-        about: stage === 'video' ? r.ai_profile?.about || null : null,
+        about: stage === 'video' ? r.about || null : null,
       })
     }
     return NextResponse.json({ items, remaining: todo.length, eligible: eligible.length })
@@ -64,8 +56,7 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
   const auth = await requireUser()
   if (auth instanceof NextResponse) return auth
-  const svc = requireService()
-  if (svc instanceof NextResponse) return svc
+  const svc = auth.session
   try {
     const { targetId, stage, rating } = await req.json().catch(() => ({} as any))
     const n = Number(rating)

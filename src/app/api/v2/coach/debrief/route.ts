@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { callClaudeJson, clampNum, type ChatMsg } from '@/lib/v2/ai'
 import { DEBRIEF_SYSTEM } from '@/lib/v2/prompts'
 import { updateWeights, type Components } from '@/lib/v2/engine'
-import { errorResponse, loadProfile, requireService, requireUser, saveProfile } from '@/lib/v2/server'
+import { errorResponse, loadProfile, matchPartner, myMatches, requireUser, saveProfile } from '@/lib/v2/server'
 import { checkRateLimit } from '@/lib/rateLimit'
 
 export const runtime = 'nodejs'
@@ -16,13 +16,12 @@ export const maxDuration = 60
 export async function POST(req: Request) {
   const auth = await requireUser()
   if (auth instanceof NextResponse) return auth
-  const svc = requireService()
-  if (svc instanceof NextResponse) return svc
+  const svc = auth.session
   try {
     const uid = auth.user.id
     const body = await req.json().catch(() => ({} as any))
-    const { data: m } = await svc.from('amorlay_matches').select('*').eq('id', body.matchId).maybeSingle()
-    if (!m || (m.user_a !== uid && m.user_b !== uid)) return NextResponse.json({ error: 'not found' }, { status: 404 })
+    const m = (await myMatches(svc)).find((x) => x.id === body.matchId)
+    if (!m) return NextResponse.json({ error: 'not found' }, { status: 404 })
     const open = m.status === 'completed' || (!!m.date_at && new Date(m.date_at).getTime() < Date.now())
     if (!open) return NextResponse.json({ error: 'The debrief opens after your date.' }, { status: 400 })
 
@@ -42,11 +41,10 @@ export async function POST(req: Request) {
     if (message) debrief.push({ role: 'user', content: message })
 
     const me = await loadProfile(svc, uid)
-    const partnerId = m.user_a === uid ? m.user_b : m.user_a
-    const { data: partner } = await svc.from('amorlay_profiles').select('basics').eq('user_id', partnerId).maybeSingle()
+    const partner = await matchPartner(svc, m.id)
     const context = JSON.stringify({
       member: { firstName: me.basics.firstName, mustHaves: me.ai_profile.mustHaves, maximizing: me.ai_profile.maximizing, exPattern: me.ai_profile.exPattern },
-      date: { with: partner?.basics?.firstName, venue: m.venue_name, when: m.date_at },
+      date: { with: partner?.first_name, venue: m.venue_name, when: m.date_at },
     })
     const msgs: ChatMsg[] = [{ role: 'user', content: `Context for you only (do not recite it): ${context}\n${debrief.length === 0 ? 'Open the debrief warmly with your first question.' : ''}` }]
     for (const d of debrief) {
@@ -72,7 +70,7 @@ export async function POST(req: Request) {
         at: new Date().toISOString(),
       }
       // Learning: reweight this member's matching from how the date went.
-      const comps = (m.user_a === uid ? m.breakdown?.aComps : m.breakdown?.bComps) as Components | undefined
+      const comps = (m.my_components || undefined) as Components | undefined
       if (comps) await saveProfile(svc, uid, { weights: updateWeights(me.weights, comps, outcome.overall) })
     }
     await svc.from('amorlay_coach').upsert(

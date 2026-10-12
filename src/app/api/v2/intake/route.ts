@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { callClaudeJson, type ChatMsg } from '@/lib/v2/ai'
 import { INTAKE_SYSTEM, COVERAGE_AREAS } from '@/lib/v2/prompts'
 import { CRISIS_REPLY, crisisFlags } from '@/lib/v2/safety'
-import { errorResponse, loadProfile, requireService, requireUser, saveProfile } from '@/lib/v2/server'
+import { errorResponse, loadProfile, requireUser, saveProfile } from '@/lib/v2/server'
 import { checkRateLimit } from '@/lib/rateLimit'
 import type { AiProfile } from '@/lib/v2/types'
 
@@ -17,8 +17,7 @@ export const maxDuration = 60
 export async function POST(req: Request) {
   const auth = await requireUser()
   if (auth instanceof NextResponse) return auth
-  const svc = requireService()
-  if (svc instanceof NextResponse) return svc
+  const svc = auth.session
   try {
     const rl = await checkRateLimit('v2-intake:' + auth.user.id)
     if (!rl.success) return NextResponse.json({ error: 'Too many messages at once. Give it a few seconds.' }, { status: 429 })

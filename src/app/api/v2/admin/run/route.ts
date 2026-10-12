@@ -3,7 +3,7 @@ import { isAdmin } from '@/lib/isAdmin'
 import { basicGates, pairKey, pairUp, scorePair, type PairResult } from '@/lib/v2/engine'
 import { evaluatePair, versionKey } from '@/lib/v2/pairEval'
 import { loadCity, loadRatings, toMember } from '@/lib/v2/pool'
-import { errorResponse, requireService, requireUser } from '@/lib/v2/server'
+import { errorResponse, requireUser } from '@/lib/v2/server'
 import type { PairEval, ProfileRow } from '@/lib/v2/types'
 
 export const runtime = 'nodejs'
@@ -28,8 +28,7 @@ export async function POST(req: Request) {
   const auth = await requireUser()
   if (auth instanceof NextResponse) return auth
   if (!(await isAdmin(auth.user.email, auth.session))) return NextResponse.json({ error: 'forbidden' }, { status: 403 })
-  const svc = requireService()
-  if (svc instanceof NextResponse) return svc
+  const svc = auth.session
   try {
     const { city, dryRun } = await req.json().catch(() => ({} as any))
     if (!city) return NextResponse.json({ error: 'city required' }, { status: 400 })

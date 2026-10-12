@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { isAdmin } from '@/lib/isAdmin'
-import { ageFrom, errorResponse, firstPhotoUrl, requireService, requireUser } from '@/lib/v2/server'
+import { ageFrom, errorResponse, firstPhotoUrl, requireUser } from '@/lib/v2/server'
 
 export const runtime = 'nodejs'
 export const maxDuration = 30
@@ -9,8 +9,7 @@ async function gate() {
   const auth = await requireUser()
   if (auth instanceof NextResponse) return auth
   if (!(await isAdmin(auth.user.email, auth.session))) return NextResponse.json({ error: 'forbidden' }, { status: 403 })
-  const svc = requireService()
-  if (svc instanceof NextResponse) return svc
+  const svc = auth.session
   return { auth, svc }
 }
 

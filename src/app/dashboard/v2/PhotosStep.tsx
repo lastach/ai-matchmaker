@@ -1,20 +1,29 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { supabase } from '@/lib/supabase'
 import { api, Button, Card, ErrorNote } from './ui'
 
-/** Profile photos. Members in the same city rate these to learn who they are drawn to. */
+const BUCKET = 'matchmaker-photos'
+
+/** Profile photos, stored privately under the member's own folder. */
 export default function PhotosStep({ onDone }: { onDone: () => void }) {
   const [photos, setPhotos] = useState<string[]>([])
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const refresh = async () => {
-    try {
-      const r = await fetch('/api/photos/list', { credentials: 'include' })
-      const d = await r.json()
-      setPhotos((d.photos || []).filter((p: any) => p.slot === 'profile').map((p: any) => p.url))
-    } catch {}
+    const { data: u } = await supabase.auth.getUser()
+    const uid = u?.user?.id
+    if (!uid) return
+    const { data: rows } = await supabase.from('matchmaker_photos').select('storage_path, position').eq('user_id', uid).order('created_at')
+    const urls: string[] = []
+    for (const r of rows || []) {
+      if (!String(r.storage_path).includes('/profile/')) continue
+      const { data } = await supabase.storage.from(BUCKET).createSignedUrl(r.storage_path, 3600)
+      if (data?.signedUrl) urls.push(data.signedUrl)
+    }
+    setPhotos(urls)
   }
   useEffect(() => { refresh() }, [])
 
@@ -23,15 +32,18 @@ export default function PhotosStep({ onDone }: { onDone: () => void }) {
     setBusy(true)
     setError(null)
     try {
+      const { data: u } = await supabase.auth.getUser()
+      const uid = u?.user?.id
+      if (!uid) throw new Error('Please sign in again.')
       for (const f of Array.from(files).slice(0, 3)) {
-        const fd = new FormData()
-        fd.append('file', f)
-        fd.append('slot', 'profile')
-        const r = await fetch('/api/photos/upload', { method: 'POST', body: fd, credentials: 'include' })
-        if (!r.ok) {
-          const d = await r.json().catch(() => ({}))
-          throw new Error(d.error || 'Upload failed')
-        }
+        if (!f.type.startsWith('image/')) throw new Error('Photos only, please.')
+        if (f.size > 8 * 1024 * 1024) throw new Error('Each photo must be under 8 MB.')
+        const ext = (f.name.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 4) || 'jpg'
+        const path = `${uid}/profile/${crypto.randomUUID()}.${ext}`
+        const up = await supabase.storage.from(BUCKET).upload(path, f, { contentType: f.type, upsert: false })
+        if (up.error) throw new Error(up.error.message)
+        const ins = await supabase.from('matchmaker_photos').insert({ user_id: uid, storage_path: path, position: photos.length })
+        if (ins.error) throw new Error(ins.error.message)
       }
       await refresh()
     } catch (e: any) {

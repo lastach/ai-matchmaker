@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { ageFrom, cityKey, COHORT_THRESHOLD, errorResponse, loadProfile, requireService, requireUser, saveProfile } from '@/lib/v2/server'
+import { ageFrom, cityKey, COHORT_THRESHOLD, errorResponse, loadProfile, requireUser, saveProfile } from '@/lib/v2/server'
 import { COVERAGE_AREAS } from '@/lib/v2/prompts'
 import type { Basics } from '@/lib/v2/types'
 
@@ -11,14 +11,13 @@ const STEPS = ['basics', 'intake', 'video', 'photos', 'attraction', 'ready'] as 
 export async function GET() {
   const auth = await requireUser()
   if (auth instanceof NextResponse) return auth
-  const svc = requireService()
-  if (svc instanceof NextResponse) return svc
+  const svc = auth.session
   try {
     const p = await loadProfile(svc, auth.user.id)
     let cohort = 0
     if (p.city_key) {
-      const { count } = await svc.from('amorlay_profiles').select('user_id', { count: 'exact', head: true }).eq('city_key', p.city_key).eq('intake_complete', true)
-      cohort = count || 0
+      const { data: count } = await svc.rpc('amorlay_cohort_count')
+      cohort = Number(count) || 0
     }
     const coverage = p.ai_profile?.coverage || {}
     const covered = Object.keys(COVERAGE_AREAS).filter((k) => coverage[k] === 'covered').length
@@ -42,8 +41,7 @@ export async function GET() {
 export async function POST(req: Request) {
   const auth = await requireUser()
   if (auth instanceof NextResponse) return auth
-  const svc = requireService()
-  if (svc instanceof NextResponse) return svc
+  const svc = auth.session
   try {
     const body = await req.json().catch(() => ({} as any))
     const p = await loadProfile(svc, auth.user.id)

@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { callClaudeJson, clampNum, type ChatMsg } from '@/lib/v2/ai'
 import { VIDEO_SYSTEM } from '@/lib/v2/prompts'
-import { errorResponse, loadProfile, requireService, requireUser, saveProfile } from '@/lib/v2/server'
+import { errorResponse, loadProfile, requireUser, saveProfile } from '@/lib/v2/server'
 import { checkRateLimit } from '@/lib/rateLimit'
 import type { VideoAssessment } from '@/lib/v2/types'
 
@@ -17,8 +17,7 @@ export const maxDuration = 60
 export async function POST(req: Request) {
   const auth = await requireUser()
   if (auth instanceof NextResponse) return auth
-  const svc = requireService()
-  if (svc instanceof NextResponse) return svc
+  const svc = auth.session
   try {
     const rl = await checkRateLimit('v2-video:' + auth.user.id)
     if (!rl.success) return NextResponse.json({ error: 'Please wait a moment and try again.' }, { status: 429 })

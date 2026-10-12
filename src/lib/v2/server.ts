@@ -108,3 +108,43 @@ export function errorResponse(e: unknown) {
   const status = (e as any)?.status && Number((e as any).status) ? Number((e as any).status) : 500
   return NextResponse.json({ error: msg }, { status })
 }
+
+export interface MatchPartner {
+  partner_id: string
+  first_name: string | null
+  age: number | null
+  about: string | null
+  interests: string[] | null
+  values: Array<{ value: string }> | null
+  feel_understood: string | null
+  mutual_second_date: boolean
+  partner_contact: string | null
+}
+
+/** The coach-safe view of a member's date, only for matches the caller is part of. */
+export async function matchPartner(session: SupabaseClient, matchId: string): Promise<MatchPartner | null> {
+  const { data, error } = await session.rpc('amorlay_match_partner', { match: matchId })
+  if (error) throw new Error(error.message)
+  return ((data as MatchPartner[] | null) || [])[0] || null
+}
+
+export interface MyMatch {
+  id: string
+  status: string
+  date_at: string | null
+  venue_name: string | null
+  venue_address: string | null
+  date_idea: string | null
+  my_attending: string | null
+  partner_attending: string | null
+  why: string | null
+  my_components: Record<string, number> | null
+  created_at: string
+}
+
+/** The caller's scheduled or past dates, member-safe fields only (no scores about the other person). */
+export async function myMatches(session: SupabaseClient): Promise<MyMatch[]> {
+  const { data, error } = await session.rpc('amorlay_my_matches')
+  if (error) throw new Error(error.message)
+  return (data as MyMatch[] | null) || []
+}

@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { CLIP_BUCKET, errorResponse, requireService, requireUser, saveProfile } from '@/lib/v2/server'
+import { CLIP_BUCKET, errorResponse, requireUser, saveProfile } from '@/lib/v2/server'
 
 export const runtime = 'nodejs'
 
@@ -14,15 +14,10 @@ export const runtime = 'nodejs'
 export async function GET() {
   const auth = await requireUser()
   if (auth instanceof NextResponse) return auth
-  const svc = requireService()
-  if (svc instanceof NextResponse) return svc
+  const svc = auth.session
   try {
     const path = `${auth.user.id}/intro-${crypto.randomUUID()}.webm`
-    let r = await svc.storage.from(CLIP_BUCKET).createSignedUploadUrl(path)
-    if (r.error && /not found/i.test(r.error.message)) {
-      await svc.storage.createBucket(CLIP_BUCKET, { public: false, fileSizeLimit: 20 * 1024 * 1024 })
-      r = await svc.storage.from(CLIP_BUCKET).createSignedUploadUrl(path)
-    }
+    const r = await svc.storage.from(CLIP_BUCKET).createSignedUploadUrl(path)
     if (r.error || !r.data) return NextResponse.json({ error: r.error?.message || 'upload unavailable' }, { status: 500 })
     return NextResponse.json({ path: r.data.path, token: r.data.token, bucket: CLIP_BUCKET })
   } catch (e) {
@@ -33,8 +28,7 @@ export async function GET() {
 export async function POST(req: Request) {
   const auth = await requireUser()
   if (auth instanceof NextResponse) return auth
-  const svc = requireService()
-  if (svc instanceof NextResponse) return svc
+  const svc = auth.session
   try {
     const { path } = await req.json().catch(() => ({} as any))
     if (typeof path !== 'string' || !path.startsWith(auth.user.id + '/')) return NextResponse.json({ error: 'bad path' }, { status: 400 })
@@ -48,8 +42,7 @@ export async function POST(req: Request) {
 export async function DELETE() {
   const auth = await requireUser()
   if (auth instanceof NextResponse) return auth
-  const svc = requireService()
-  if (svc instanceof NextResponse) return svc
+  const svc = auth.session
   try {
     const { data } = await svc.from('amorlay_profiles').select('clip_path').eq('user_id', auth.user.id).maybeSingle()
     if (data?.clip_path) await svc.storage.from(CLIP_BUCKET).remove([data.clip_path])
