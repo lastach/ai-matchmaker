@@ -4,7 +4,6 @@ import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { DashboardErrorBoundary } from './ErrorBoundary';
-import TrialGate from '@/components/TrialGate';
 import BasicsStep from './v2/BasicsStep';
 import IntakeChat from './v2/IntakeChat';
 import VideoInterview from './v2/VideoInterview';
@@ -23,7 +22,7 @@ type FullState = ProfileState & {
  */
 function Dashboard() {
   const router = useRouter();
-  const [userId, setUserId] = useState<string | undefined>();
+  const [, setUserId] = useState<string | undefined>();
   const [state, setState] = useState<FullState | null>(null);
   const [view, setView] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -118,11 +117,10 @@ function Dashboard() {
   else body = <Home state={state} goTo={goTo} reload={reload} />;
 
   return (
-    <TrialGate userId={userId} productName="Amorlay">
-      <Shell step={view} onSignOut={signOut}>
-        {body}
-      </Shell>
-    </TrialGate>
+    // Early access is free (see /pricing); the subscription gate returns with checkout.
+    <Shell step={view} onSignOut={signOut}>
+      {body}
+    </Shell>
   );
 }
 
