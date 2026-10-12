@@ -56,7 +56,7 @@ export async function GET() {
   const results = await Promise.all([
     check('config', async () => {
       const svc = serviceClient()
-      const env = { anthropicKey: !!process.env.ANTHROPIC_API_KEY, serviceRoleKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY }
+      const env = { anthropicKey: !!process.env.ANTHROPIC_API_KEY, serviceRoleKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY, envNames: Object.keys(process.env).filter((k) => /SUPA|SERVICE|SECRET|POSTGRES|DATABASE/i.test(k)).sort() }
       let tables: string | null = null
       if (svc) {
         const { error } = await svc.from('amorlay_profiles').select('user_id', { count: 'exact', head: true })
