@@ -69,7 +69,9 @@ export async function POST(req: Request) {
     const progress = () => ({ covered: coveredCount(aiProfile), total: AREAS.length })
 
     // Opening question: instant, no AI call.
-    if (conversation.length === 0 && !message) {
+    // Opening question (also replaces an opener nobody has answered yet, so it always reflects the current wording).
+    if (!message && !conversation.some((m) => m.role === 'user')) {
+      conversation.length = 0
       const reply = `Hi ${p.basics.firstName}. To start, what does your life look like right now?`
       conversation.push({ role: 'assistant', content: reply })
       await saveProfile(svc, uid, { conversation, ai_profile: aiProfile, ...(body.restart ? { intake_complete: false } : {}) })

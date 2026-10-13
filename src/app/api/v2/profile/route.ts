@@ -24,7 +24,8 @@ export async function GET() {
     return NextResponse.json({
       step: p.step,
       basics: p.basics,
-      conversation: p.conversation,
+      // Until the member has answered, the opener is regenerated fresh by the intake.
+      conversation: (p.conversation || []).some((m) => m.role === 'user') ? p.conversation : [],
       intakeProgress: { covered, total: Object.keys(COVERAGE_AREAS).length },
       intakeComplete: p.intake_complete,
       videoDone: !!p.video?.at,
