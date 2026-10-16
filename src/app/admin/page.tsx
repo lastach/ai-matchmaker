@@ -102,11 +102,12 @@ export default function AdminPage() {
         <h2 className="font-semibold mb-3">Cities</h2>
         {Object.keys(cities).length === 0 && <p className="text-sm text-gray-500">No members yet.</p>}
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-          {Object.entries(cities).sort((a, b) => b[1].complete - a[1].complete).map(([city, c]) => (
+          {Object.entries(cities).sort((a, b) => b[1].eligible - a[1].eligible).map(([city, c]) => (
             <div key={city} className="border rounded-lg p-3 flex items-center justify-between gap-3">
               <div className="min-w-0">
                 <p className="font-medium capitalize">{city}</p>
-                <p className="text-xs text-gray-500">{c.members} signed up, {c.complete} finished, {c.eligible} eligible</p>
+                <p className="text-sm font-medium">{c.eligible} eligible <span className="font-normal text-xs text-gray-500">(count toward opening)</span></p>
+                <p className="text-xs text-gray-500">{c.members} signed up, {c.complete} finished setup</p>
                 <button className="text-xs text-[#B23F68] underline mt-1" onClick={async () => {
                   const list = members.filter((m) => m.cityKey === city && m.email).map((m) => m.email).join(', ')
                   try { await navigator.clipboard.writeText(list); setCopied(city) } catch { setCopied(null) }
