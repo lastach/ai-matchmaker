@@ -4,7 +4,12 @@ import { useEffect, useState } from 'react'
 import { api, Button, Card, ErrorNote } from './ui'
 
 type Item = { id: string; src: string; snippet?: string }
-type Batch = { stage: 'photo' | 'about' | 'done'; items: Item[]; done: number; total: number }
+type Side = { value: string; label: string; faces: string[] }
+type Features = {
+  comparisons: Array<{ feature: string; label: string; a: Side; b: Side }>
+  chips: Array<{ feature: string; label: string; options: string[] }>
+}
+type Batch = { stage: 'photo' | 'about' | 'features' | 'done'; items: Item[]; features?: Features; done: number; total: number }
 
 const SCALE = [
   { v: 1, label: 'Not for me' },
@@ -73,6 +78,10 @@ export default function AttractionRound({ onFinished }: { onFinished: () => void
 
   if (!batch) return <Card><p className="text-sm text-[#6B7280]">Loading…</p><ErrorNote error={error} /></Card>
 
+  if (batch.stage === 'features' && batch.features) {
+    return <FeaturesStep features={batch.features} onSaved={load} />
+  }
+
   if (batch.stage === 'done') {
     return (
       <Card>
@@ -109,6 +118,100 @@ export default function AttractionRound({ onFinished }: { onFinished: () => void
         ))}
       </div>
       <p className="mt-3 text-[11px] text-[#9CA3AF]">Example photos from Pexels.</p>
+      <ErrorNote error={error} />
+    </Card>
+  )
+}
+
+const CHIP_LABELS: Record<string, string> = {
+  slim: 'Slim', average: 'Average', athletic: 'Athletic', fuller: 'Fuller',
+  black: 'Black', brown: 'Brown', blonde: 'Blonde', red: 'Red', gray: 'Gray',
+  none: 'Clean shaven', stubble: 'Stubble', beard: 'Beard',
+}
+
+/** Faces side by side, one feature at a time, then build, hair color and facial hair. */
+function FeaturesStep({ features, onSaved }: { features: Features; onSaved: () => void }) {
+  const [i, setI] = useState(0)
+  const [answers, setAnswers] = useState<Record<string, any>>({})
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const n = features.comparisons.length
+  const c = features.comparisons[i]
+
+  const choose = (v: string) => {
+    setAnswers((a) => ({ ...a, [c.feature]: v }))
+    setI(i + 1)
+  }
+  const toggle = (feature: string, v: string) => setAnswers((a) => {
+    const list: string[] = Array.isArray(a[feature]) ? a[feature] : []
+    return { ...a, [feature]: list.includes(v) ? list.filter((x) => x !== v) : [...list, v] }
+  })
+  const save = async () => {
+    setBusy(true)
+    setError(null)
+    try {
+      await api('/api/v2/attraction', { method: 'POST', body: JSON.stringify({ stage: 'features', answers }) })
+      onSaved()
+    } catch (e: any) {
+      setError(e.message)
+      setBusy(false)
+    }
+  }
+
+  const SideCard = ({ side, pick }: { side: Side; pick: () => void }) => (
+    <button type="button" onClick={pick} className="rounded-xl border border-[#E5E7EB] hover:border-[#D4537E] hover:bg-[#FDF0F4] p-2 text-left">
+      <div className="grid grid-cols-3 gap-1">
+        {side.faces.map((f) => <img key={f} src={f} alt="" className="w-full aspect-square object-cover rounded-md bg-[#F4F1EE]" />)}
+      </div>
+      <p className="mt-2 text-sm font-medium text-[#1F2937] text-center">{side.label}</p>
+    </button>
+  )
+
+  return (
+    <Card>
+      <div className="flex items-center justify-between gap-3">
+        <h1 className="text-xl font-bold text-[#1F2937]">What draws you in</h1>
+        <span className="text-xs text-[#6B7280] whitespace-nowrap">{Math.min(i + 1, n + 1)} of {n + 1}</span>
+      </div>
+      <div className="mt-2 h-1.5 rounded-full bg-[#EDE7E0]"><div className="h-1.5 rounded-full bg-[#D4537E] transition-all" style={{ width: `${Math.round((i / (n + 1)) * 100)}%` }} /></div>
+      {c ? (
+        <>
+          <p className="text-sm text-[#6B7280] mt-3">{c.label}: which are you more drawn to? These are example faces, not members.</p>
+          <div className="mt-4 grid gap-3 sm:grid-cols-2">
+            <SideCard side={c.a} pick={() => choose(c.a.value)} />
+            <SideCard side={c.b} pick={() => choose(c.b.value)} />
+          </div>
+          <div className="mt-3 flex items-center justify-between">
+            <button type="button" className="text-sm text-[#6B7280] underline disabled:opacity-40" disabled={i === 0} onClick={() => setI(i - 1)}>Back</button>
+            <Button variant="secondary" onClick={() => choose('none')}>No preference</Button>
+          </div>
+        </>
+      ) : (
+        <>
+          <p className="text-sm text-[#6B7280] mt-3">Anything else you’re drawn to? Pick any that apply, or leave a row empty for no preference.</p>
+          <div className="mt-4 space-y-4">
+            {features.chips.map((g) => (
+              <div key={g.feature}>
+                <p className="text-sm font-medium text-[#1F2937]">{g.label}</p>
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {g.options.map((o) => {
+                    const on = (answers[g.feature] || []).includes(o)
+                    return (
+                      <button key={o} type="button" onClick={() => toggle(g.feature, o)}
+                        className={`px-3 py-2 rounded-lg border text-sm ${on ? 'bg-[#2E1A47] text-white border-[#2E1A47]' : 'border-[#E5E7EB] text-[#374151]'}`}>{CHIP_LABELS[o] || o}</button>
+                    )
+                  })}
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="mt-5 flex items-center justify-between">
+            <button type="button" className="text-sm text-[#6B7280] underline" onClick={() => setI(n - 1)}>Back</button>
+            <Button onClick={save} disabled={busy}>{busy ? 'Saving…' : 'Continue'}</Button>
+          </div>
+        </>
+      )}
+      <p className="mt-3 text-[11px] text-[#9CA3AF]">Example photos from Pexels. Nobody sees your answers.</p>
       <ErrorNote error={error} />
     </Card>
   )

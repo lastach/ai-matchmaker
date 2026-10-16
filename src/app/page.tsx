@@ -38,7 +38,7 @@ export default function Home() {
             {[
               ['Talk it through', 'A conversation about your life, who you want and what you want the relationship to be. It follows your lead and only asks about what is still missing.'],
               ['A short video interview', 'Four light questions on camera. It helps us match energy and warmth, which a written profile can’t show.'],
-              ['Your type', 'Rate some example photos so we learn the look and the kind of personality you’re drawn to. You never see other members, and they never see you.'],
+              ['Your type', 'Rate example photos and pick between faces side by side, so we learn the look, the features and the kind of personality you’re drawn to. You never see other members, and they never see you.'],
               ['Your date, planned', 'When we’re matching in your city, one match a month arrives as a planned date. Your AI date coach preps you before and debriefs with you after, and each debrief sharpens your next match.'],
             ].map(([t, d], i) => (
               <div key={t} className="bg-white rounded-xl p-6 border border-gray-200">

@@ -12,6 +12,8 @@ export interface Basics {
   ageMin?: number
   ageMax?: number
   email?: string // copied from the sign-in, for "matching is open in your city" notes
+  ethnicity?: string[] // self-described, optional
+  ethnicityPref?: string[] // backgrounds they want to meet; empty = open to everyone
 }
 
 export type Coverage = 'covered' | 'partial' | 'missing'
@@ -67,6 +69,20 @@ export interface Looks {
   hair?: string // long | medium | short | bald
   facialHair?: string // none | stubble | beard
   glasses?: string // yes | no
+  faceShape?: string // oval | round | angular
+  eyes?: string // large | medium | narrow
+  jawline?: string // defined | soft
+  nose?: string // small | medium | prominent
+  lips?: string // full | medium | thin
+  brows?: string // thick | thin
+  cheekbones?: string // high | subtle
+  hairColor?: string // black | brown | blonde | red | gray | none
+}
+
+/** What a member said they are drawn to when shown features side by side. */
+export interface ExplicitPrefs {
+  faceShape?: string; eyes?: string; jawline?: string; nose?: string; lips?: string; brows?: string; cheekbones?: string // a value, or 'none'
+  build?: string[]; hairColor?: string[]; facialHair?: string[] // empty = no preference
 }
 
 /** Ratings of the example library plus the member's own looks (from their photos). */
@@ -74,6 +90,8 @@ export interface AttractionData {
   ratings?: Record<string, { photo?: number; about?: number; variant?: 'warm' | 'flat' }>
   looks?: Looks
   looksAt?: string
+  explicit?: ExplicitPrefs
+  explicitDone?: boolean
   done?: boolean
 }
 

@@ -37,7 +37,7 @@ export async function POST() {
     if (!blocks.length) return NextResponse.json({ error: 'We could not read your photos. Try uploading them again.' }, { status: 400 })
     blocks.push({ type: 'text', text: 'Describe this member from these photos.' })
 
-    const { out } = await callClaudeJson<any>({ system: LOOKS_SYSTEM, maxTokens: 300, messages: [{ role: 'user', content: blocks }] })
+    const { out } = await callClaudeJson<any>({ system: LOOKS_SYSTEM, maxTokens: 500, messages: [{ role: 'user', content: blocks }] })
     const looks = cleanLooks(out)
     const p = await loadProfile(svc, uid)
     await saveProfile(svc, uid, { attraction: { ...(p.attraction || {}), looks, looksAt: new Date().toISOString() } })

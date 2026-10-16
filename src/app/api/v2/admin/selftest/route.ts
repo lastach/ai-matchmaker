@@ -107,11 +107,11 @@ export async function GET(req: Request) {
       // One of the example library photos stands in for a member photo.
       const img = await fetch(origin + '/type/m34330228.jpg')
       const b64 = Buffer.from(await img.arrayBuffer()).toString('base64')
-      const { out } = await callClaudeJson<any>({ system: LOOKS_SYSTEM, maxTokens: 300, messages: [{ role: 'user', content: [
+      const { out } = await callClaudeJson<any>({ system: LOOKS_SYSTEM, maxTokens: 500, messages: [{ role: 'user', content: [
         { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: b64 } }, { type: 'text', text: 'Describe this member from these photos.' },
       ] }] })
       const looks = cleanLooks(out)
-      return { ok: Object.keys(looks).length >= 6, detail: { looks, raw: out } }
+      return { ok: Object.keys(looks).length >= 12, detail: { looks, raw: out } }
     }),
     check('coachPrep', async () => {
       const { out, raw } = await callClaudeJson<any>({ system: PREP_SYSTEM, maxTokens: 900, messages: [{ role: 'user', content: JSON.stringify({

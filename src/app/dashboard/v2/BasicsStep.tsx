@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import type { Basics } from '@/lib/v2/types'
+import { ETHNICITIES } from '@/lib/v2/ethnicity'
 import { api, Button, Card, ErrorNote } from './ui'
 
 const INTERESTS = [
@@ -24,6 +25,13 @@ export default function BasicsStep({ initial, onDone }: { initial: Basics; onDon
     if (cur.has(k)) cur.delete(k); else cur.add(k)
     set({ interestedIn: Array.from(cur) as any })
   }
+
+  const toggleList = (field: 'ethnicity' | 'ethnicityPref', k: string) => {
+    const cur = new Set(b[field] || [])
+    if (cur.has(k)) cur.delete(k); else cur.add(k)
+    set({ [field]: Array.from(cur) } as Partial<Basics>)
+  }
+  const chip = (on: boolean) => `px-3 py-2 rounded-lg border text-sm ${on ? 'bg-[#2E1A47] text-white border-[#2E1A47]' : 'border-[#E5E7EB] text-[#374151]'}`
 
   const save = async () => {
     setError(null)
@@ -76,6 +84,22 @@ export default function BasicsStep({ initial, onDone }: { initial: Basics; onDon
             <span className="text-[#6B7280]">to</span>
             <input type="number" min={18} max={99} className={input} value={b.ageMax ?? ''} onChange={(e) => set({ ageMax: Number(e.target.value) })} />
           </div>
+        </div>
+        <div className="text-sm font-medium text-[#1F2937]">Your background <span className="font-normal text-[#6B7280]">(optional, pick any)</span>
+          <div className="flex flex-wrap gap-2 mt-2">
+            {ETHNICITIES.map((o) => (
+              <button key={o.key} type="button" onClick={() => toggleList('ethnicity', o.key)} className={chip((b.ethnicity || []).includes(o.key))}>{o.label}</button>
+            ))}
+          </div>
+        </div>
+        <div className="text-sm font-medium text-[#1F2937]">Backgrounds you’d like to meet <span className="font-normal text-[#6B7280]">(optional)</span>
+          <div className="flex flex-wrap gap-2 mt-2">
+            <button type="button" onClick={() => set({ ethnicityPref: [] })} className={chip(!(b.ethnicityPref || []).length)}>Open to everyone</button>
+            {ETHNICITIES.map((o) => (
+              <button key={o.key} type="button" onClick={() => toggleList('ethnicityPref', o.key)} className={chip((b.ethnicityPref || []).includes(o.key))}>{o.label}</button>
+            ))}
+          </div>
+          {(b.ethnicityPref || []).length > 0 && <p className="mt-2 text-xs font-normal text-[#6B7280]">You’ll only be matched with people who shared a background on your list.</p>}
         </div>
         <label className="flex items-start gap-2 text-sm text-[#4B5563]">
           <input type="checkbox" className="mt-1" checked={adult} onChange={(e) => setAdult(e.target.checked)} />

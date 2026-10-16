@@ -3,7 +3,7 @@
  *
  * 0. Eligibility: only members ready for a relationship, with a partnership readiness score of
  *    at least ELIGIBLE_SCORE, are matched at all.
- * 1. Gates (pass/fail, checked both ways): interest, age range, city, kids, dealbreakers,
+ * 1. Gates (pass/fail, checked both ways): interest, age range, background preference, city, kids, dealbreakers,
  *    deal-level values, inflexible must-haves, predicted attraction bar.
  * 2. Match score out of 100, from each person's own learned weights (defaults: must-haves 25,
  *    values 25, partner fit 20, energy 15, attraction 15). Every component is about this
@@ -12,6 +12,7 @@
  * 4. Pairing: best mutual pairs across the city, one per person per cycle.
  * 5. Learning: each debrief nudges that person's weights.
  */
+import { fitsEthnicityPref } from './ethnicity'
 import { learnType, predictAttraction, type TypeModel } from './typeLibrary'
 import { DEFAULT_WEIGHTS, type AiProfile, type AttractionData, type Basics, type PairEval, type VideoAssessment, type Weights } from './types'
 
@@ -145,6 +146,7 @@ export function basicGates(a: Member, b: Member): GateResult {
   if (!a.cityKey || a.cityKey !== b.cityKey) reasons.push('different city')
   if (!interestedIn(a, b) || !interestedIn(b, a)) reasons.push('interest')
   if (!ageFits(a, b) || !ageFits(b, a)) reasons.push('age range')
+  if (!fitsEthnicityPref(a.basics.ethnicityPref, b.basics.ethnicity) || !fitsEthnicityPref(b.basics.ethnicityPref, a.basics.ethnicity)) reasons.push('background preference')
   if (!eligibility(a).ok || !eligibility(b).ok) reasons.push('not eligible')
   if (!kidsCompatible(a, b)) reasons.push('kids')
   const ab = predictedAttraction(a, b)

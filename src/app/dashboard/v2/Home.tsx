@@ -58,6 +58,7 @@ export default function Home({ state, goTo, reload }: { state: ProfileState; goT
       <Card>
         <h2 className="text-lg font-bold text-[#1F2937]">Your profile</h2>
         <div className="mt-3 flex flex-wrap gap-2">
+          <Button variant="secondary" onClick={() => goTo('basics')}>Basics and filters</Button>
           <Button variant="secondary" onClick={() => goTo('intake')}>Continue the conversation</Button>
           <Button variant="secondary" onClick={() => { if (confirm('Start the conversation over? Your earlier answers will be replaced.')) goTo('intake', true) }}>Start it over</Button>
           {state.videoDone && <Button variant="secondary" onClick={() => goTo('video')}>Redo video</Button>}

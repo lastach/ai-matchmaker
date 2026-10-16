@@ -8,7 +8,8 @@ import {
   predictedAttraction, scorePair, updateWeights, withType, type Member,
 } from '../src/lib/v2/engine'
 import { parseJsonObject } from '../src/lib/v2/ai'
-import { EXAMPLES, examplesFor, FEATURE_VALUES, learnType, round2For } from '../src/lib/v2/typeLibrary'
+import { cleanExplicit, EXAMPLES, examplesFor, FEATURE_VALUES, featuresFor, learnType, predictAttraction, round2For } from '../src/lib/v2/typeLibrary'
+import { fitsEthnicityPref } from '../src/lib/v2/ethnicity'
 import { DEFAULT_WEIGHTS, type AttractionData, type Looks, type PairEval } from '../src/lib/v2/types'
 
 let seed = 7
@@ -144,6 +145,26 @@ const manEdgy = { ...members[1], attraction: { looks: { vibe: 'reserved', style:
 const tester = { ...members[0], type: likesWarm }
 assert.ok(predictedAttraction(tester, manWarm)! > predictedAttraction(tester, manEdgy)!, 'predicts higher attraction for their type')
 assert.ok(EXAMPLES.length >= 60 && examplesFor('x', basicsT).every((e) => e.gender === 'man'), 'examples match who they want to meet')
+
+// Stated face preferences move the prediction
+const withJaw = { ...likesWarm, explicit: cleanExplicit({ jawline: 'defined', lips: 'full', build: ['athletic'] }) }
+const base = { vibe: 'warm', style: 'casual' }
+assert.ok(predictAttraction(withJaw, { ...base, jawline: 'defined', lips: 'full', build: 'athletic' }) > predictAttraction(withJaw, { ...base, jawline: 'soft', lips: 'thin', build: 'slim' }), 'stated features raise attraction')
+assert.deepEqual(cleanExplicit({ jawline: 'weird', build: ['athletic', 'x'] }), { build: ['athletic'], hairColor: [], facialHair: [] }, 'unknown answers dropped')
+const fx = featuresFor('u1', basicsT)
+assert.equal(fx.comparisons.length, 7)
+assert.ok(fx.comparisons.every((c) => c.a.faces.length >= 2 && c.b.faces.length >= 2), 'every comparison has faces on both sides')
+assert.ok(fx.chips.some((c) => c.feature === 'facialHair'), 'facial hair offered when meeting men')
+const r1 = examplesFor('u1', { ...basicsT, ageMin: 35, ageMax: 50 })
+assert.ok(new Set(r1.map((e) => e.f.age)).size >= 3, 'round 1 spans several age bands')
+
+// Background filter (self-described, optional)
+assert.equal(fitsEthnicityPref([], undefined), true, 'no filter: open to everyone')
+assert.equal(fitsEthnicityPref(['hispanic'], ['hispanic', 'white']), true)
+assert.equal(fitsEthnicityPref(['hispanic'], ['white']), false)
+assert.equal(fitsEthnicityPref(['hispanic'], undefined), false, 'filter excludes people who did not share')
+const filt = { ...members[0], basics: { ...members[0].basics, ethnicityPref: ['east-asian'] } }
+assert.ok(basicGates(filt, members[1]).reasons.includes('background preference'))
 
 // Eligibility filter
 const notReady = { ...members[0], ai: { ...members[0].ai, readiness: { level: 4, ready: true } } }

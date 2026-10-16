@@ -6,27 +6,55 @@
  * 2. A second, shorter round shows some of the same examples with a short personality snippet: half warm and
  *    engaging, half flat. How far the ratings move with the snippet measures how much personality drives
  *    attraction for this member, versus looks.
- * 3. Each member's own photos are tagged on the same characteristics by the AI.
- * 4. Attraction from A to B is predicted from A's learned preferences applied to B's characteristics.
+ * 3. A features round shows faces side by side (face shape, eyes, jawline, nose, lips, brows,
+ *    cheekbones) and asks which they are drawn to, plus build, hair color and facial hair.
+ * 4. Each member's own photos are tagged on the same characteristics by the AI.
+ * 5. Attraction from A to B is predicted from A's learned and stated preferences applied to B's characteristics.
  */
 import library from './typeLibrary.json'
-import type { AttractionData, Basics, Looks } from './types'
+import type { AttractionData, Basics, ExplicitPrefs, Looks } from './types'
 
-export interface Example { id: string; gender: 'woman' | 'man'; src: string; pexels: number; f: Required<Looks> }
+export interface Example { id: string; gender: 'woman' | 'man'; src: string; face?: string; pexels: number; f: Required<Looks> }
 export const EXAMPLES = library as Example[]
 
-export const FEATURES: Array<keyof Looks> = ['age', 'style', 'vibe', 'build', 'hair', 'facialHair', 'glasses']
+export const FEATURES: Array<keyof Looks> = [
+  'age', 'style', 'vibe', 'build', 'hair', 'facialHair', 'glasses',
+  'faceShape', 'eyes', 'jawline', 'nose', 'lips', 'brows', 'cheekbones', 'hairColor',
+]
 export const FEATURE_VALUES: Record<keyof Looks, string[]> = {
   age: ['20s', '30s', '40s', '50s'],
   style: ['polished', 'casual', 'edgy', 'outdoorsy', 'sporty'],
   vibe: ['warm', 'reserved', 'playful'],
   build: ['slim', 'average', 'athletic', 'fuller'],
-  hair: ['long', 'medium', 'short', 'bald'],
+  hair: ['long', 'medium', 'short', 'bald', 'covered'],
   facialHair: ['none', 'stubble', 'beard'],
   glasses: ['yes', 'no'],
+  faceShape: ['oval', 'round', 'angular'],
+  eyes: ['large', 'medium', 'narrow'],
+  jawline: ['defined', 'soft'],
+  nose: ['small', 'medium', 'prominent'],
+  lips: ['full', 'medium', 'thin'],
+  brows: ['thick', 'thin'],
+  cheekbones: ['high', 'subtle'],
+  hairColor: ['black', 'brown', 'blonde', 'red', 'gray', 'none'],
 }
 
-export const ROUND1_SIZE = 24
+/** Face features compared side by side in the features round. */
+export const COMPARISONS: Array<{ feature: keyof ExplicitPrefs & keyof Looks; label: string; a: { value: string; label: string }; b: { value: string; label: string } }> = [
+  { feature: 'faceShape', label: 'Face shape', a: { value: 'round', label: 'Softer, rounder face' }, b: { value: 'angular', label: 'More angular face' } },
+  { feature: 'eyes', label: 'Eyes', a: { value: 'large', label: 'Larger, rounder eyes' }, b: { value: 'narrow', label: 'Narrower eyes' } },
+  { feature: 'jawline', label: 'Jawline', a: { value: 'defined', label: 'Defined jawline' }, b: { value: 'soft', label: 'Softer jawline' } },
+  { feature: 'nose', label: 'Nose', a: { value: 'small', label: 'Smaller nose' }, b: { value: 'prominent', label: 'More prominent nose' } },
+  { feature: 'lips', label: 'Lips', a: { value: 'full', label: 'Fuller lips' }, b: { value: 'thin', label: 'Thinner lips' } },
+  { feature: 'brows', label: 'Eyebrows', a: { value: 'thick', label: 'Thicker brows' }, b: { value: 'thin', label: 'Thinner brows' } },
+  { feature: 'cheekbones', label: 'Cheekbones', a: { value: 'high', label: 'High cheekbones' }, b: { value: 'subtle', label: 'Softer cheekbones' } },
+]
+
+/** Closest neighbor when a side has too few examples (for example, few men are tagged with a small nose). */
+const FALLBACK: Record<string, string> = { small: 'medium', large: 'medium', narrow: 'medium', full: 'medium', thin: 'medium', round: 'oval', angular: 'oval' }
+const OPPOSITE: Record<string, Record<string, string>> = Object.fromEntries(COMPARISONS.map((c) => [c.feature, { [c.a.value]: c.b.value, [c.b.value]: c.a.value }]))
+
+export const ROUND1_SIZE = 30
 export const ROUND2_SIZE = 12
 export const DEFAULT_PERSONALITY_WEIGHT = 0.3
 
@@ -81,8 +109,70 @@ export function examplesFor(userId: string, basics: Basics): Example[] {
   }
   let pool = EXAMPLES.filter(fits)
   // Too few in their age range: widen to everyone of the right gender.
-  if (pool.length < 12) pool = EXAMPLES.filter((e) => any || wants.includes(e.gender === 'woman' ? 'women' : 'men'))
-  return [...pool].sort((x, y) => hash(userId + x.id) - hash(userId + y.id)).slice(0, ROUND1_SIZE)
+  if (pool.length < 16) pool = EXAMPLES.filter((e) => any || wants.includes(e.gender === 'woman' ? 'women' : 'men'))
+  // Spread the set across age bands and builds so every member sees a varied range of people.
+  const shuffled = [...pool].sort((x, y) => hash(userId + x.id) - hash(userId + y.id))
+  const groups = new Map<string, Example[]>()
+  for (const e of shuffled) {
+    const k = `${e.f.age}|${e.f.build}`
+    if (!groups.has(k)) groups.set(k, [])
+    groups.get(k)!.push(e)
+  }
+  const out: Example[] = []
+  const queues = [...groups.values()]
+  while (out.length < ROUND1_SIZE && queues.some((q) => q.length)) {
+    for (const q of queues) {
+      const e = q.shift()
+      if (e) out.push(e)
+      if (out.length >= ROUND1_SIZE) break
+    }
+  }
+  return out
+}
+
+/** Who this member wants to meet, for the features round. */
+function wantedExamples(basics: Basics): Example[] {
+  const wants = (basics.interestedIn || []).map((x) => String(x).toLowerCase())
+  const any = wants.includes('anyone') || wants.includes('nonbinary') || wants.length === 0
+  return EXAMPLES.filter((e) => e.face && (any || wants.includes(e.gender === 'woman' ? 'women' : 'men')))
+}
+
+/** Features round: for each face feature, three faces on each side. */
+export function featuresFor(userId: string, basics: Basics) {
+  const pool = wantedExamples(basics)
+  const pick = (feature: keyof Looks, value: string, salt: string) => {
+    let xs = pool.filter((e) => e.f[feature] === value)
+    if (xs.length < 2 && FALLBACK[value]) xs = pool.filter((e) => e.f[feature] === FALLBACK[value])
+    return xs.sort((x, y) => hash(userId + salt + x.id) - hash(userId + salt + y.id)).slice(0, 3).map((e) => e.face as string)
+  }
+  const wantsMen = pool.some((e) => e.gender === 'man')
+  return {
+    comparisons: COMPARISONS.map((c) => ({
+      feature: c.feature,
+      label: c.label,
+      a: { ...c.a, faces: pick(c.feature, c.a.value, 'a' + c.feature) },
+      b: { ...c.b, faces: pick(c.feature, c.b.value, 'b' + c.feature) },
+    })),
+    chips: [
+      { feature: 'build', label: 'Build', options: ['slim', 'average', 'athletic', 'fuller'] },
+      { feature: 'hairColor', label: 'Hair color', options: ['black', 'brown', 'blonde', 'red', 'gray'] },
+      ...(wantsMen ? [{ feature: 'facialHair', label: 'Facial hair', options: ['none', 'stubble', 'beard'] }] : []),
+    ],
+  }
+}
+
+/** Keep only answers that name a real option. */
+export function cleanExplicit(raw: any): ExplicitPrefs {
+  const out: ExplicitPrefs = {}
+  for (const c of COMPARISONS) {
+    const v = String(raw?.[c.feature] ?? '')
+    if (v === 'none' || v === c.a.value || v === c.b.value) (out as any)[c.feature] = v
+  }
+  for (const f of ['build', 'hairColor', 'facialHair'] as const) {
+    const list = Array.isArray(raw?.[f]) ? raw[f].map(String).filter((v: string) => FEATURE_VALUES[f].includes(v)) : []
+    out[f] = [...new Set(list)] as string[]
+  }
+  return out
 }
 
 /** Round 2: some of the round 1 examples, each paired with a warm or flat snippet (balanced). */
@@ -97,10 +187,15 @@ export function round2For(userId: string, basics: Basics): Array<{ example: Exam
 
 export interface TypeModel {
   mean: number // average photo rating, 1..5
-  prefs: Record<string, number> // "feature:value" -> rating shift
+  prefs: Record<string, number> // "feature:value" -> rating shift, learned from their ratings
+  explicit: ExplicitPrefs // what they said they are drawn to in the features round
   personalityWeight: number // 0..1, how much personality moved their ratings
   n: number
 }
+
+export const EXPLICIT_FACE_WEIGHT = 0.5 // rating points for a face feature they picked (minus for its opposite)
+export const EXPLICIT_LIST_BONUS = 0.3 // build, hair color, facial hair they picked
+export const EXPLICIT_LIST_PENALTY = 0.4 // when they picked some and this person has none of them
 
 /** Learn what this member is drawn to from their ratings of the examples. */
 export function learnType(data: AttractionData | undefined): TypeModel | null {
@@ -134,7 +229,7 @@ export function learnType(data: AttractionData | undefined): TypeModel | null {
     const avg = (xs: number[]) => xs.reduce((s, x) => s + x, 0) / xs.length
     personalityWeight = Math.max(0, Math.min(1, (avg(warm) - avg(flat)) / 2))
   }
-  return { mean, prefs, personalityWeight, n: rated.length }
+  return { mean, prefs, explicit: data?.explicit || {}, personalityWeight, n: rated.length }
 }
 
 /** Predicted 1..5 rating from this member's type, applied to someone's looks. */
@@ -143,6 +238,20 @@ export function predictAttraction(model: TypeModel, looks: Looks): number {
   for (const f of FEATURES) {
     const v = looks[f]
     if (v) shift += model.prefs[`${f}:${v}`] || 0
+  }
+  const ex = model.explicit || {}
+  for (const c of COMPARISONS) {
+    const want = (ex as any)[c.feature] as string | undefined
+    const v = looks[c.feature]
+    if (!want || want === 'none' || !v) continue
+    if (v === want) shift += EXPLICIT_FACE_WEIGHT
+    else if (OPPOSITE[c.feature]?.[want] === v) shift -= EXPLICIT_FACE_WEIGHT
+  }
+  for (const f of ['build', 'hairColor', 'facialHair'] as const) {
+    const list = ex[f] || []
+    const v = looks[f]
+    if (!list.length || !v) continue
+    shift += list.includes(v) ? EXPLICIT_LIST_BONUS : -EXPLICIT_LIST_PENALTY
   }
   return Math.max(1, Math.min(5, model.mean + shift))
 }

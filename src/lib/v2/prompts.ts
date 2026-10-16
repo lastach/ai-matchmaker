@@ -135,14 +135,22 @@ Describe only these visible characteristics, choosing exactly one value for each
 - style: "polished" | "casual" | "edgy" | "outdoorsy" | "sporty"
 - vibe: "warm" | "reserved" | "playful" (how they come across in the photo)
 - build: "slim" | "average" | "athletic" | "fuller"
-- hair: "long" | "medium" | "short" | "bald"
+- hair: "long" | "medium" | "short" | "bald" | "covered"
+- hairColor: "black" | "brown" | "blonde" | "red" | "gray" | "none"
 - facialHair: "none" | "stubble" | "beard"
 - glasses: "yes" | "no"
+- faceShape: "oval" | "round" | "angular"
+- eyes: "large" | "medium" | "narrow" (how large and open the eyes look)
+- jawline: "defined" | "soft"
+- nose: "small" | "medium" | "prominent"
+- lips: "full" | "medium" | "thin"
+- brows: "thick" | "thin"
+- cheekbones: "high" | "subtle"
 
-Never describe or infer race, ethnicity, skin color, religion or any other protected trait, and never rate attractiveness.
+Judge each feature relative to typical adult faces, as a neutral description. Never describe or infer race, ethnicity, skin color, religion or any other protected trait, and never rate attractiveness.
 Also report whether the first photo clearly shows one person's face (clearFace), and a short note if it does not.
 
 Never use em dashes or en dashes; use commas or periods instead.
 
 Return ONLY JSON:
-{"age":"...","style":"...","vibe":"...","build":"...","hair":"...","facialHair":"...","glasses":"...","clearFace":true,"note":""}`
+{"age":"...","style":"...","vibe":"...","build":"...","hair":"...","hairColor":"...","facialHair":"...","glasses":"...","faceShape":"...","eyes":"...","jawline":"...","nose":"...","lips":"...","brows":"...","cheekbones":"...","clearFace":true,"note":""}`

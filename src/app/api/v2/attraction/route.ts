@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { errorResponse, loadProfile, requireUser, saveProfile } from '@/lib/v2/server'
-import { examplesFor, round2For } from '@/lib/v2/typeLibrary'
+import { cleanExplicit, examplesFor, featuresFor, round2For } from '@/lib/v2/typeLibrary'
 
 export const runtime = 'nodejs'
 
@@ -9,9 +9,12 @@ export const runtime = 'nodejs'
  * Round 1: example photos alone, to learn the look they are drawn to.
  * Round 2: some of the same people with a short personality snippet, to measure how much
  * personality moves them versus looks.
+ * Features: faces side by side (face shape, eyes, jawline, nose, lips, brows, cheekbones), plus build,
+ * hair color and facial hair, so members can say directly what draws them in.
  *
- * GET -> { stage: 'photo' | 'about' | 'done', items: [{ id, src, snippet? }], done, total }
+ * GET -> { stage: 'photo' | 'about' | 'features' | 'done', items, features?, done, total }
  * POST { exampleId, stage, rating (1..5) }
+ * POST { stage: 'features', answers }
  * POST { finish: true } -> marks the step done
  */
 export async function GET() {
@@ -32,6 +35,9 @@ export async function GET() {
     if (todo2.length) {
       return NextResponse.json({ stage: 'about', items: todo2.map((x) => ({ id: x.example.id, src: x.example.src, snippet: x.snippet })), done: total - todo2.length, total })
     }
+    if (!p.attraction?.explicitDone) {
+      return NextResponse.json({ stage: 'features', items: [], features: featuresFor(auth.user.id, p.basics), done: total, total })
+    }
     return NextResponse.json({ stage: 'done', items: [], done: total, total })
   } catch (e) {
     return errorResponse(e)
@@ -50,6 +56,13 @@ export async function POST(req: Request) {
     if (body.finish) {
       attraction.done = true
       await saveProfile(svc, auth.user.id, { attraction, ...(p.step === 'type' ? { step: 'ready' } : {}) })
+      return NextResponse.json({ ok: true })
+    }
+
+    if (body.stage === 'features') {
+      attraction.explicit = cleanExplicit(body.answers)
+      attraction.explicitDone = true
+      await saveProfile(svc, auth.user.id, { attraction })
       return NextResponse.json({ ok: true })
     }
 

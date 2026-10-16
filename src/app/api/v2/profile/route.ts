@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { ageFrom, cityKey, COHORT_THRESHOLD, errorResponse, loadProfile, requireUser, saveProfile } from '@/lib/v2/server'
 import { COVERAGE_AREAS } from '@/lib/v2/prompts'
 import type { Basics } from '@/lib/v2/types'
+import { cleanEthnicityList } from '@/lib/v2/ethnicity'
 
 export const runtime = 'nodejs'
 
@@ -60,6 +61,8 @@ export async function POST(req: Request) {
       const hi = Math.max(lo, Number(b.ageMax) || 99)
       b.ageMin = lo
       b.ageMax = hi
+      b.ethnicity = cleanEthnicityList(b.ethnicity)
+      b.ethnicityPref = cleanEthnicityList(b.ethnicityPref)
       // Kept so the matchmaker can tell members when matching opens in their city.
       b.email = auth.user.email || b.email
       patch.basics = b

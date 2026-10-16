@@ -76,7 +76,9 @@ function MemberAreaInner({ area }: { area: 'start' | 'dashboard' }) {
       if (restart) {
         await api('/api/v2/intake', { method: 'POST', body: JSON.stringify({ restart: true }) });
       }
-      if (restart || step !== 'intake' || !state?.intakeComplete) {
+      // Editing basics or continuing the conversation after onboarding only changes the view.
+      const viewOnly = !restart && state?.intakeComplete && (step === 'intake' || step === 'basics')
+      if (!viewOnly) {
         await api('/api/v2/profile', { method: 'POST', body: JSON.stringify({ step }) });
       }
       await reload();
