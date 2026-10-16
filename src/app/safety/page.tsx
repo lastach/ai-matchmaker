@@ -1,47 +1,31 @@
-import Link from 'next/link'
 import MarketingHeader from '@/components/MarketingHeader'
 import MarketingFooter from '@/components/MarketingFooter'
-export const metadata = { title: 'Safety - Amorlay' }
+export const metadata = { title: 'Safety | Amorlay' }
+
+const ITEMS: Array<[string, string]> = [
+  ['A person reviews every match', 'The AI scores possible matches, and a person reviews each one before it goes out. Nobody is introduced automatically.'],
+  ['First dates are in public', 'Every first date is planned at a public place. Meet there, tell a friend where you will be, and leave whenever you want to.'],
+  ['What your match sees', 'Your first name, age, one photo and a two line “about you”. Your full conversation is never shared with another member.'],
+  ['Reporting', 'If anything about a date felt unsafe, tell your date coach in the debrief or email support@amorlay.com. A person reads every report, and that member is not matched again while we look into it.'],
+  ['If you are going through something hard', 'If you mention being in danger or thoughts of harming yourself during the conversation, it pauses and points you to the 988 Suicide and Crisis Lifeline (call or text 988) and the National Domestic Violence Hotline (1-800-799-7233). None of that is used for matching.'],
+  ['What we do not do yet', 'During early access there is no ID verification and no background check. Use the same care you would with anyone you have not met.'],
+]
+
 export default function Safety() {
   return (
     <>
-      <main className="min-h-screen bg-white">
       <MarketingHeader />
-      <section className="max-w-3xl mx-auto px-6 py-16">
-        <h1 className="text-4xl font-bold text-gray-900 mb-3">Safety</h1>
-        <p className="text-lg text-gray-600 mb-10">Matchmaking takes deeply personal disclosures. Here is how we handle them, and where we are vs. where we still need to be.</p>
-        <div className="space-y-8 text-sm text-gray-800 leading-relaxed">
-          <div>
-            <h2 className="text-lg font-semibold mb-2">Verification (we are building this)</h2>
-            <p>Every Amorlay account at GA will go through ID verification (gov ID + selfie liveness check) and photo verification (selfies cross-checked against profile photos) before any match is delivered. During the early access, accounts are email-verified only - no IDs. We do not deliver matches during early access without manual matchmaker review.</p>
+      <main className="min-h-screen bg-white">
+        <section className="max-w-3xl mx-auto px-6 py-16">
+          <h1 className="text-4xl font-bold text-gray-900 mb-3">Safety</h1>
+          <p className="text-lg text-gray-600 mb-10">How we handle what you share, and how dates are set up.</p>
+          <div className="space-y-8 text-[15px] text-gray-800 leading-7">
+            {ITEMS.map(([h, p]) => (
+              <div key={h}><h2 className="text-lg font-semibold mb-2">{h}</h2><p>{p}</p></div>
+            ))}
           </div>
-          <div>
-            <h2 className="text-lg font-semibold mb-2">Who is "the I" you are talking to</h2>
-            <p>The conversational intake is an AI built on Anthropic's Claude. It reads your answers carefully and writes back specific reactions. A human matchmaker reviews every match before it is sent - the AI does not introduce people on its own.</p>
-          </div>
-          <div>
-            <h2 className="text-lg font-semibold mb-2">What gets shared with your match</h2>
-            <p>Only the brief - a 1-page summary of why we paired you, written in our voice. Your raw intake answers are never shared with another user without your explicit consent. First names only until you both opt in to fuller disclosure.</p>
-          </div>
-          <div>
-            <h2 className="text-lg font-semibold mb-2">Reporting and blocking</h2>
-            <p>Every match has Report and Block buttons. Reports go to a human within 24 hours. Confirmed bad-faith behavior results in account closure with no refund. We share with law enforcement only when legally compelled.</p>
-          </div>
-          <div>
-            <h2 className="text-lg font-semibold mb-2">Crisis disclosure handling</h2>
-            <p>If you disclose self-harm, suicidal ideation, or active abuse during intake, the conversation pauses and we provide direct links to 988 (US Suicide and Crisis Lifeline), the National Domestic Violence Hotline (1-800-799-7233), and the Crisis Text Line (text HOME to 741741). We never use crisis disclosures in your match brief.</p>
-          </div>
-          <div>
-            <h2 className="text-lg font-semibold mb-2">Background checks (we do not do these)</h2>
-            <p>Amorlay does not run criminal background checks on users. We are not a substitute for caution on a first date - meet in public, tell a friend, trust your gut. We will surface warning signals from our own system (multiple reports, inconsistent intake answers) but cannot guarantee anyone's character.</p>
-          </div>
-          <div>
-            <h2 className="text-lg font-semibold mb-2">Honest read on where we are</h2>
-            <p>Amorlay is in early access. ID verification, photo verification, and the human matchmaker review queue are scaffolded but not all live yet. We are honest about this; we will not deliver matches before the safety floor is in place.</p>
-          </div>
-        </div>
-      </section>
-    </main>
+        </section>
+      </main>
       <MarketingFooter />
     </>
   )

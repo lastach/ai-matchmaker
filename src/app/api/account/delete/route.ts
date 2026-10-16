@@ -1,54 +1,37 @@
 import { NextResponse } from 'next/server'
-import { createServerClient, type CookieOptions } from '@supabase/ssr'
-import { cookies } from 'next/headers'
-import { createClient } from '@supabase/supabase-js'
+import { CLIP_BUCKET, PHOTO_BUCKET, requireUser, saveProfile, emptyProfile } from '@/lib/v2/server'
+
+export const runtime = 'nodejs'
 
 /**
  * POST /api/account/delete
- * Permanently deletes the user's account + all their data.
- * GDPR/CCPA requirement. Idempotent: if user is already gone, returns ok.
+ * Removes the member's Amorlay data with their own session: photos and intro clip
+ * (files and rows), and the profile is wiped back to empty so it drops out of every
+ * pool and match run. The sign-in itself is shared with other apps on this auth project,
+ * so it is left in place.
  */
 export async function POST() {
-  const cookieStore = await cookies()
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        get(name: string) { return cookieStore.get(name)?.value },
-        set(name: string, value: string, options: CookieOptions) {
-          try { cookieStore.set({ name, value, ...options }) } catch {}
-        },
-        remove(name: string, options: CookieOptions) {
-          try { cookieStore.set({ name, value: '', ...options }) } catch {}
-        },
-      },
-    }
-  )
-
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return NextResponse.json({ error: 'not authenticated' }, { status: 401 })
-
-  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
-  if (!serviceKey) {
-    return NextResponse.json({
-      error: 'Server is missing SUPABASE_SERVICE_ROLE_KEY. Account deletion is currently unavailable. Please email support@amorlay.com to request manual deletion.',
-    }, { status: 500 })
-  }
-
-  const admin = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, serviceKey)
-  // Remove the optional intro clip; database rows cascade with the auth user.
+  const auth = await requireUser()
+  if (auth instanceof NextResponse) return auth
+  const svc = auth.session
+  const uid = auth.user.id
   try {
-    const { data: clips } = await admin.storage.from('amorlay-clips').list(user.id, { limit: 100 })
-    if (clips?.length) await admin.storage.from('amorlay-clips').remove(clips.map((f) => `${user.id}/${f.name}`))
-  } catch {}
-  const { error: delErr } = await admin.auth.admin.deleteUser(user.id)
-  if (delErr) {
-    return NextResponse.json({ error: delErr.message }, { status: 500 })
+    for (const bucket of [PHOTO_BUCKET, CLIP_BUCKET]) {
+      for (const folder of [uid, `${uid}/profile`]) {
+        const { data: files } = await svc.storage.from(bucket).list(folder, { limit: 100 })
+        const paths = (files || []).filter((f) => f.id).map((f) => `${folder}/${f.name}`)
+        if (paths.length) await svc.storage.from(bucket).remove(paths)
+      }
+    }
+    await svc.from('matchmaker_photos').delete().eq('user_id', uid)
+    const blank = emptyProfile(uid)
+    await saveProfile(svc, uid, {
+      step: 'basics', basics: {}, city_key: null, conversation: [], ai_profile: {}, video: {},
+      clip_path: null, share_clip: false, weights: blank.weights, intake_complete: false,
+    })
+    await svc.auth.signOut().catch(() => {})
+    return NextResponse.json({ ok: true })
+  } catch (e: any) {
+    return NextResponse.json({ error: e?.message || 'Could not delete your data.' }, { status: 500 })
   }
-
-  // Sign the now-deleted user out of this session
-  try { await supabase.auth.signOut() } catch {}
-
-  return NextResponse.json({ ok: true, deleted: user.id })
 }

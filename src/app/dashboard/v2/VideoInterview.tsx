@@ -81,7 +81,7 @@ export default function VideoInterview({ onDone, onSkip }: { onDone: () => void;
       const rec = new SR()
       rec.continuous = true
       rec.interimResults = false
-      rec.lang = 'en-US'
+      rec.lang = navigator.language || 'en-US'
       rec.onresult = (e: any) => {
         for (let i = e.resultIndex; i < e.results.length; i++) if (e.results[i].isFinal) transcriptRef.current += e.results[i][0].transcript + ' '
       }
@@ -136,7 +136,7 @@ export default function VideoInterview({ onDone, onSkip }: { onDone: () => void;
     try {
       if (shareClip && clip && clip.size > 0) {
         try {
-          const up = await api<{ path: string; token: string; bucket: string }>('/api/v2/video/clip')
+          const up = await api<{ path: string; token: string; bucket: string }>(`/api/v2/video/clip?ext=${/mp4/.test(clip.type) ? 'mp4' : 'webm'}`)
           const { error: upErr } = await supabase.storage.from(up.bucket).uploadToSignedUrl(up.path, up.token, clip, { contentType: clip.type || 'video/webm' })
           if (!upErr) await api('/api/v2/video/clip', { method: 'POST', body: JSON.stringify({ path: up.path }) })
         } catch {

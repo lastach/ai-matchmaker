@@ -11,12 +11,13 @@ export const runtime = 'nodejs'
  * POST body: { path } -> records the uploaded clip on the profile
  * DELETE -> removes the clip
  */
-export async function GET() {
+export async function GET(req: Request) {
   const auth = await requireUser()
   if (auth instanceof NextResponse) return auth
   const svc = auth.session
   try {
-    const path = `${auth.user.id}/intro-${crypto.randomUUID()}.webm`
+    const ext = new URL(req.url).searchParams.get('ext') === 'mp4' ? 'mp4' : 'webm'
+    const path = `${auth.user.id}/intro-${crypto.randomUUID()}.${ext}`
     const r = await svc.storage.from(CLIP_BUCKET).createSignedUploadUrl(path)
     if (r.error || !r.data) return NextResponse.json({ error: r.error?.message || 'upload unavailable' }, { status: 500 })
     return NextResponse.json({ path: r.data.path, token: r.data.token, bucket: CLIP_BUCKET })

@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { supabase } from '@/lib/supabase'
 import AttractionRound from './AttractionRound'
 import DateCard, { type Match } from './DateCard'
 import { api, Button, Card, ErrorNote } from './ui'
@@ -81,13 +82,13 @@ export default function Home({ state, goTo, reload }: { state: ProfileState; goT
           <button
             className="mt-2 text-[#B42318] underline"
             onClick={async () => {
-              if (!confirm('Permanently delete your account and all your data? This cannot be undone.')) return
+              if (!confirm('Delete your Amorlay profile, conversation, photos and video? This cannot be undone.')) return
               const r = await fetch('/api/account/delete', { method: 'POST', credentials: 'include' })
-              if (r.ok) window.location.href = '/'
-              else alert('Could not delete your account. Please contact support.')
+              if (r.ok) { await supabase.auth.signOut().catch(() => {}); window.location.href = '/' }
+              else setError('Could not delete your data. Please email support@amorlay.com.')
             }}
           >
-            Delete my account and all my data
+            Delete my profile and all my data
           </button>
         </details>
         <ErrorNote error={error} />

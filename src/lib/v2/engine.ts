@@ -166,8 +166,28 @@ export function flipEval(ev: PairEval): PairEval {
 export type Components = Record<Component, number> // each 0..1
 
 /** Components from a's point of view of b. Must-haves met by b count fully; no extra credit beyond "good enough". */
+/**
+ * Share of a's must-haves that b meets, weighted by a's own ranking: with n items,
+ * rank 1 counts n times as much as rank n.
+ */
+export function mustHavesMet(a: Member, list: PairEval['aMustHaves']): number {
+  if (!list.length) return 0.7
+  const own = a.ai.mustHaves || []
+  const n = list.length
+  let total = 0
+  let got = 0
+  list.forEach((m, i) => {
+    const o = own.find((x) => x.item === m.item)
+    const rank = typeof o?.rank === 'number' && o.rank >= 1 ? Math.min(o.rank, n) : Math.min(i + 1, n)
+    const w = n - rank + 1
+    total += w
+    got += w * Math.max(0, Math.min(1, m.met))
+  })
+  return total ? got / total : 0.7
+}
+
 export function directionalComponents(a: Member, b: Member, ev: PairEval, ratings: RatingMap): Components {
-  const met = ev.aMustHaves.length ? ev.aMustHaves.reduce((s, m) => s + Math.max(0, Math.min(1, m.met)), 0) / ev.aMustHaves.length : 0.7
+  const met = mustHavesMet(a, ev.aMustHaves)
   const r = attractionRating(ratings[a.id]?.[b.id])
   return {
     mustHaves: met,

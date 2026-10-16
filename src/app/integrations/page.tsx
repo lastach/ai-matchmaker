@@ -1,6 +1,6 @@
 import MarketingHeader from '@/components/MarketingHeader'
 import MarketingFooter from '@/components/MarketingFooter'
-export const metadata = { title: 'Integrations - Amorlay' }
+export const metadata = { title: 'Integrations | Amorlay' }
 
 export default function Page() {
   return (

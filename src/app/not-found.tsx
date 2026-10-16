@@ -2,7 +2,7 @@ import Link from 'next/link'
 import MarketingHeader from '@/components/MarketingHeader'
 import MarketingFooter from '@/components/MarketingFooter'
 
-export const metadata = { title: 'Page not found - Amorlay' }
+export const metadata = { title: 'Page not found | Amorlay' }
 
 export default function NotFound() {
   return (

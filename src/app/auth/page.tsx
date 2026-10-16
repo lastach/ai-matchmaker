@@ -1,80 +1,85 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { createClient } from '@supabase/supabase-js'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { supabase } from '@/lib/supabase'
 
-function getSupabase() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL || '',
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
-  )
+/** Where to go after signing in: a same-site path from ?next=, otherwise onboarding. */
+function nextPath(): string {
+  if (typeof window === 'undefined') return '/start'
+  const n = new URLSearchParams(window.location.search).get('next') || ''
+  return n.startsWith('/') && !n.startsWith('//') ? n : '/start'
+}
+
+function friendly(msg: string): string {
+  if (/invalid login credentials/i.test(msg)) return 'That email and password don’t match. Check both and try again.'
+  if (/already registered|already exists/i.test(msg)) return 'There’s already an account with this email. Sign in instead.'
+  if (/password should be at least|weak password/i.test(msg)) return 'Use a password of at least 8 characters.'
+  if (/rate limit|too many/i.test(msg)) return 'Too many tries. Wait a minute and try again.'
+  return msg
 }
 
 export default function AuthPage() {
+  const router = useRouter()
+  const [isSignUp, setIsSignUp] = useState(false)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [isSignUp, setIsSignUp] = useState(false) // Hydration-safe: server renders with false, useEffect re-reads URL post-mount and flips if ?signup=1
-
-  // Robust signup default: re-read the URL after mount in case the lazy
-  // initializer was hydrated from server state where window was unavailable.
-  useEffect(() => {
-    if (typeof window === 'undefined') return
-    const wantsSignup = new URLSearchParams(window.location.search).get('signup') === '1'
-    if (wantsSignup) setIsSignUp(true)
-  }, [])
   const [error, setError] = useState('')
   const [message, setMessage] = useState('')
   const [loading, setLoading] = useState(false)
-  const router = useRouter()
 
-  async function handleMagicSignIn() {
-    setError('')
-    setMessage('')
-    if (!email) { setError('Enter your email first.'); return }
-    setLoading(true)
-    try {
-      const { error } = await getSupabase().auth.signInWithOtp({
-        email,
-        options: {
-          shouldCreateUser: false,
-          emailRedirectTo: typeof window !== 'undefined' ? window.location.origin + '/dashboard' : undefined,
-        },
-      })
-      if (error) throw error
-      setMessage('Check your email - we sent you a one-click sign-in link.')
-    } catch (err: any) {
-      const msg = (err && err.message) || 'Could not send sign-in link'
-      setError(msg)
-    } finally {
-      setLoading(false)
-    }
-  }
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get('signup') === '1') setIsSignUp(true)
+    // Already signed in: skip the form.
+    supabase.auth.getSession().then(({ data }) => { if (data.session) router.replace(nextPath()) })
+  }, [router])
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError('')
     setMessage('')
+    if (isSignUp && password.length < 8) { setError('Use a password of at least 8 characters.'); return }
     setLoading(true)
     try {
       if (isSignUp) {
-        // Magic-link signup. The link in the email confirms + signs in at once. No password.
-        const { error } = await getSupabase().auth.signInWithOtp({
-          email,
-          options: {
-            shouldCreateUser: true,
-            emailRedirectTo: typeof window !== 'undefined' ? window.location.origin + '/dashboard' : undefined,
-          },
+        const { data, error } = await supabase.auth.signUp({
+          email: email.trim(),
+          password,
+          options: { emailRedirectTo: window.location.origin + '/start' },
         })
         if (error) throw error
-        setMessage('Check your email - we sent you a one-click sign-in link. No password needed.')
+        // An existing email comes back as a user with no identities.
+        if (data.user && Array.isArray(data.user.identities) && data.user.identities.length === 0) {
+          throw new Error('already exists')
+        }
+        if (data.session) { router.push(nextPath()); return }
+        setMessage('Check your email to confirm your account, then sign in.')
       } else {
-        const { error } = await getSupabase().auth.signInWithPassword({ email, password })
+        const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password })
         if (error) throw error
-        router.push('/dashboard')
+        router.push(nextPath())
       }
     } catch (err: any) {
-      setError(err.message || 'Something went wrong')
+      setError(friendly(err?.message || 'Something went wrong'))
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  async function emailLink() {
+    setError('')
+    setMessage('')
+    if (!email.trim()) { setError('Enter your email first.'); return }
+    setLoading(true)
+    try {
+      const { error } = await supabase.auth.signInWithOtp({
+        email: email.trim(),
+        options: { shouldCreateUser: false, emailRedirectTo: window.location.origin + nextPath() },
+      })
+      if (error) throw error
+      setMessage('Check your email for a sign-in link.')
+    } catch {
+      setError('We couldn’t email a link to this address. Sign in with your password.')
     } finally {
       setLoading(false)
     }
@@ -82,104 +87,45 @@ export default function AuthPage() {
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-rose-50 to-white flex items-center justify-center">
-      <div className="w-full max-w-sm mx-auto px-6">
-        <a href="/" aria-label="Amorlay home" className="block mb-3 flex justify-center"><img src="/logo.svg" alt="Amorlay" className="h-10" /></a><h1 className="text-2xl font-semibold text-[#3D1820] mb-2 text-center">Amorlay</h1>
-                <p className="text-gray-500 text-sm mb-8 text-center">{isSignUp ? 'One match. One memo. One date. Free during early access.' : 'Sign in to continue. New here? Use the Sign up link below.'}</p>
-        <button
-          type="button"
-          onClick={async () => {
-            setError('');
-            setLoading(true);
-            try {
-              const { data, error } = await getSupabase().auth.signInWithOAuth({
-                provider: 'google',
-                options: {
-                  redirectTo: typeof window !== 'undefined' ? window.location.origin + '/dashboard' : undefined,
-                  skipBrowserRedirect: true,
-                },
-              });
-              if (error) throw error;
-              if (!data?.url) throw new Error('Could not start Google sign-in');
-              // Pre-flight: detect provider-not-enabled before navigating
-              try {
-                const head = await fetch(data.url, { method: 'HEAD', redirect: 'manual' });
-                // Supabase returns 400 with JSON when provider is not enabled
-                if (head.status >= 400 && head.status < 500) {
-                  throw new Error('Google sign-in is not yet enabled. Use email + password for now, or contact support.');
-                }
-              } catch (preflightErr: any) {
-                if (preflightErr?.message?.includes('Google sign-in is not yet enabled')) throw preflightErr;
-                // Network/CORS error on preflight is OK; proceed to redirect
-              }
-              if (typeof window !== 'undefined') window.location.href = data.url;
-            } catch (err: any) {
-              setError(err?.message || 'Could not start Google sign-in');
-            } finally {
-              setLoading(false);
-            }
-          }}
-          disabled={loading}
-          className="w-full mb-4 flex items-center justify-center gap-2 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 py-2.5 rounded-lg font-medium text-sm transition disabled:opacity-50"
-        >
-          <svg className="w-4 h-4" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-            <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-            <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-            <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC04"/>
-            <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-          </svg>
-          Continue with Google
-        </button>
-        <div className="flex items-center gap-3 mb-4">
-          <div className="flex-1 h-px bg-gray-200"></div>
-          <span className="text-xs text-gray-400 uppercase tracking-wide">or</span>
-          <div className="flex-1 h-px bg-gray-200"></div>
-        </div>
+      <div className="w-full max-w-sm mx-auto px-6 py-10">
+        <a href="/" aria-label="Amorlay home" className="mb-6 flex justify-center"><img src="/logo.svg" alt="Amorlay" className="h-10" /></a>
+        <h1 className="text-2xl font-semibold text-[#3D1820] mb-2 text-center">{isSignUp ? 'Create your account' : 'Welcome back'}</h1>
+        <p className="text-gray-500 text-sm mb-8 text-center">{isSignUp ? 'Free during early access. 18+ only.' : 'Sign in to continue.'}</p>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
-          {isSignUp && (
-            <p className="text-xs text-gray-500 bg-rose-50 border border-rose-100 rounded-md px-3 py-2">No password needed to sign up. We'll email you a one-click sign-in link.</p>
-          )}
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-rose-300" placeholder="you@example.com" />
+            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+            <input id="email" type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} required
+              className="w-full px-3 py-2.5 border rounded-lg text-base focus:outline-none focus:ring-2 focus:ring-rose-300" placeholder="you@example.com" />
           </div>
-          {!isSignUp && (
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
-              <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} className="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-rose-300" placeholder="Min 6 characters" />
-            </div>
-          )}
-          {!isSignUp && (
-            <button
-              type="button"
-              onClick={handleMagicSignIn}
-              disabled={loading}
-              className="text-xs text-gray-500 hover:text-gray-700 underline text-center w-full disabled:opacity-50"
-            >
-              Or send me a one-click sign-in link instead
-            </button>
-          )}
-          <div role="status" aria-live="polite" className="min-h-[3rem]">
-            {loading && !error && !message && (
-              <p className="text-gray-600 text-sm flex items-center justify-center gap-2">
-                <span className="inline-block w-3.5 h-3.5 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" aria-hidden="true" />
-                <span>{isSignUp ? 'Sending you a sign-in link...' : 'Signing you in...'}</span>
-              </p>
-            )}
-            {message && (
-              <div className="bg-green-50 border border-green-200 rounded-md px-3 py-2.5 text-sm text-green-800">{message}</div>
-            )}
-            {error && (
-              <p className="text-red-600 text-sm">{error}</p>
-            )}
+          <div>
+            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+            <input id="password" type="password" autoComplete={isSignUp ? 'new-password' : 'current-password'} value={password}
+              onChange={(e) => setPassword(e.target.value)} required minLength={isSignUp ? 8 : 6}
+              className="w-full px-3 py-2.5 border rounded-lg text-base focus:outline-none focus:ring-2 focus:ring-rose-300"
+              placeholder={isSignUp ? 'At least 8 characters' : 'Your password'} />
           </div>
-          <button type="submit" disabled={loading} className="w-full bg-[#3D1820] text-white py-2.5 rounded-lg font-medium text-sm hover:bg-[#2a0f16] transition disabled:opacity-50">{loading ? 'Please wait...' : isSignUp ? 'Create Account' : 'Sign In'}</button>
+          <div role="status" aria-live="polite" className="min-h-[1.5rem]">
+            {message && <div className="bg-green-50 border border-green-200 rounded-md px-3 py-2.5 text-sm text-green-800">{message}</div>}
+            {error && <p className="text-red-600 text-sm">{error}</p>}
+          </div>
+          <button type="submit" disabled={loading} className="w-full bg-[#3D1820] text-white py-3 rounded-lg font-medium hover:bg-[#2a0f16] transition disabled:opacity-50">
+            {loading ? 'One moment…' : isSignUp ? 'Create account' : 'Sign in'}
+          </button>
         </form>
+        {!isSignUp && (
+          <button type="button" onClick={emailLink} disabled={loading} className="mt-3 w-full text-xs text-gray-500 hover:text-gray-700 underline disabled:opacity-50">
+            Email me a sign-in link instead
+          </button>
+        )}
+
         <p className="text-center text-sm text-gray-500 mt-6">
-          {isSignUp ? 'Already have an account?' : "Don't have an account?"}{' '}
-          <button onClick={() => { setIsSignUp(!isSignUp); setError(''); setMessage('') }} className="text-rose-700 font-medium hover:underline">{isSignUp ? 'Sign in' : 'Sign up'}</button>
+          {isSignUp ? 'Already have an account?' : 'New here?'}{' '}
+          <button type="button" onClick={() => { setIsSignUp(!isSignUp); setError(''); setMessage('') }} className="text-rose-700 font-medium hover:underline">
+            {isSignUp ? 'Sign in' : 'Create an account'}
+          </button>
         </p>
-        <p className="text-center text-xs text-gray-400 mt-8"><a href="/" className="hover:underline">← Back home</a></p>
+        <p className="text-center text-xs text-gray-400 mt-8"><a href="/" className="hover:underline">Back to home</a></p>
       </div>
     </main>
   )

@@ -8,8 +8,6 @@ export default function MarketingFooter() {
         <div className="flex flex-wrap gap-4">
           <Link href="/pricing" className="hover:text-gray-700">Pricing</Link>
           <Link href="/safety" className="hover:text-gray-700">Safety</Link>
-          <Link href="/verification" className="hover:text-gray-700">Verification</Link>
-          <Link href="/integrations" className="hover:text-gray-700">Integrations</Link>
           <Link href="/faq" className="hover:text-gray-700">FAQ</Link>
           <Link href="/about" className="hover:text-gray-700">About</Link>
           <a href="mailto:support@amorlay.com" className="hover:text-gray-700">Contact</a>
