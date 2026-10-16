@@ -11,13 +11,14 @@ export interface Basics {
   interestedIn?: Array<'women' | 'men' | 'nonbinary' | 'anyone'>
   ageMin?: number
   ageMax?: number
+  email?: string // copied from the sign-in, for "matching is open in your city" notes
 }
 
 export type Coverage = 'covered' | 'partial' | 'missing'
 
 /** What the AI pulls out of the intake conversation. Every field is optional until covered. */
 export interface AiProfile {
-  about?: string // two lines in the person's own spirit, shown to others in the attraction round
+  about?: string // two lines in the person's own spirit, used by the date coach
   readiness?: { level?: number; ready?: boolean; notes?: string } // level 0..10
   kids?: { stance?: 'yes' | 'no' | 'maybe' | 'have-and-want-more' | 'have-and-done' | null; flexible?: boolean }
   relationshipGoals?: { summary?: string; marriage?: 'yes' | 'no' | 'open' | null; pace?: string }
@@ -50,12 +51,31 @@ export interface VideoAssessment {
 export interface Weights {
   mustHaves: number
   values: number
-  attraction: number
-  goodPartner: number
+  partnerFit: number
   energy: number
+  attraction: number
 }
 
-export const DEFAULT_WEIGHTS: Weights = { mustHaves: 30, values: 25, attraction: 20, goodPartner: 15, energy: 10 }
+export const DEFAULT_WEIGHTS: Weights = { mustHaves: 25, values: 25, partnerFit: 20, energy: 15, attraction: 15 }
+
+/** Visible characteristics of a photo, used to learn and match someone's physical type. */
+export interface Looks {
+  age?: string // 20s | 30s | 40s | 50s
+  style?: string // polished | casual | edgy | outdoorsy | sporty
+  vibe?: string // warm | reserved | playful
+  build?: string // slim | average | athletic | fuller
+  hair?: string // long | medium | short | bald
+  facialHair?: string // none | stubble | beard
+  glasses?: string // yes | no
+}
+
+/** Ratings of the example library plus the member's own looks (from their photos). */
+export interface AttractionData {
+  ratings?: Record<string, { photo?: number; about?: number; variant?: 'warm' | 'flat' }>
+  looks?: Looks
+  looksAt?: string
+  done?: boolean
+}
 
 export interface ProfileRow {
   user_id: string
@@ -69,6 +89,7 @@ export interface ProfileRow {
   share_clip: boolean
   weights: Weights
   intake_complete: boolean
+  attraction?: AttractionData
   updated_at?: string
 }
 
@@ -82,6 +103,8 @@ export interface PairEval {
   dealLevelValueConflict: string | null
   aRepeatType: number // 0..1 how much B resembles the type behind A's past problems
   bRepeatType: number
+  aPartnerFit: number // 0..1 how good a partner B would be for A specifically
+  bPartnerFit: number
   why: string // plain-language reason this could work
   dateIdea: string
 }

@@ -8,6 +8,7 @@ import BasicsStep from './BasicsStep';
 import IntakeChat from './IntakeChat';
 import VideoInterview from './VideoInterview';
 import PhotosStep from './PhotosStep';
+import AttractionRound from './AttractionRound';
 import Home, { type ProfileState } from './Home';
 import { api, Button, Card, Shell } from './ui';
 
@@ -17,8 +18,8 @@ type FullState = ProfileState & {
 };
 
 /**
- * Member flow: basics -> conversation -> video interview -> photos -> home
- * (attraction rating, the planned date, the date coach and the debrief).
+ * Member flow: basics -> conversation -> video interview -> photos -> your type (example photos)
+ * -> home (waiting for their city, then the planned date, the date coach and the debrief).
  */
 function MemberAreaInner({ area }: { area: 'start' | 'dashboard' }) {
   const router = useRouter();
@@ -117,6 +118,7 @@ function MemberAreaInner({ area }: { area: 'start' | 'dashboard' }) {
     );
   } else if (view === 'video') body = <VideoInterview onDone={reload} onSkip={() => goTo('photos')} />;
   else if (view === 'photos') body = <PhotosStep onDone={reload} />;
+  else if (view === 'type') body = <AttractionRound onFinished={reload} />;
   else body = <Home state={state} goTo={goTo} reload={reload} />;
 
   return (

@@ -44,6 +44,7 @@ export default function BasicsStep({ initial, onDone }: { initial: Basics; onDon
     <Card>
       <h1 className="text-2xl font-bold text-[#1F2937]">First, the basics</h1>
       <p className="text-sm text-[#6B7280] mt-1">Just the logistics. Everything about who you are and who you want comes next, in a conversation.</p>
+      <p className="text-sm text-[#4B5563] mt-3 bg-[#FDF0F4] border border-[#F5D0DC] rounded-lg px-3 py-2">We’re opening city by city. Set up your profile now and we’ll let you know as soon as we’re matching where you live.</p>
       <div className="mt-5 grid gap-4">
         <label className="text-sm font-medium text-[#1F2937]">First name
           <input className={input} value={b.firstName || ''} onChange={(e) => set({ firstName: e.target.value })} />

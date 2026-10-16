@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server'
-import { errorResponse, firstPhotoUrl, matchPartner, myMatches, requireUser } from '@/lib/v2/server'
+import { errorResponse, matchPartner, myMatches, requireUser } from '@/lib/v2/server'
 
 export const runtime = 'nodejs'
 
 /**
- * GET: the member's current date (no messaging; the service sets the date).
+ * GET: the member's current date (no messaging and no photos; the service sets the date).
  * POST { matchId, attending: 'yes' | 'no' }: confirm, or say you can't make it so the matchmaker reschedules.
  */
 export async function GET() {
@@ -32,7 +32,6 @@ export async function GET() {
         partner: {
           firstName: partner?.first_name || 'your match',
           age: partner?.age ?? null,
-          photoUrl: partner ? await firstPhotoUrl(svc, partner.partner_id) : null,
         },
         debriefOpen,
         debriefDone: !!mine?.outcome,

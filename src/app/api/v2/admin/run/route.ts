@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server'
 import { isAdmin } from '@/lib/isAdmin'
-import { basicGates, pairKey, pairUp, scorePair, type PairResult } from '@/lib/v2/engine'
+import { basicGates, eligibility, pairKey, pairUp, scorePair, type PairResult } from '@/lib/v2/engine'
 import { evaluatePair, versionKey } from '@/lib/v2/pairEval'
-import { loadCity, loadRatings, toMember } from '@/lib/v2/pool'
+import { loadCity, toMemberWithType } from '@/lib/v2/pool'
 import { errorResponse, requireUser } from '@/lib/v2/server'
 import type { PairEval, ProfileRow } from '@/lib/v2/types'
 
@@ -19,7 +19,8 @@ function cycleNow(): string {
 /**
  * POST /api/v2/admin/run  body: { city: string (city key), dryRun?: boolean }
  * Runs the monthly matching for one city:
- *   1. basic gates on every pair (interest, age, city, readiness, kids, attraction both ways)
+ *   0. only members whose partnership readiness clears the bar are considered
+ *   1. basic gates on every pair (interest, age, city, kids, predicted attraction both ways)
  *   2. AI evaluation of surviving pairs (cached; up to 30 new evaluations per call, so call again while remaining > 0)
  *   3. score, flag and pair up: best mutual pairs, one per person per month, never the same pair twice
  *   4. save proposals for the matchmaker to review and schedule
@@ -36,8 +37,10 @@ export async function POST(req: Request) {
 
     const rows = await loadCity(svc, String(city))
     const byId = new Map(rows.map((r) => [r.user_id, r]))
-    const members = rows.map(toMember)
-    const ratings = await loadRatings(svc, members.map((m) => m.id))
+    const all = rows.map(toMemberWithType)
+    // Only members who are ready for a partnership are matched at all.
+    const members = all.filter((m) => eligibility(m).ok)
+    const memberById = new Map(members.map((m) => [m.id, m]))
 
     // Members already matched this cycle, and pairs that already happened.
     const { data: existing } = await svc
@@ -62,7 +65,7 @@ export async function POST(req: Request) {
       for (let j = i + 1; j < members.length; j++) {
         const [x, y] = members[i].id < members[j].id ? [members[i], members[j]] : [members[j], members[i]]
         if (busy.has(x.id) || busy.has(y.id) || alreadyMet.has(pairKey(x.id, y.id))) continue
-        if (!basicGates(x, y, ratings).ok) { gatedOut++; continue }
+        if (!basicGates(x, y).ok) { gatedOut++; continue }
         candidates.push([byId.get(x.id)!, byId.get(y.id)!])
       }
     }
@@ -94,7 +97,7 @@ export async function POST(req: Request) {
     }
     const remaining = needed.length - batch.length + failed
     if (remaining > 0) {
-      return NextResponse.json({ done: false, remaining, evaluated: batch.length - failed, members: members.length, pairsAfterGates: candidates.length })
+      return NextResponse.json({ done: false, remaining, evaluated: batch.length - failed, members: members.length, notEligible: all.length - members.length, pairsAfterGates: candidates.length })
     }
 
     // 3. Score and pair
@@ -102,7 +105,7 @@ export async function POST(req: Request) {
     for (const [a, b] of candidates) {
       const ev = cached.get(pairKey(a.user_id, b.user_id))?.eval
       if (!ev) continue
-      results.push(scorePair(toMember(a), toMember(b), ev, ratings))
+      results.push(scorePair(memberById.get(a.user_id)!, memberById.get(b.user_id)!, ev))
     }
     const chosen = pairUp(results, alreadyMet)
 
@@ -126,6 +129,7 @@ export async function POST(req: Request) {
     return NextResponse.json({
       done: true,
       members: members.length,
+      notEligible: all.length - members.length,
       pairsAfterGates: candidates.length,
       gatedOut,
       validPairs: results.filter((r) => r.ok).length,

@@ -4,45 +4,65 @@
  */
 import assert from 'node:assert/strict'
 import {
-  attractionBar, basicGates, COMPONENTS, directionalScore, normalizeWeights, pairKey, pairUp,
-  personalityWeight, scorePair, updateWeights, type Member, type RatingMap,
+  attractionBar, basicGates, COMPONENTS, directionalScore, eligibility, flipEval, normalizeWeights, pairKey, pairUp,
+  predictedAttraction, scorePair, updateWeights, withType, type Member,
 } from '../src/lib/v2/engine'
 import { parseJsonObject } from '../src/lib/v2/ai'
-import { DEFAULT_WEIGHTS, type PairEval } from '../src/lib/v2/types'
+import { EXAMPLES, examplesFor, FEATURE_VALUES, learnType, round2For } from '../src/lib/v2/typeLibrary'
+import { DEFAULT_WEIGHTS, type AttractionData, type Looks, type PairEval } from '../src/lib/v2/types'
 
 let seed = 7
 const rand = () => ((seed = (seed * 16807) % 2147483647) - 1) / 2147483646
 const pick = <T,>(xs: T[]) => xs[Math.floor(rand() * xs.length)]
 const r10 = () => 1 + Math.round(rand() * 9)
 
+// Each synthetic member has a hidden taste: likes one vibe, dislikes one style. They rate the example
+// library from it (plus noise), and half of them are moved by personality snippets in round 2.
+function simulateRatings(id: string, basics: any, likesVibe: string, dislikesStyle: string, personalityLed: boolean): AttractionData {
+  const ratings: AttractionData['ratings'] = {}
+  for (const e of examplesFor(id, basics)) {
+    const base = 3 + (e.f.vibe === likesVibe ? 1.2 : 0) - (e.f.style === dislikesStyle ? 1.2 : 0) + (rand() - 0.5)
+    ratings[e.id] = { photo: Math.max(1, Math.min(5, Math.round(base))) }
+  }
+  for (const r of round2For(id, basics)) {
+    const p = ratings[r.example.id]!.photo!
+    const shift = personalityLed ? (r.variant === 'warm' ? 1.5 : -1.5) : 0
+    ratings[r.example.id] = { ...ratings[r.example.id], about: Math.max(1, Math.min(5, Math.round(p + shift))), variant: r.variant }
+  }
+  return { ratings, done: true }
+}
+function randomLooks(gender: string): Looks {
+  const l: Looks = {}
+  for (const [f, vals] of Object.entries(FEATURE_VALUES)) (l as any)[f] = pick(vals)
+  if (gender === 'woman') l.facialHair = 'none'
+  return l
+}
+
 const N = 80
 const members: Member[] = Array.from({ length: N }, (_, i) => {
   const gender = i % 2 === 0 ? 'woman' : 'man'
   const age = 28 + Math.floor(rand() * 15)
+  const id = `u${String(i).padStart(3, '0')}`
+  const basics: any = { firstName: `P${i}`, gender, interestedIn: [gender === 'woman' ? 'men' : 'women'], ageMin: age - 6, ageMax: age + 6, city: 'Boston' }
+  const attraction = simulateRatings(id, basics, pick(['warm', 'reserved', 'playful']), pick(['polished', 'casual', 'edgy']), rand() < 0.5)
+  attraction.looks = randomLooks(gender)
   return {
-    id: `u${String(i).padStart(3, '0')}`,
-    basics: { firstName: `P${i}`, gender, interestedIn: [gender === 'woman' ? 'men' : 'women'], ageMin: age - 6, ageMax: age + 6, city: 'Boston' },
+    id,
+    basics,
     age,
     cityKey: rand() < 0.95 ? 'boston' : 'chicago',
     ai: {
       readiness: { level: rand() < 0.85 ? 7 + Math.floor(rand() * 4) : 3, ready: true },
       kids: { stance: pick(['yes', 'no', 'maybe', 'have-and-done'] as const), flexible: rand() < 0.3 },
       mustHaves: [{ item: 'kind', flexible: false }, { item: 'active', flexible: true }],
-      personality: { agreeableness: r10(), conscientiousness: r10(), neuroticism: r10(), extraversion: r10() },
+      personality: { agreeableness: 3 + r10() * 0.7, conscientiousness: 3 + r10() * 0.7, neuroticism: r10(), extraversion: r10() },
+      attachment: { anxiety: r10(), avoidance: r10() },
     },
-    video: { warmth: r10(), energy: r10(), agreeableness: r10(), neuroticism: r10(), at: 'x' },
+    video: { warmth: 3 + r10() * 0.7, energy: r10(), agreeableness: r10(), neuroticism: r10(), at: 'x' },
     weights: { ...DEFAULT_WEIGHTS },
+    attraction,
   }
-})
-
-// Everyone rates everyone they could plausibly see; a third also rate again with video.
-const ratings: RatingMap = {}
-for (const a of members) for (const b of members) {
-  if (a.id === b.id || a.basics.gender === b.basics.gender) continue
-  const photo = 1 + Math.floor(rand() * 5)
-  const video = rand() < 0.35 ? Math.max(1, Math.min(5, photo + pick([-2, -1, 0, 1, 1, 2]))) : null
-  ;(ratings[a.id] ||= {})[b.id] = { photo, video }
-}
+}).map(withType)
 
 // Simulated AI evaluation: must-have "kind" met when the other's agreeableness >= 5.
 function simEval(a: Member, b: Member): PairEval {
@@ -57,6 +77,8 @@ function simEval(a: Member, b: Member): PairEval {
     dealLevelValueConflict: rand() < 0.05 ? 'faith' : null,
     aRepeatType: rand(),
     bRepeatType: rand(),
+    aPartnerFit: rand(),
+    bPartnerFit: rand(),
     why: 'test',
     dateIdea: 'pottery class',
   }
@@ -66,8 +88,8 @@ const results = []
 let gated = 0
 for (let i = 0; i < N; i++) for (let j = i + 1; j < N; j++) {
   const [a, b] = members[i].id < members[j].id ? [members[i], members[j]] : [members[j], members[i]]
-  if (!basicGates(a, b, ratings).ok) { gated++; continue }
-  results.push(scorePair(a, b, simEval(a, b), ratings))
+  if (!basicGates(a, b).ok) { gated++; continue }
+  results.push(scorePair(a, b, simEval(a, b)))
 }
 const valid = results.filter((r) => r.ok)
 const already = new Set([pairKey(valid[0]?.a ?? 'x', valid[0]?.b ?? 'y')])
@@ -86,25 +108,46 @@ for (const c of chosen) {
   const A = members.find((m) => m.id === c.a)!, B = members.find((m) => m.id === c.b)!
   assert.ok(A.cityKey === B.cityKey, 'same city')
   assert.ok((A.ai.readiness?.level ?? 0) >= 6 && (B.ai.readiness?.level ?? 0) >= 6, 'both ready')
+  assert.ok(eligibility(A).ok && eligibility(B).ok, 'both eligible')
+  assert.ok(predictedAttraction(A, B)! >= attractionBar(A.type!.personalityWeight) && predictedAttraction(B, A)! >= attractionBar(B.type!.personalityWeight), 'predicted attraction both ways')
 }
 for (let i = 1; i < chosen.length; i++) assert.ok(chosen[i - 1].score >= chosen[i].score, 'best pairs first')
 
 // Weights and learning
-const w = normalizeWeights({ mustHaves: 30, values: 25, attraction: 20, goodPartner: 15, energy: 10 })
+const w = normalizeWeights({ mustHaves: 30, values: 25, attraction: 20, partnerFit: 15, energy: 10 })
 assert.equal(Math.round(COMPONENTS.reduce((s, k) => s + w[k], 0)), 100)
-const comps = { mustHaves: 1, values: 0.2, attraction: 0.9, goodPartner: 0.5, energy: 0.5 }
+assert.deepEqual(normalizeWeights({ mustHaves: 30, values: 25, attraction: 20, goodPartner: 15, energy: 10 } as any), normalizeWeights(DEFAULT_WEIGHTS), 'old saved weights fall back to the defaults')
+const comps = { mustHaves: 1, values: 0.2, attraction: 0.9, partnerFit: 0.5, energy: 0.5 }
 const up = updateWeights(DEFAULT_WEIGHTS, comps, 5)
 const down = updateWeights(DEFAULT_WEIGHTS, comps, 1)
 assert.ok(up.mustHaves > DEFAULT_WEIGHTS.mustHaves && up.values < DEFAULT_WEIGHTS.values, 'good date raises weight on what was high')
 assert.ok(down.mustHaves < DEFAULT_WEIGHTS.mustHaves && down.values > DEFAULT_WEIGHTS.values, 'bad date lowers it')
 assert.ok(Math.abs(COMPONENTS.reduce((s, k) => s + up[k], 0) - 100) < 0.5, 'weights stay at 100')
-assert.equal(Math.round(directionalScore(DEFAULT_WEIGHTS, { mustHaves: 1, values: 1, attraction: 1, goodPartner: 1, energy: 1 })), 100)
+assert.equal(Math.round(directionalScore(DEFAULT_WEIGHTS, { mustHaves: 1, values: 1, attraction: 1, partnerFit: 1, energy: 1 })), 100)
 
-// Personality weight and attraction bar
-assert.equal(personalityWeight({ a: { photo: 2, video: 4 }, b: { photo: 1, video: 3 }, c: { photo: 3, video: 5 } }), 1)
-assert.equal(personalityWeight({ a: { photo: 3, video: 3 }, b: { photo: 4, video: 4 }, c: { photo: 2, video: 2 } }), 0)
+// Partner fit is specific to the pair and direction
+const ev0 = simEval(members[0], members[1])
+assert.equal(flipEval(ev0).aPartnerFit, ev0.bPartnerFit)
+
+// Type learning recovers a known taste
+const basicsT: any = { gender: 'woman', interestedIn: ['men'], ageMin: 25, ageMax: 60 }
+const likesWarm = learnType(simulateRatings('t1', basicsT, 'warm', 'edgy', false))!
+assert.ok(likesWarm.prefs['vibe:warm'] > likesWarm.prefs['vibe:reserved'], 'learns the vibe they like')
+assert.ok((likesWarm.prefs['style:edgy'] ?? 0) < (likesWarm.prefs['style:casual'] ?? 0), 'learns the style they dislike')
+assert.ok(likesWarm.personalityWeight < 0.2, 'looks-led member: personality barely moves ratings')
+const persLed = learnType(simulateRatings('t2', basicsT, 'warm', 'edgy', true))!
+assert.ok(persLed.personalityWeight > 0.8, 'personality-led member detected')
 assert.equal(attractionBar(1), 2)
 assert.equal(attractionBar(0), 3)
+const manWarm = { ...members[1], attraction: { looks: { vibe: 'warm', style: 'casual' } } }
+const manEdgy = { ...members[1], attraction: { looks: { vibe: 'reserved', style: 'edgy' } } }
+const tester = { ...members[0], type: likesWarm }
+assert.ok(predictedAttraction(tester, manWarm)! > predictedAttraction(tester, manEdgy)!, 'predicts higher attraction for their type')
+assert.ok(EXAMPLES.length >= 60 && examplesFor('x', basicsT).every((e) => e.gender === 'man'), 'examples match who they want to meet')
+
+// Eligibility filter
+const notReady = { ...members[0], ai: { ...members[0].ai, readiness: { level: 4, ready: true } } }
+assert.equal(eligibility(notReady).ok, false)
 
 // JSON parsing of model replies
 assert.deepEqual(parseJsonObject('Here you go:\n```json\n{"reply":"hi {there}","n":1}\n```'), { reply: 'hi {there}', n: 1 })
@@ -112,5 +155,5 @@ assert.deepEqual(parseJsonObject('{"a":{"b":"}"}} trailing'), { a: { b: '}' } })
 assert.equal(parseJsonObject('no json'), null)
 
 const flagged = chosen.filter((c) => c.flags.length).length
-console.log(JSON.stringify({ members: N, pairsGatedOut: gated, pairsScored: results.length, passedAllGates: valid.length, matched: chosen.length * 2, pairs: chosen.length, flaggedPairs: flagged, topScore: chosen[0]?.score, lowestChosen: chosen[chosen.length - 1]?.score, weightsAfterGreatDate: up }, null, 1))
+console.log(JSON.stringify({ members: N, eligible: members.filter((m) => eligibility(m).ok).length, pairsGatedOut: gated, pairsScored: results.length, passedAllGates: valid.length, matched: chosen.length * 2, pairs: chosen.length, flaggedPairs: flagged, topScore: chosen[0]?.score, lowestChosen: chosen[chosen.length - 1]?.score, weightsAfterGreatDate: up }, null, 1))
 console.log('ALL ENGINE TESTS PASSED')

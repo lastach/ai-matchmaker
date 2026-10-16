@@ -1,16 +1,19 @@
 /**
  * Amorlay v2 matching engine (pure functions, no I/O).
  *
- * 1. Gates (pass/fail, checked both ways): interest, age range, city, readiness,
- *    kids, dealbreakers, deal-level values, inflexible must-haves, attraction bar.
- * 2. Match score out of 100, from each person's own learned weights
- *    (defaults: must-haves 30, values 25, attraction 20, good partner 15, energy 10).
- *    The pair score is the average of the two directional scores.
+ * 0. Eligibility: only members ready for a relationship, with a partnership readiness score of
+ *    at least ELIGIBLE_SCORE, are matched at all.
+ * 1. Gates (pass/fail, checked both ways): interest, age range, city, kids, dealbreakers,
+ *    deal-level values, inflexible must-haves, predicted attraction bar.
+ * 2. Match score out of 100, from each person's own learned weights (defaults: must-haves 25,
+ *    values 25, partner fit 20, energy 15, attraction 15). Every component is about this
+ *    specific pair. The pair score is the average of the two directional scores.
  * 3. Flags: a candidate who resembles the type behind someone's past problems.
  * 4. Pairing: best mutual pairs across the city, one per person per cycle.
  * 5. Learning: each debrief nudges that person's weights.
  */
-import { DEFAULT_WEIGHTS, type AiProfile, type Basics, type PairEval, type VideoAssessment, type Weights } from './types'
+import { learnType, predictAttraction, type TypeModel } from './typeLibrary'
+import { DEFAULT_WEIGHTS, type AiProfile, type AttractionData, type Basics, type PairEval, type VideoAssessment, type Weights } from './types'
 
 export interface Member {
   id: string
@@ -20,17 +23,21 @@ export interface Member {
   ai: AiProfile
   video: VideoAssessment
   weights: Weights
+  attraction?: AttractionData
+  type?: TypeModel | null // learned from attraction ratings; filled in by withType()
 }
 
-export interface Rating { photo?: number | null; video?: number | null }
-export type RatingMap = Record<string, Record<string, Rating>> // rater -> target -> rating
-
 export type Component = keyof Weights
-export const COMPONENTS: Component[] = ['mustHaves', 'values', 'attraction', 'goodPartner', 'energy']
+export const COMPONENTS: Component[] = ['mustHaves', 'values', 'partnerFit', 'energy', 'attraction']
 
 export const READY_LEVEL = 6
+export const ELIGIBLE_SCORE = 60
 export const REPEAT_TYPE_FLAG = 0.6
-export const DEFAULT_PERSONALITY_WEIGHT = 0.3
+
+/** Learn each member's type once, before pairing. */
+export function withType(m: Member): Member {
+  return { ...m, type: m.type !== undefined ? m.type : learnType(m.attraction) }
+}
 
 // ---------- helpers ----------
 
@@ -66,28 +73,17 @@ export function kidsCompatible(a: Member, b: Member): boolean {
   return !KID_CONFLICTS.some(([p, q]) => (x === p && y === q) || (x === q && y === p))
 }
 
-/** How much personality (clip or about text) moves this person's attraction ratings, 0..1. */
-export function personalityWeight(raterRatings: Record<string, Rating> | undefined): number {
-  if (!raterRatings) return DEFAULT_PERSONALITY_WEIGHT
-  const shifts: number[] = []
-  for (const r of Object.values(raterRatings)) {
-    if (typeof r.photo === 'number' && typeof r.video === 'number') shifts.push(Math.abs(r.video - r.photo))
-  }
-  if (shifts.length < 3) return DEFAULT_PERSONALITY_WEIGHT
-  const mean = shifts.reduce((s, x) => s + x, 0) / shifts.length
-  return Math.max(0, Math.min(1, mean / 2))
+/** Attraction bar on the 1..5 scale: 3 for looks-led members, down to 2 for personality-led members. */
+export function attractionBar(personalityWeight: number): number {
+  return 3 - personalityWeight
 }
 
-/** Attraction bar on the 1..5 scale: 3 for looks-led raters, down to 2 for personality-led raters. */
-export function attractionBar(pw: number): number {
-  return 3 - pw
-}
-
-export function attractionRating(r: Rating | undefined): number | null {
-  if (!r) return null
-  if (typeof r.video === 'number') return r.video
-  if (typeof r.photo === 'number') return r.photo
-  return null
+/** Predicted attraction from a to b on 1..5, or null when a has not rated examples or b has no tagged photo. */
+export function predictedAttraction(a: Member, b: Member): number | null {
+  const t = a.type !== undefined ? a.type : learnType(a.attraction)
+  const looks = b.attraction?.looks
+  if (!t || !looks || Object.keys(looks).length === 0) return null
+  return predictAttraction(t, looks)
 }
 
 function avg(xs: Array<number | undefined | null>): number | null {
@@ -95,8 +91,8 @@ function avg(xs: Array<number | undefined | null>): number | null {
   return v.length ? v.reduce((s, x) => s + x, 0) / v.length : null
 }
 
-/** 0..1: warm, agreeable, conscientious, calm (from conversation and video). */
-export function goodPartner(m: Member): number {
+/** 0..1: warm, agreeable, conscientious, calm (from conversation and video). A trait of the person, used for eligibility. */
+export function partnerQualities(m: Member): number {
   const p = m.ai.personality || {}
   const v = m.video || {}
   const agree = avg([p.agreeableness, v.agreeableness])
@@ -104,6 +100,30 @@ export function goodPartner(m: Member): number {
   const parts = [v.warmth, agree, p.conscientiousness, neuro == null ? null : 11 - neuro]
   const a = avg(parts)
   return a == null ? 0.5 : Math.max(0, Math.min(1, (a - 1) / 9))
+}
+
+/** 0..1: secure attachment (low anxiety and low avoidance). */
+export function security(m: Member): number {
+  const a = m.ai.attachment || {}
+  const x = avg([a.anxiety, a.avoidance])
+  return x == null ? 0.5 : Math.max(0, Math.min(1, 1 - (x - 1) / 9))
+}
+
+export interface Eligibility { ok: boolean; score: number; reasons: string[] }
+
+/**
+ * Partnership readiness, 0..100: readiness for a relationship now (40%), partner qualities (40%)
+ * and secure attachment (20%). Members must be ready (6+ of 10) and score ELIGIBLE_SCORE or more to be matched.
+ */
+export function eligibility(m: Member): Eligibility {
+  const reasons: string[] = []
+  const r = m.ai.readiness
+  const level = typeof r?.level === 'number' ? r.level : r?.ready === true ? 7 : r?.ready === false ? 3 : null
+  if (level == null) reasons.push('readiness unknown')
+  else if (level < READY_LEVEL || r?.ready === false) reasons.push('not ready for a relationship yet')
+  const score = Math.round((0.4 * ((level ?? 5) / 10) + 0.4 * partnerQualities(m) + 0.2 * security(m)) * 100)
+  if (score < ELIGIBLE_SCORE) reasons.push(`partnership readiness ${score} (needs ${ELIGIBLE_SCORE})`)
+  return { ok: reasons.length === 0, score, reasons }
 }
 
 export function energyLevel(m: Member): number {
@@ -119,20 +139,20 @@ export function energyAlignment(a: Member, b: Member): number {
 export interface GateResult { ok: boolean; reasons: string[] }
 
 /** Gates that need no AI: run these first to keep AI evaluation to plausible pairs. */
-export function basicGates(a: Member, b: Member, ratings: RatingMap): GateResult {
+export function basicGates(a: Member, b: Member): GateResult {
   const reasons: string[] = []
   if (a.id === b.id) reasons.push('same person')
   if (!a.cityKey || a.cityKey !== b.cityKey) reasons.push('different city')
   if (!interestedIn(a, b) || !interestedIn(b, a)) reasons.push('interest')
   if (!ageFits(a, b) || !ageFits(b, a)) reasons.push('age range')
-  if (!isReady(a) || !isReady(b)) reasons.push('readiness')
+  if (!eligibility(a).ok || !eligibility(b).ok) reasons.push('not eligible')
   if (!kidsCompatible(a, b)) reasons.push('kids')
-  const rab = attractionRating(ratings[a.id]?.[b.id])
-  const rba = attractionRating(ratings[b.id]?.[a.id])
-  if (rab == null || rba == null) reasons.push('attraction not rated both ways')
+  const ab = predictedAttraction(a, b)
+  const ba = predictedAttraction(b, a)
+  if (ab == null || ba == null) reasons.push('attraction data missing')
   else {
-    if (rab < attractionBar(personalityWeight(ratings[a.id]))) reasons.push('attraction (first person)')
-    if (rba < attractionBar(personalityWeight(ratings[b.id]))) reasons.push('attraction (second person)')
+    if (ab < attractionBar(a.type?.personalityWeight ?? 0.3)) reasons.push('attraction (first person)')
+    if (ba < attractionBar(b.type?.personalityWeight ?? 0.3)) reasons.push('attraction (second person)')
   }
   return { ok: reasons.length === 0, reasons }
 }
@@ -158,6 +178,8 @@ export function flipEval(ev: PairEval): PairEval {
     bDealbreakerHit: ev.aDealbreakerHit,
     aRepeatType: ev.bRepeatType,
     bRepeatType: ev.aRepeatType,
+    aPartnerFit: ev.bPartnerFit,
+    bPartnerFit: ev.aPartnerFit,
   }
 }
 
@@ -186,20 +208,21 @@ export function mustHavesMet(a: Member, list: PairEval['aMustHaves']): number {
   return total ? got / total : 0.7
 }
 
-export function directionalComponents(a: Member, b: Member, ev: PairEval, ratings: RatingMap): Components {
-  const met = mustHavesMet(a, ev.aMustHaves)
-  const r = attractionRating(ratings[a.id]?.[b.id])
+export function directionalComponents(a: Member, b: Member, ev: PairEval): Components {
+  const r = predictedAttraction(a, b)
   return {
-    mustHaves: met,
+    mustHaves: mustHavesMet(a, ev.aMustHaves),
     values: Math.max(0, Math.min(1, ev.valuesAlignment)),
-    attraction: r == null ? 0.5 : (r - 1) / 4,
-    goodPartner: goodPartner(b),
+    partnerFit: Math.max(0, Math.min(1, ev.aPartnerFit ?? 0.5)),
     energy: energyAlignment(a, b),
+    attraction: r == null ? 0.5 : (r - 1) / 4,
   }
 }
 
 export function normalizeWeights(w: Partial<Weights> | undefined): Weights {
-  const merged = { ...DEFAULT_WEIGHTS, ...(w || {}) }
+  // Weights saved before the components changed fall back to the current defaults.
+  const valid = w && COMPONENTS.every((c) => typeof (w as any)[c] === 'number')
+  const merged = { ...DEFAULT_WEIGHTS, ...(valid ? w : {}) }
   const total = COMPONENTS.reduce((s, c) => s + Math.max(0, merged[c]), 0) || 100
   const out = {} as Weights
   for (const c of COMPONENTS) out[c] = (Math.max(0, merged[c]) / total) * 100
@@ -228,11 +251,13 @@ export interface PairResult {
 }
 
 /** Full evaluation of a pair. `ev` must be oriented to (a, b). */
-export function scorePair(a: Member, b: Member, ev: PairEval, ratings: RatingMap): PairResult {
-  const g1 = basicGates(a, b, ratings)
+export function scorePair(a0: Member, b0: Member, ev: PairEval): PairResult {
+  const a = withType(a0)
+  const b = withType(b0)
+  const g1 = basicGates(a, b)
   const g2 = evalGates(ev)
-  const aComps = directionalComponents(a, b, ev, ratings)
-  const bComps = directionalComponents(b, a, flipEval(ev), ratings)
+  const aComps = directionalComponents(a, b, ev)
+  const bComps = directionalComponents(b, a, flipEval(ev))
   const aScore = directionalScore(a.weights, aComps)
   const bScore = directionalScore(b.weights, bComps)
   const wa = normalizeWeights(a.weights)

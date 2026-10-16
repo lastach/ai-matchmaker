@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server'
 import { isAdmin } from '@/lib/isAdmin'
+import { eligibility } from '@/lib/v2/engine'
+import { toMemberWithType } from '@/lib/v2/pool'
 import { ageFrom, errorResponse, firstPhotoUrl, requireUser } from '@/lib/v2/server'
+import type { ProfileRow } from '@/lib/v2/types'
 
 export const runtime = 'nodejs'
 export const maxDuration = 30
@@ -19,15 +22,34 @@ export async function GET() {
   if (g instanceof NextResponse) return g
   const { svc } = g
   try {
-    const { data: profs } = await svc.from('amorlay_profiles').select('user_id, city_key, basics, intake_complete')
-    const cities: Record<string, { members: number; complete: number }> = {}
+    const { data: profs } = await svc.from('amorlay_profiles').select('*').limit(5000)
+    const cities: Record<string, { members: number; complete: number; eligible: number }> = {}
     const names = new Map<string, any>()
-    for (const p of profs || []) {
+    const members = []
+    for (const p of (profs || []) as ProfileRow[]) {
       names.set(p.user_id, p.basics || {})
+      const finished = p.step === 'ready'
+      const el = p.intake_complete ? eligibility(toMemberWithType(p)) : null
+      members.push({
+        id: p.user_id,
+        firstName: p.basics?.firstName || '',
+        email: p.basics?.email || '',
+        city: p.basics?.city || '',
+        cityKey: p.city_key,
+        age: ageFrom(p.basics?.birthDate),
+        step: p.step,
+        finished,
+        intakeComplete: p.intake_complete,
+        videoDone: !!p.video?.at,
+        looksDone: !!p.attraction?.looks && Object.keys(p.attraction.looks).length > 0,
+        typeDone: !!p.attraction?.done,
+        eligibility: el,
+      })
       if (!p.city_key) continue
-      const c = (cities[p.city_key] ||= { members: 0, complete: 0 })
+      const c = (cities[p.city_key] ||= { members: 0, complete: 0, eligible: 0 })
       c.members++
-      if (p.intake_complete) c.complete++
+      if (finished) c.complete++
+      if (finished && el?.ok) c.eligible++
     }
     const { data: matches } = await svc
       .from('amorlay_matches')
@@ -45,7 +67,7 @@ export async function GET() {
         b: { id: m.user_b, firstName: b.firstName, age: ageFrom(b.birthDate), photoUrl: await firstPhotoUrl(svc, m.user_b) },
       })
     }
-    return NextResponse.json({ cities, matches: items })
+    return NextResponse.json({ cities, members, matches: items })
   } catch (e) {
     return errorResponse(e)
   }

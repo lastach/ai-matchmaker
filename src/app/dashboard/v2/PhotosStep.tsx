@@ -88,9 +88,28 @@ export default function PhotosStep({ onDone }: { onDone: () => void }) {
     }
   }
 
+  const [note, setNote] = useState<string | null>(null)
   const next = async () => {
+    setBusy(true)
+    setError(null)
+    setNote(null)
     try {
-      await api('/api/v2/profile', { method: 'POST', body: JSON.stringify({ step: 'ready' }) })
+      const r = await api<{ clearFace: boolean; note?: string }>('/api/v2/photos/analyze', { method: 'POST' })
+      if (!r.clearFace) {
+        setNote('Your first photo should clearly show your face, just you. Swap it if you can, or continue.')
+        setBusy(false)
+        return
+      }
+      await api('/api/v2/profile', { method: 'POST', body: JSON.stringify({ step: 'type' }) })
+      onDone()
+    } catch (e: any) {
+      setError(e.message)
+      setBusy(false)
+    }
+  }
+  const skipCheck = async () => {
+    try {
+      await api('/api/v2/profile', { method: 'POST', body: JSON.stringify({ step: 'type' }) })
       onDone()
     } catch (e: any) {
       setError(e.message)
@@ -100,7 +119,7 @@ export default function PhotosStep({ onDone }: { onDone: () => void }) {
   return (
     <Card>
       <h1 className="text-2xl font-bold text-[#1F2937]">Your photos</h1>
-      <p className="text-sm text-[#6B7280] mt-1">One to three photos, with your face clearly visible in the first. Only members in your city see them, while rating who they’re drawn to, and your match sees one before your date.</p>
+      <p className="text-sm text-[#6B7280] mt-1">One to three recent photos, with your face clearly visible in the first. Other members never see them, not even your match before your date. Only our matchmaker and the AI do, to compare your look with what your potential matches are drawn to.</p>
       <label className="mt-4 block border-2 border-dashed border-[#D4537E]/40 rounded-xl p-8 text-center cursor-pointer hover:border-[#D4537E]">
         <input type="file" accept="image/*" multiple className="hidden" disabled={busy || photos.length >= 3} onChange={(e) => { upload(e.target.files); e.target.value = '' }} />
         <span className="text-[#B23F68] font-semibold">{busy ? 'Working…' : photos.length >= 3 ? 'Three photos added. Remove one to change it.' : 'Choose photos'}</span>
@@ -117,8 +136,9 @@ export default function PhotosStep({ onDone }: { onDone: () => void }) {
         </div>
       )}
       <ErrorNote error={error} />
+      {note && <p className="mt-3 text-sm text-[#92400E] bg-[#FFFBEB] border border-[#FDE68A] rounded-lg px-3 py-2">{note} <button className="underline" onClick={skipCheck}>Continue anyway</button></p>}
       <div className="mt-5 flex justify-end">
-        <Button onClick={next} disabled={photos.length === 0 || busy}>Continue</Button>
+        <Button onClick={next} disabled={photos.length === 0 || busy}>{busy ? 'One moment…' : 'Continue'}</Button>
       </div>
     </Card>
   )

@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server'
 import { isAdmin } from '@/lib/isAdmin'
 import { callClaudeJson } from '@/lib/v2/ai'
-import { DEBRIEF_SYSTEM, INTAKE_REPLY_SYSTEM, INTAKE_ANALYZE_SYSTEM, PREP_SYSTEM, VIDEO_SYSTEM } from '@/lib/v2/prompts'
+import { DEBRIEF_SYSTEM, INTAKE_REPLY_SYSTEM, INTAKE_ANALYZE_SYSTEM, LOOKS_SYSTEM, PREP_SYSTEM, VIDEO_SYSTEM } from '@/lib/v2/prompts'
+import { cleanLooks } from '@/lib/v2/typeLibrary'
 import { evaluatePair } from '@/lib/v2/pairEval'
 import { requireUser } from '@/lib/v2/server'
 import type { ProfileRow } from '@/lib/v2/types'
@@ -14,7 +15,7 @@ const TEST_FRAME = '/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAoHBwgHBgoICAgLCgoLDhgQDg0N
 
 const personA: ProfileRow = {
   user_id: '00000000-0000-0000-0000-00000000000a', step: 'ready', city_key: 'boston', conversation: [], video: { warmth: 8, energy: 6, expressiveness: 7, at: 'test' },
-  clip_path: null, share_clip: false, intake_complete: true, weights: { mustHaves: 30, values: 25, attraction: 20, goodPartner: 15, energy: 10 },
+  clip_path: null, share_clip: false, intake_complete: true, weights: { mustHaves: 25, values: 25, partnerFit: 20, energy: 15, attraction: 15 },
   basics: { firstName: 'Test A', birthDate: '1985-03-01', city: 'Boston, MA', gender: 'woman', interestedIn: ['men'], ageMin: 36, ageMax: 48 },
   ai_profile: {
     about: 'Founder who dances ballroom and travels a lot.', readiness: { level: 9, ready: true }, kids: { stance: 'maybe', flexible: true },
@@ -48,7 +49,8 @@ async function check(name: string, fn: () => Promise<{ ok: boolean; detail: unkn
  * GET /api/v2/admin/selftest  (admin only)
  * Runs every AI step on synthetic test data and checks configuration. Writes nothing.
  */
-export async function GET() {
+export async function GET(req: Request) {
+  const origin = new URL(req.url).origin
   const auth = await requireUser()
   if (auth instanceof NextResponse) return auth
   if (!(await isAdmin(auth.user.email, auth.session))) return NextResponse.json({ error: 'forbidden' }, { status: 403 })
@@ -99,7 +101,17 @@ export async function GET() {
     }),
     check('pairEvaluation', async () => {
       const ev = await evaluatePair(personA, personB)
-      return { ok: ev.aMustHaves.length > 0 && typeof ev.valuesAlignment === 'number' && !!ev.dateIdea, detail: ev }
+      return { ok: ev.aMustHaves.length > 0 && typeof ev.valuesAlignment === 'number' && typeof ev.aPartnerFit === 'number' && !!ev.dateIdea, detail: ev }
+    }),
+    check('looksFromPhoto', async () => {
+      // One of the example library photos stands in for a member photo.
+      const img = await fetch(origin + '/type/m34330228.jpg')
+      const b64 = Buffer.from(await img.arrayBuffer()).toString('base64')
+      const { out } = await callClaudeJson<any>({ system: LOOKS_SYSTEM, maxTokens: 300, messages: [{ role: 'user', content: [
+        { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: b64 } }, { type: 'text', text: 'Describe this member from these photos.' },
+      ] }] })
+      const looks = cleanLooks(out)
+      return { ok: Object.keys(looks).length >= 6, detail: { looks, raw: out } }
     }),
     check('coachPrep', async () => {
       const { out, raw } = await callClaudeJson<any>({ system: PREP_SYSTEM, maxTokens: 900, messages: [{ role: 'user', content: JSON.stringify({

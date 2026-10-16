@@ -21,12 +21,20 @@ type MatchRow = {
   b: Person
 }
 
-const LABELS: Record<string, string> = { mustHaves: 'Must-haves', values: 'Values', attraction: 'Attraction', goodPartner: 'Good partner', energy: 'Energy' }
+const LABELS: Record<string, string> = { mustHaves: 'Must-haves', values: 'Values', partnerFit: 'Partner fit', energy: 'Energy', attraction: 'Attraction' }
+
+type MemberRow = {
+  id: string; firstName: string; email: string; city: string; cityKey: string | null; age: number | null; step: string; finished: boolean
+  intakeComplete: boolean; videoDone: boolean; looksDone: boolean; typeDone: boolean
+  eligibility: { ok: boolean; score: number; reasons: string[] } | null
+}
 
 export default function AdminPage() {
   const [authChecked, setAuthChecked] = useState(false)
   const [authorized, setAuthorized] = useState(false)
-  const [cities, setCities] = useState<Record<string, { members: number; complete: number }>>({})
+  const [cities, setCities] = useState<Record<string, { members: number; complete: number; eligible: number }>>({})
+  const [members, setMembers] = useState<MemberRow[]>([])
+  const [copied, setCopied] = useState<string | null>(null)
   const [matches, setMatches] = useState<MatchRow[]>([])
   const [running, setRunning] = useState<string | null>(null)
   const [status, setStatus] = useState('')
@@ -36,6 +44,7 @@ export default function AdminPage() {
     if (r.status === 403) { setAuthorized(false); setAuthChecked(true); return }
     const d = await r.json()
     setCities(d.cities || {})
+    setMembers(d.members || [])
     setMatches(d.matches || [])
     setAuthorized(r.ok)
     setAuthChecked(true)
@@ -59,7 +68,7 @@ export default function AdminPage() {
         const d = await r.json()
         if (!r.ok) { setStatus('Failed: ' + (d.error || r.status)); break }
         if (d.done) {
-          setStatus(`${city}: ${d.members} members, ${d.pairsAfterGates} pairs passed the basic gates, ${d.validPairs} passed every gate, ${d.proposed} matches proposed, ${d.unmatched} unmatched this month.`)
+          setStatus(`${city}: ${d.members} eligible members (${d.notEligible ?? 0} not eligible yet), ${d.pairsAfterGates} pairs passed the basic gates, ${d.validPairs} passed every gate, ${d.proposed} matches proposed, ${d.unmatched} unmatched this month.`)
           break
         }
         setStatus(`${city}: evaluating pairs, ${d.remaining} to go…`)
@@ -97,7 +106,11 @@ export default function AdminPage() {
             <div key={city} className="border rounded-lg p-3 flex items-center justify-between gap-3">
               <div className="min-w-0">
                 <p className="font-medium capitalize">{city}</p>
-                <p className="text-xs text-gray-500">{c.complete} finished intake, {c.members} signed up</p>
+                <p className="text-xs text-gray-500">{c.members} signed up, {c.complete} finished, {c.eligible} eligible</p>
+                <button className="text-xs text-[#B23F68] underline mt-1" onClick={async () => {
+                  const list = members.filter((m) => m.cityKey === city && m.email).map((m) => m.email).join(', ')
+                  try { await navigator.clipboard.writeText(list); setCopied(city) } catch { setCopied(null) }
+                }}>{copied === city ? 'Emails copied' : 'Copy emails'}</button>
               </div>
               <button onClick={() => run(city)} disabled={!!running} className="shrink-0 text-sm bg-[#2E1A47] text-white px-3 py-1.5 rounded disabled:opacity-50">
                 {running === city ? 'Running…' : 'Run matching'}
@@ -106,6 +119,27 @@ export default function AdminPage() {
           ))}
         </div>
         {status && <p className="text-sm text-gray-700 mt-3">{status}</p>}
+      </section>
+
+      <section className="bg-white rounded-xl p-5 shadow-sm border mb-6 overflow-x-auto">
+        <h2 className="font-semibold mb-1">Members ({members.length})</h2>
+        <p className="text-xs text-gray-500 mb-3">Only eligible members are matched: ready for a relationship (6+ of 10) and a partnership readiness score of 60+ (readiness 40%, partner qualities 40%, secure attachment 20%).</p>
+        <table className="w-full text-sm">
+          <thead><tr className="text-left text-xs text-gray-500 border-b">
+            <th className="py-2 pr-3">Name</th><th className="pr-3">Email</th><th className="pr-3">City</th><th className="pr-3">Progress</th><th className="pr-3">Readiness</th>
+          </tr></thead>
+          <tbody>
+            {[...members].sort((a, b) => (a.cityKey || '').localeCompare(b.cityKey || '')).map((m) => (
+              <tr key={m.id} className="border-b last:border-0 align-top">
+                <td className="py-2 pr-3">{m.firstName || '(no name yet)'}{m.age ? `, ${m.age}` : ''}</td>
+                <td className="pr-3 text-gray-600">{m.email || 'not saved yet'}</td>
+                <td className="pr-3 capitalize">{m.city || ''}</td>
+                <td className="pr-3 text-xs text-gray-600">{m.finished ? 'Finished' : `On ${m.step}`}{m.finished && !m.typeDone ? ', type not rated' : ''}{m.finished && !m.looksDone ? ', photos not analyzed' : ''}</td>
+                <td className="pr-3 text-xs">{m.eligibility ? <span className={m.eligibility.ok ? 'text-green-700' : 'text-amber-700'}>{m.eligibility.score}{m.eligibility.ok ? ' eligible' : `: ${m.eligibility.reasons.join('; ')}`}</span> : <span className="text-gray-400">after intake</span>}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </section>
 
       <section className="mb-6">

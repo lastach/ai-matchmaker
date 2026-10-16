@@ -1,53 +1,38 @@
 import { NextResponse } from 'next/server'
-import { clipUrl, errorResponse, firstPhotoUrl, loadProfile, requireUser } from '@/lib/v2/server'
+import { errorResponse, loadProfile, requireUser, saveProfile } from '@/lib/v2/server'
+import { examplesFor, round2For } from '@/lib/v2/typeLibrary'
 
 export const runtime = 'nodejs'
-export const maxDuration = 30
-
-const BATCH = 12
 
 /**
- * Attraction round, rated on real members of the member's city cohort.
- * Stage "photo": rate faces alone. Stage "video": rate the same people again with their intro clip
- * (or their short "about" when they did not share a clip). The difference measures how much
- * personality moves this member, which loosens or tightens their attraction bar.
+ * "Your type": members rate example photos (never other members).
+ * Round 1: example photos alone, to learn the look they are drawn to.
+ * Round 2: some of the same people with a short personality snippet, to measure how much
+ * personality moves them versus looks.
  *
- * GET ?stage=photo|video -> { items: [{ id, firstName, age, photoUrl, clipUrl?, about? }], remaining }
- * POST { targetId, stage, rating (1..5) }
+ * GET -> { stage: 'photo' | 'about' | 'done', items: [{ id, src, snippet? }], done, total }
+ * POST { exampleId, stage, rating (1..5) }
+ * POST { finish: true } -> marks the step done
  */
-export async function GET(req: Request) {
+export async function GET() {
   const auth = await requireUser()
   if (auth instanceof NextResponse) return auth
   const svc = auth.session
   try {
-    const stage = new URL(req.url).searchParams.get('stage') === 'video' ? 'video' : 'photo'
-    const me = await loadProfile(svc, auth.user.id)
-    if (!me.city_key || !me.intake_complete) return NextResponse.json({ items: [], remaining: 0, note: 'Finish the conversation first.' })
-    // City members who could be a mutual match on the basics (interest and age, both ways).
-    const { data: pool, error } = await svc.rpc('amorlay_attraction_pool')
-    if (error) throw new Error(error.message)
-    const eligible = (pool || []) as Array<{ user_id: string; first_name: string | null; age: number | null; about: string | null; share_clip: boolean; clip_path: string | null }>
-    const { data: mine } = await svc.from('amorlay_ratings').select('target_id, photo_rating, video_rating').eq('rater_id', auth.user.id)
-    const rated = new Map((mine || []).map((r) => [r.target_id, r]))
-    const todo = eligible.filter((r) => {
-      const x = rated.get(r.user_id)
-      return stage === 'photo' ? !x?.photo_rating : !!x?.photo_rating && !x?.video_rating
-    })
-
-    const items = []
-    for (const r of todo.slice(0, BATCH)) {
-      const photoUrl = await firstPhotoUrl(svc, r.user_id)
-      if (!photoUrl) continue
-      items.push({
-        id: r.user_id,
-        firstName: r.first_name || '',
-        age: r.age,
-        photoUrl,
-        clipUrl: stage === 'video' && r.share_clip ? await clipUrl(svc, r.clip_path) : null,
-        about: stage === 'video' ? r.about || null : null,
-      })
+    const p = await loadProfile(svc, auth.user.id)
+    const ratings = p.attraction?.ratings || {}
+    const r1 = examplesFor(auth.user.id, p.basics)
+    const r2 = round2For(auth.user.id, p.basics)
+    const total = r1.length + r2.length
+    const todo1 = r1.filter((e) => typeof ratings[e.id]?.photo !== 'number')
+    if (todo1.length) {
+      return NextResponse.json({ stage: 'photo', items: todo1.map((e) => ({ id: e.id, src: e.src })), done: r1.length - todo1.length, total })
     }
-    return NextResponse.json({ items, remaining: todo.length, eligible: eligible.length })
+    const todo2 = r2.filter((x) => typeof ratings[x.example.id]?.about !== 'number')
+    if (todo2.length) {
+      return NextResponse.json({ stage: 'about', items: todo2.map((x) => ({ id: x.example.id, src: x.example.src, snippet: x.snippet })), done: total - todo2.length, total })
+    }
+    return NextResponse.json({ stage: 'done', items: [], done: total, total })
   } catch (e) {
     return errorResponse(e)
   }
@@ -58,16 +43,30 @@ export async function POST(req: Request) {
   if (auth instanceof NextResponse) return auth
   const svc = auth.session
   try {
-    const { targetId, stage, rating } = await req.json().catch(() => ({} as any))
-    const n = Number(rating)
-    if (!targetId || targetId === auth.user.id || !Number.isInteger(n) || n < 1 || n > 5) {
-      return NextResponse.json({ error: 'bad rating' }, { status: 400 })
+    const body = await req.json().catch(() => ({} as any))
+    const p = await loadProfile(svc, auth.user.id)
+    const attraction = { ...(p.attraction || {}) }
+
+    if (body.finish) {
+      attraction.done = true
+      await saveProfile(svc, auth.user.id, { attraction, ...(p.step === 'type' ? { step: 'ready' } : {}) })
+      return NextResponse.json({ ok: true })
     }
-    const col = stage === 'video' ? 'video_rating' : 'photo_rating'
-    const { error } = await svc
-      .from('amorlay_ratings')
-      .upsert({ rater_id: auth.user.id, target_id: targetId, [col]: n, updated_at: new Date().toISOString() }, { onConflict: 'rater_id,target_id' })
-    if (error) throw new Error(error.message)
+
+    const n = Number(body.rating)
+    const stage = body.stage === 'about' ? 'about' : 'photo'
+    if (!Number.isInteger(n) || n < 1 || n > 5) return NextResponse.json({ error: 'bad rating' }, { status: 400 })
+    const ratings = { ...(attraction.ratings || {}) }
+    if (stage === 'photo') {
+      if (!examplesFor(auth.user.id, p.basics).some((e) => e.id === body.exampleId)) return NextResponse.json({ error: 'unknown example' }, { status: 400 })
+      ratings[body.exampleId] = { ...(ratings[body.exampleId] || {}), photo: n }
+    } else {
+      const r = round2For(auth.user.id, p.basics).find((x) => x.example.id === body.exampleId)
+      if (!r) return NextResponse.json({ error: 'unknown example' }, { status: 400 })
+      ratings[body.exampleId] = { ...(ratings[body.exampleId] || {}), about: n, variant: r.variant }
+    }
+    attraction.ratings = ratings
+    await saveProfile(svc, auth.user.id, { attraction })
     return NextResponse.json({ ok: true })
   } catch (e) {
     return errorResponse(e)

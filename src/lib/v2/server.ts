@@ -3,6 +3,7 @@ import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
 import { DEFAULT_WEIGHTS, type ProfileRow } from './types'
+import { normalizeWeights } from './engine'
 
 export const PHOTO_BUCKET = 'matchmaker-photos'
 export const CLIP_BUCKET = 'amorlay-clips'
@@ -63,6 +64,7 @@ export function emptyProfile(userId: string): ProfileRow {
     share_clip: false,
     weights: { ...DEFAULT_WEIGHTS },
     intake_complete: false,
+    attraction: {},
   }
 }
 
@@ -70,7 +72,7 @@ export async function loadProfile(svc: SupabaseClient, userId: string): Promise<
   const { data, error } = await svc.from('amorlay_profiles').select('*').eq('user_id', userId).maybeSingle()
   if (error) throw new Error(error.message)
   if (!data) return emptyProfile(userId)
-  return { ...emptyProfile(userId), ...data, weights: { ...DEFAULT_WEIGHTS, ...(data.weights || {}) } } as ProfileRow
+  return { ...emptyProfile(userId), ...data, weights: normalizeWeights(data.weights) } as ProfileRow
 }
 
 export async function saveProfile(svc: SupabaseClient, userId: string, patch: Partial<ProfileRow>): Promise<void> {

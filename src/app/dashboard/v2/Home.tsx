@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
-import AttractionRound from './AttractionRound'
 import DateCard, { type Match } from './DateCard'
 import { api, Button, Card, ErrorNote } from './ui'
 
@@ -11,14 +10,14 @@ export type ProfileState = {
   basics: any
   intakeComplete: boolean
   videoDone: boolean
-  hasClip: boolean
+  looksDone?: boolean
+  typeDone?: boolean
   cohort: { city: string | null; count: number; threshold: number; open: boolean }
 }
 
 export default function Home({ state, goTo, reload }: { state: ProfileState; goTo: (step: string, restart?: boolean) => void; reload: () => void }) {
   const [match, setMatch] = useState<Match | null>(null)
   const [loaded, setLoaded] = useState(false)
-  const [rating, setRating] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const loadMatch = async () => {
@@ -33,10 +32,7 @@ export default function Home({ state, goTo, reload }: { state: ProfileState; goT
   }
   useEffect(() => { loadMatch() }, [])
 
-  if (rating) return <AttractionRound onFinished={() => setRating(false)} />
-
   const { cohort } = state
-  const remaining = Math.max(0, cohort.threshold - cohort.count)
   return (
     <div className="space-y-4">
       {loaded && match && <DateCard match={match} onChange={loadMatch} />}
@@ -51,20 +47,13 @@ export default function Home({ state, goTo, reload }: { state: ProfileState; goT
 
       {loaded && !match && (
         <Card>
-          <h2 className="text-lg font-bold text-[#1F2937]">{cohort.open ? `Matching is open in ${cohort.city}` : `You’re on the list for ${cohort.city || 'your city'}`}</h2>
-          <p className="text-sm text-[#6B7280] mt-1">
-            {cohort.open
-              ? 'One match a month. When we find yours, it arrives here as a planned date: who, when and where. No messaging back and forth.'
-              : `We open a city once ${cohort.threshold} members have finished. ${cohort.count} have so far${remaining ? `, ${remaining} to go` : ''}.`}
+          <h2 className="text-lg font-bold text-[#1F2937]">You’re all set</h2>
+          <p className="text-[15px] text-[#4B5563] mt-1">
+            We’re opening city by city and aren’t matching in {cohort.city || 'your city'} yet. We’ll let you know as soon as we are.
+            When we have a match for you, it arrives here as a planned date: who, when and where. No messaging back and forth, and no photos beforehand.
           </p>
         </Card>
       )}
-
-      <Card>
-        <h2 className="text-lg font-bold text-[#1F2937]">Who you’re drawn to</h2>
-        <p className="text-sm text-[#6B7280] mt-1">Rate members in your city so every match is mutual attraction. Nobody sees your ratings.</p>
-        <div className="mt-3"><Button variant="secondary" onClick={() => setRating(true)}>Rate members</Button></div>
-      </Card>
 
       <Card>
         <h2 className="text-lg font-bold text-[#1F2937]">Your profile</h2>
@@ -73,9 +62,6 @@ export default function Home({ state, goTo, reload }: { state: ProfileState; goT
           <Button variant="secondary" onClick={() => { if (confirm('Start the conversation over? Your earlier answers will be replaced.')) goTo('intake', true) }}>Start it over</Button>
           {state.videoDone && <Button variant="secondary" onClick={() => goTo('video')}>Redo video</Button>}
           <Button variant="secondary" onClick={() => goTo('photos')}>Photos</Button>
-          {state.hasClip && (
-            <Button variant="ghost" onClick={async () => { await api('/api/v2/video/clip', { method: 'DELETE' }); reload() }}>Delete my intro clip</Button>
-          )}
         </div>
         <details className="mt-5 text-xs text-[#6B7280]">
           <summary className="cursor-pointer">Account and data</summary>

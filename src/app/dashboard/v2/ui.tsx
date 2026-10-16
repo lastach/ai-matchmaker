@@ -8,6 +8,7 @@ export const STEPS = [
   { key: 'intake', label: 'Conversation' },
   { key: 'video', label: 'Video' },
   { key: 'photos', label: 'Photos' },
+  { key: 'type', label: 'Your type' },
   { key: 'ready', label: 'Matching' },
 ] as const
 

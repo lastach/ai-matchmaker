@@ -13,7 +13,7 @@ export type Match = {
   dateIdea: string | null
   myAttending: 'yes' | 'no' | null
   partnerConfirmed: boolean
-  partner: { firstName: string; age: number | null; photoUrl: string | null }
+  partner: { firstName: string; age: number | null }
   debriefOpen: boolean
   debriefDone: boolean
   mutualSecondDate: boolean
@@ -60,8 +60,7 @@ export default function DateCard({ match, onChange }: { match: Match; onChange: 
     <div className="space-y-4">
       <Card className="border-[#D4537E]/40">
         <p className="text-xs uppercase tracking-wider text-[#B23F68] font-semibold">You have a match</p>
-        <div className="mt-3 flex gap-4 items-center">
-          {match.partner.photoUrl && <img src={match.partner.photoUrl} alt={match.partner.firstName} className="h-24 w-24 rounded-xl object-cover" />}
+        <div className="mt-3">
           <div>
             <p className="text-xl font-bold text-[#1F2937]">{match.partner.firstName}{match.partner.age ? `, ${match.partner.age}` : ''}</p>
             {match.status === 'needs_reschedule' ? (
@@ -70,6 +69,7 @@ export default function DateCard({ match, onChange }: { match: Match; onChange: 
               <>
                 <p className="text-[15px] text-[#1F2937] mt-1">Your date is <b>{when(match.dateAt)}</b></p>
                 <p className="text-[15px] text-[#1F2937]">at <b>{match.venueName}</b>{match.venueAddress ? `, ${match.venueAddress}` : ''}</p>
+                <p className="text-sm text-[#6B7280] mt-2">You won’t see each other’s photos before the date. When you arrive, ask for the reservation under “Amorlay.”</p>
               </>
             )}
           </div>

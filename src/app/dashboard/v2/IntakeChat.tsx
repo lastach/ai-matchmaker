@@ -96,7 +96,7 @@ export default function IntakeChat({ initial, progress, onComplete }: { initial:
         </div>
       )}
       {heard && <p className="mt-1 text-sm italic text-[#6B7280]">{heard}</p>}
-      <p className="text-[11px] text-[#9CA3AF] mt-2">Saved as you go. Matches see only a two-line &quot;about you&quot; written from this conversation, and your date&apos;s coach learns what makes you feel understood so they can show up well. Nothing else you say here is shared.</p>
+      <p className="text-[11px] text-[#9CA3AF] mt-2">Saved as you go. Nobody else sees this conversation. When you have a date, their date coach shares a few things with them, like what helps you feel understood, so they can show up well.</p>
     </div>
   )
 }

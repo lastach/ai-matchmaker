@@ -18,8 +18,8 @@ export default function Pricing() {
             <ul className="text-sm text-gray-700 space-y-2 mb-6 list-disc pl-5">
               <li>A conversation in your own words, typed or spoken; the AI only follows up on what is missing</li>
               <li>A short video interview so matches line up on energy and warmth</li>
-              <li>Rate members in your city so every match is mutual attraction</li>
-              <li>One planned date a month once your city has a good match for you</li>
+              <li>Show us your type with example photos, so every match is attraction both ways</li>
+              <li>We let you know as soon as we are matching in your city</li>
               <li>An AI date coach before and after each date</li>
             </ul>
             <Link href="/auth?signup=1" className="block text-center bg-[#C8102E] hover:bg-[#A50D26] text-white px-5 py-2.5 rounded-lg font-semibold">Get started</Link>
@@ -29,7 +29,7 @@ export default function Pricing() {
             <h3 className="text-2xl font-bold text-gray-900 mb-2">$1,000 / 3 months</h3>
             <p className="text-sm text-gray-600 mb-4">Human matchmakers charge thousands. Here is what three months includes:</p>
             <ul className="text-sm text-gray-700 space-y-2 mb-6">
-              <li><strong>One match a month</strong>, picked for must-haves, values, mutual attraction, partner qualities and energy</li>
+              <li><strong>One match a month</strong>, picked for must-haves, values, partner fit, energy and mutual attraction</li>
               <li><strong>A planned date, not a chat</strong>: we tell you who, when and where</li>
               <li><strong>An AI date coach</strong>: a brief before each date and a debrief after, which also sharpens your next match</li>
             </ul>
@@ -39,7 +39,7 @@ export default function Pricing() {
         <div className="mt-12 border-t pt-8">
           <h2 className="text-xl font-semibold text-gray-900 mb-4">FAQ</h2>
           <div className="space-y-4 text-sm text-gray-700">
-            <details open><summary className="cursor-pointer font-medium">When will I get a match?</summary><p className="mt-2">When someone in your city clears both of your dealbreakers and scores well both ways. Your page shows where your city stands.</p></details>
+            <details open><summary className="cursor-pointer font-medium">When will I get a match?</summary><p className="mt-2">We are opening city by city. Set up your profile now and we will let you know as soon as we are matching where you live.</p></details>
             <details open><summary className="cursor-pointer font-medium">Can I get a refund?</summary><p className="mt-2">Yes. After GA, full refund within 7 days of paying if you have not yet received a match.</p></details>
             <details open><summary className="cursor-pointer font-medium">What about safety and verification?</summary><p className="mt-2">See our <Link href="/safety" className="text-rose-700 hover:underline">Safety page</Link> for how dates are set up and what we share.</p></details>
           </div>

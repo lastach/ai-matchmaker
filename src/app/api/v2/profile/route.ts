@@ -5,7 +5,7 @@ import type { Basics } from '@/lib/v2/types'
 
 export const runtime = 'nodejs'
 
-const STEPS = ['basics', 'intake', 'video', 'photos', 'attraction', 'ready'] as const
+const STEPS = ['basics', 'intake', 'video', 'photos', 'type', 'ready'] as const
 
 /** GET: the member's own state for the dashboard. */
 export async function GET() {
@@ -29,8 +29,8 @@ export async function GET() {
       intakeProgress: { covered, total: Object.keys(COVERAGE_AREAS).length },
       intakeComplete: p.intake_complete,
       videoDone: !!p.video?.at,
-      shareClip: p.share_clip,
-      hasClip: !!p.clip_path,
+      looksDone: !!p.attraction?.looks && Object.keys(p.attraction.looks).length > 0,
+      typeDone: !!p.attraction?.done,
       cohort: { city: p.basics.city || null, count: cohort, threshold: COHORT_THRESHOLD, open: cohort >= COHORT_THRESHOLD },
     })
   } catch (e) {
@@ -60,19 +60,19 @@ export async function POST(req: Request) {
       const hi = Math.max(lo, Number(b.ageMax) || 99)
       b.ageMin = lo
       b.ageMax = hi
+      // Kept so the matchmaker can tell members when matching opens in their city.
+      b.email = auth.user.email || b.email
       patch.basics = b
       patch.city_key = cityKey(b.city)
       if (p.step === 'basics') patch.step = 'intake'
     }
 
-    if (typeof body.shareClip === 'boolean') patch.share_clip = body.shareClip
-
-    if (body.step && (STEPS as readonly string[]).includes(body.step)) {
+        if (body.step && (STEPS as readonly string[]).includes(body.step)) {
       // Members can only move forward through steps they have finished, or back to redo one.
       const target = body.step as (typeof STEPS)[number]
       const blocked =
         (target === 'video' && !p.intake_complete) ||
-        (target === 'attraction' && !p.intake_complete)
+        (target === 'type' && !p.intake_complete)
       if (blocked) return NextResponse.json({ error: 'Finish the conversation first.' }, { status: 400 })
       patch.step = target
     }

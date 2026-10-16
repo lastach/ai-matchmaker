@@ -11,6 +11,7 @@ export default function Page() {
         <p className="text-gray-600 mb-8">For people done with swiping.</p>
         <section className="space-y-4 text-[15px] leading-7 text-gray-700">
           <p>Amorlay does not show you a feed. You tell us about yourself in your own words, typed or spoken, and the AI only asks about what it still needs. Once a month we pick one person for you and plan the date. A person reviews every match before it goes out.</p>
+          <p>We are opening city by city. Set up your profile now and we will let you know as soon as we are matching where you live.</p>
           <h2 className="text-lg font-semibold text-gray-900 mt-6">Who it is for</h2>
           <p>Adults who want a relationship and are tired of dating apps. We open city by city.</p>
           <h2 className="text-lg font-semibold text-gray-900 mt-6">Status</h2>

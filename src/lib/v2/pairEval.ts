@@ -18,6 +18,9 @@ function view(r: ProfileRow) {
     dealbreakers: a.dealbreakers,
     values: a.values,
     exPattern: a.exPattern,
+    feelUnderstood: a.feelUnderstood,
+    readiness: a.readiness,
+    attachment: a.attachment,
     personality: a.personality,
     interests: a.interests,
     videoImpression: r.video?.at ? { warmth: r.video.warmth, energy: r.video.energy, expressiveness: r.video.expressiveness } : null,
@@ -58,6 +61,8 @@ export function sanitizeEval(out: any, a: ProfileRow, b: ProfileRow): PairEval {
     dealLevelValueConflict: str(out?.dealLevelValueConflict),
     aRepeatType: clampNum(out?.aRepeatType, 0, 1, 0),
     bRepeatType: clampNum(out?.bRepeatType, 0, 1, 0),
+    aPartnerFit: clampNum(out?.aPartnerFit, 0, 1, 0.5),
+    bPartnerFit: clampNum(out?.bPartnerFit, 0, 1, 0.5),
     why: str(out?.why) || '',
     dateIdea: str(out?.dateIdea) || '',
   }
