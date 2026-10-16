@@ -4,7 +4,7 @@ import { cookies } from 'next/headers'
 
 const APP_NAME = 'Amorlay'
 const APP_HOME = 'https://www.amorlay.com'
-const APP_TAGLINE = 'One match. One memo. One date.'
+const APP_TAGLINE = 'One match. One date. A coach for both.'
 const APP_NEXT_STEP = 'Finish your intake so we can start matching against the right values, attachment style, and life goals - not just a swipe.'
 
 /**

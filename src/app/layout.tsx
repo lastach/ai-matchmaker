@@ -17,7 +17,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Amorlay",
   icons: { icon: "/logo.svg" },
-  description: "One match. One memo. One date.",
+  description: "One match. One date. A coach for both.",
 };
 
 export default function RootLayout({

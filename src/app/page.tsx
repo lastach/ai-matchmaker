@@ -1,23 +1,9 @@
 'use client';
 import MarketingHeader from '@/components/MarketingHeader'
 
-import { useState, useEffect } from 'react';
-import { supabase } from '@/lib/supabase';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
 export default function Home() {
-  const router = useRouter();
-  const [checking, setChecking] = useState(true);
-
-  useEffect(() => {
-    // Always show the marketing homepage. Logged-in users can navigate to
-    // /dashboard explicitly via the nav.
-    setChecking(false);
-  }, []);
-
-  if (checking) return <div className="min-h-screen bg-white" />;
-
   return (
     <main className="min-h-screen bg-white">
       <MarketingHeader />
