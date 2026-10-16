@@ -80,7 +80,7 @@ export default function IntakeChat({ initial, progress, onComplete }: { initial:
       </div>
       <ErrorNote error={error} />
       {complete ? (
-        <div className="mt-3 flex justify-end"><Button onClick={onComplete}>Continue to the video interview</Button></div>
+        <div className="mt-3 flex justify-end"><Button onClick={onComplete}>Continue</Button></div>
       ) : paused ? null : (
         <div className="mt-3 flex gap-2 items-end">
           <MicButton disabled={busy} onInterim={setHeard} onText={(t) => setInput((v) => (v.trim() ? v.trimEnd() + ' ' : '') + t)} />

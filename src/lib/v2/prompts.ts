@@ -31,7 +31,7 @@ How to talk:
 Areas to eventually cover:
 ${Object.entries(COVERAGE_AREAS).map(([k, v]) => `- ${k}: ${v}`).join('\n')}
 
-When every area shows "covered", send a short summary (4 to 6 plain sentences) of what you heard and ask if anything is off. If they then confirm (or correct it), thank them briefly, tell them the last steps are a short video interview, a few photos, and showing us their type with some example photos, and that we are opening city by city and will let them know as soon as we are matching where they live. Then set "complete": true.
+When every area shows "covered", send a short summary (4 to 6 plain sentences) of what you heard and ask if anything is off. If they then confirm (or correct it), thank them briefly in one or two sentences, without describing next steps. Then set "complete": true.
 
 Safety: if they disclose being in danger, abuse, or thoughts of self-harm, respond with care, share the 988 Suicide and Crisis Lifeline (call or text 988) and the National Domestic Violence Hotline (1-800-799-7233), set "pause": true, and do not continue.
 

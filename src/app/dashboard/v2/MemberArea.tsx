@@ -121,6 +121,20 @@ function MemberAreaInner({ area }: { area: 'start' | 'dashboard' }) {
   } else if (view === 'video') body = <VideoInterview onDone={reload} onSkip={() => goTo('photos')} />;
   else if (view === 'photos') body = <PhotosStep onDone={reload} />;
   else if (view === 'type') body = <AttractionRound onFinished={reload} />;
+  else if (view === 'hold') {
+    body = (
+      <Card>
+        <h1 className="text-2xl font-bold text-[#1F2937]">Thank you, {state.basics?.firstName || 'and welcome'}</h1>
+        <p className="text-[15px] text-[#4B5563] mt-2 leading-relaxed">
+          From what you shared, now may not be the best time for us to start matching you. We only set up dates when we think
+          both people are in a good place to build something, and that can depend on timing, like how recently a relationship
+          ended or how much room your life has right now.
+        </p>
+        <p className="text-[15px] text-[#4B5563] mt-3 leading-relaxed">We’ve saved everything. If things change, pick the conversation back up and tell us, and we’ll take another look.</p>
+        <div className="mt-4"><Button variant="secondary" onClick={() => setView('intake')}>Pick the conversation back up</Button></div>
+      </Card>
+    );
+  }
   else body = <Home state={state} goTo={goTo} reload={reload} />;
 
   return (

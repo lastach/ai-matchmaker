@@ -75,7 +75,8 @@ export async function POST(req: Request) {
       const target = body.step as (typeof STEPS)[number]
       const blocked =
         (target === 'video' && !p.intake_complete) ||
-        (target === 'type' && !p.intake_complete)
+        (target === 'type' && !p.intake_complete) ||
+        (p.step === 'hold' && target !== 'intake' && target !== 'basics')
       if (blocked) return NextResponse.json({ error: 'Finish the conversation first.' }, { status: 400 })
       patch.step = target
     }

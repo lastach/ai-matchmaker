@@ -4,6 +4,8 @@ import { callClaudeJson, type ChatMsg } from '@/lib/v2/ai'
 import { COVERAGE_AREAS, INTAKE_ANALYZE_SYSTEM, INTAKE_REPLY_SYSTEM } from '@/lib/v2/prompts'
 import { CRISIS_REPLY, crisisFlags } from '@/lib/v2/safety'
 import { detachedClient, errorResponse, loadProfile, requireUser, saveProfile } from '@/lib/v2/server'
+import { eligibility } from '@/lib/v2/engine'
+import { toMember } from '@/lib/v2/pool'
 import { checkRateLimit } from '@/lib/rateLimit'
 import type { AiProfile } from '@/lib/v2/types'
 
@@ -99,8 +101,10 @@ export async function POST(req: Request) {
     })
 
     // The member confirmed the summary but the latest analysis has not caught up: analyze now, then decide.
+    let analyzedNow = false
     if (out?.complete && !allCovered(aiProfile)) {
       aiProfile = await analyze(svc, uid, conversation, aiProfile)
+      analyzedNow = true
       if (!allCovered(aiProfile)) {
         ;({ out } = await callClaudeJson<{ reply?: string; complete?: boolean; pause?: boolean }>({
           system: INTAKE_REPLY_SYSTEM, maxTokens: 700, messages: asMessages(context(aiProfile), conversation),
@@ -114,7 +118,11 @@ export async function POST(req: Request) {
     const patch: any = { conversation }
     if (complete) {
       patch.intake_complete = true
-      if (p.step === 'intake') patch.step = 'video'
+      // Readiness is decided here: only members ready for a partnership go on to the video, photos and type.
+      const fresh = analyzedNow ? aiProfile : await analyze(svc, uid, conversation, aiProfile)
+      const ok = eligibility(toMember({ ...p, ai_profile: fresh })).ok
+      if (p.step === 'intake' || p.step === 'hold') patch.step = ok ? 'video' : 'hold'
+      else if (!ok) patch.step = 'hold'
     }
     await saveProfile(svc, uid, patch)
 

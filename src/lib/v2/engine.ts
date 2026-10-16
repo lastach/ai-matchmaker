@@ -1,8 +1,9 @@
 /**
  * Amorlay v2 matching engine (pure functions, no I/O).
  *
- * 0. Eligibility: only members ready for a relationship, with a partnership readiness score of
- *    at least ELIGIBLE_SCORE, are matched at all.
+ * 0. Eligibility: decided right after the conversation. Only members ready for a relationship, with a
+ *    partnership readiness score of at least ELIGIBLE_SCORE, go on to the video, photos and type steps
+ *    and count toward their city.
  * 1. Gates (pass/fail, checked both ways): interest, age range, background preference, city, kids, dealbreakers,
  *    deal-level values, inflexible must-haves, predicted attraction bar.
  * 2. Match score out of 100, from each person's own learned weights (defaults: must-haves 25,
@@ -113,16 +114,24 @@ export function security(m: Member): number {
 export interface Eligibility { ok: boolean; score: number; reasons: string[] }
 
 /**
- * Partnership readiness, 0..100: readiness for a relationship now (40%), partner qualities (40%)
- * and secure attachment (20%). Members must be ready (6+ of 10) and score ELIGIBLE_SCORE or more to be matched.
+ * Partnership readiness, 0..100, from the conversation alone, so it is decided right after it:
+ * readiness for a relationship now (40%), partner qualities (40%) and secure attachment (20%). Members must be ready (6+ of 10) and score ELIGIBLE_SCORE or more to be matched.
  */
+/** 0..1: kind, reliable and calm, from the conversation alone (so eligibility is known before the video). */
+export function intakePartnerQualities(m: Member): number {
+  const p = m.ai.personality || {}
+  const parts = [p.agreeableness, p.conscientiousness, p.neuroticism == null ? null : 11 - p.neuroticism]
+  const a = avg(parts)
+  return a == null ? 0.5 : Math.max(0, Math.min(1, (a - 1) / 9))
+}
+
 export function eligibility(m: Member): Eligibility {
   const reasons: string[] = []
   const r = m.ai.readiness
   const level = typeof r?.level === 'number' ? r.level : r?.ready === true ? 7 : r?.ready === false ? 3 : null
   if (level == null) reasons.push('readiness unknown')
   else if (level < READY_LEVEL || r?.ready === false) reasons.push('not ready for a relationship yet')
-  const score = Math.round((0.4 * ((level ?? 5) / 10) + 0.4 * partnerQualities(m) + 0.2 * security(m)) * 100)
+  const score = Math.round((0.4 * ((level ?? 5) / 10) + 0.4 * intakePartnerQualities(m) + 0.2 * security(m)) * 100)
   if (score < ELIGIBLE_SCORE) reasons.push(`partnership readiness ${score} (needs ${ELIGIBLE_SCORE})`)
   return { ok: reasons.length === 0, score, reasons }
 }
